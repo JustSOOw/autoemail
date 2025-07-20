@@ -1,0 +1,51 @@
+# Email Domain Manager - Dependencies
+
+# GUI Framework
+PyQt6==6.6.1
+
+# Database (SQLite is built-in)
+
+# Network requests
+requests==2.31.0
+aiohttp==3.9.1
+
+# Encryption
+cryptography==41.0.8
+
+# Configuration management
+python-dotenv==1.0.0
+
+# Logging
+loguru==0.7.2
+
+# Data validation
+pydantic==2.5.2
+
+# Async support
+asyncqt==0.8.0
+
+# Regular expressions
+regex==2023.10.3
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# JSON processing
+orjson==3.9.10
+
+# System information
+psutil==5.9.6
+
+# Build tools
+PyInstaller==6.3.0
+
+# Development tools (optional)
+pytest==7.4.3
+pytest-qt==4.2.0
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Type hints
+typing-extensions==4.8.0
