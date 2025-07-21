@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent))  # 添加src目录
 
 from PyQt6.QtCore import QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
+
 # PyQt6导入
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
