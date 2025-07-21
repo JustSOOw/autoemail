@@ -113,7 +113,11 @@ def test_gui_import():
         print(f"❌ GUI模块导入失败: {e}")
         print("💡 这在CI环境或某些开发环境中是正常的，PyQt6可能与系统Qt库不兼容")
         # 在CI环境或Windows开发环境中，GUI导入失败不应该导致整个测试失败
-        if os.getenv("CI") or os.getenv("GITHUB_ACTIONS") or "DLL load failed" in str(e):
+        if (
+            os.getenv("CI")
+            or os.getenv("GITHUB_ACTIONS")
+            or "DLL load failed" in str(e)
+        ):
             print("⏭️ 跳过GUI测试，这不影响核心功能")
             return True
         return False
