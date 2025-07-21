@@ -4,12 +4,8 @@
 包含所有数据模型定义
 """
 
-from .email_model import EmailModel
 from .config_model import ConfigModel
+from .email_model import EmailModel
 from .tag_model import TagModel
 
-__all__ = [
-    'EmailModel',
-    'ConfigModel', 
-    'TagModel'
-]
+__all__ = ["EmailModel", "ConfigModel", "TagModel"]
