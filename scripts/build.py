@@ -12,6 +12,17 @@ import subprocess
 import platform
 from pathlib import Path
 
+# 设置Windows环境下的编码处理
+if platform.system() == "Windows":
+    # 确保stdout能正确处理UTF-8编码
+    if hasattr(sys.stdout, 'reconfigure'):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+    # 设置环境变量确保正确的编码
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 # 项目配置
 PROJECT_NAME = "EmailDomainManager"
 VERSION = "1.0.0"
@@ -45,21 +56,21 @@ def check_requirements():
     print(f"✅ Python版本: {python_version.major}.{python_version.minor}.{python_version.micro}")
     
     # 检查必需的包
-    required_packages = [
-        "PyQt6",
-        "PyInstaller",
-        "cryptography",
-        "requests"
-    ]
-    
+    required_packages = {
+        "PyQt6": "PyQt6",
+        "PyInstaller": "PyInstaller",
+        "cryptography": "cryptography",
+        "requests": "requests"
+    }
+
     missing_packages = []
-    for package in required_packages:
+    for package_name, import_name in required_packages.items():
         try:
-            __import__(package.lower().replace("-", "_"))
-            print(f"✅ {package}: 已安装")
+            __import__(import_name)
+            print(f"✅ {package_name}: 已安装")
         except ImportError:
-            missing_packages.append(package)
-            print(f"❌ {package}: 未安装")
+            missing_packages.append(package_name)
+            print(f"❌ {package_name}: 未安装")
     
     if missing_packages:
         print(f"\n请安装缺失的包:")
@@ -325,12 +336,25 @@ def main():
     # 检查是否为测试模式
     test_only = "--test-only" in sys.argv
 
-    print(f"""
+    # 使用兼容的字符显示标题
+    try:
+        # 尝试使用Unicode字符
+        header = f"""
 ╔══════════════════════════════════════════════════════════════╗
 ║                    {PROJECT_NAME} 构建工具                    ║
 ║                        版本: {VERSION}                         ║
 ╚══════════════════════════════════════════════════════════════╝
-""")
+"""
+        print(header)
+    except UnicodeEncodeError:
+        # 如果Unicode字符不支持，使用ASCII字符
+        header = f"""
++==============================================================+
+|                    {PROJECT_NAME} 构建工具                    |
+|                        版本: {VERSION}                         |
++==============================================================+
+"""
+        print(header)
 
     if test_only:
         print("🧪 测试构建模式 - 仅验证构建环境")
