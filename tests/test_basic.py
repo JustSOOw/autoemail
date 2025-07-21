@@ -15,8 +15,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 from models.config_model import ConfigModel
-from models.email_model import (EmailModel, VerificationMethod,
-                                VerificationStatus)
+from models.email_model import EmailModel, VerificationStatus
 from models.tag_model import TagModel
 from services.database_service import DatabaseService
 from utils.config_manager import ConfigManager

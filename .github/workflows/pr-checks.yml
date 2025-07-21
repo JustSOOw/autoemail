@@ -48,7 +48,7 @@ jobs:
     - name: 代码风格检查 (Flake8)
       run: |
         echo "🔍 检查代码风格..."
-        flake8 src/ tests/ scripts/ --max-line-length=88 --extend-ignore=E203,W503
+        flake8 src/ tests/ scripts/ --max-line-length=88 --extend-ignore=E203,W503,W293,E402
 
   # 单元测试
   unit-tests:

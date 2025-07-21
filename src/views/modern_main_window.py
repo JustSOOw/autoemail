@@ -380,11 +380,11 @@ ApplicationWindow {
                     horizontalAlignment: Text.AlignHCenter
                 }
             }
-            
+
             // 配置管理页面
             Rectangle {
                 color: "#f5f5f5"
-                
+
                 Label {
                     anchors.centerIn: parent
                     text: "⚙️ 配置管理页面\\n\\n功能开发中..."
@@ -394,7 +394,7 @@ ApplicationWindow {
             }
         }
     }
-    
+
     // 状态栏
     Rectangle {
         anchors.bottom: parent.bottom
@@ -402,19 +402,19 @@ ApplicationWindow {
         height: 30
         color: "#f0f0f0"
         border.color: "#e0e0e0"
-        
+
         RowLayout {
             anchors.fill: parent
             anchors.margins: 5
-            
+
             Label {
                 id: statusLabel
                 text: "就绪"
                 font.pixelSize: 12
             }
-            
+
             Item { Layout.fillWidth: true }
-            
+
             Label {
                 text: new Date().toLocaleTimeString()
                 font.pixelSize: 12
@@ -422,29 +422,30 @@ ApplicationWindow {
             }
         }
     }
-    
+
     // 连接信号
     Connections {
         target: emailController
-        
+
         function onEmailGenerated(email, status) {
             if (status === "success") {
-                logArea.text += "\\n[" + new Date().toLocaleTimeString() + "] 邮箱生成成功: " + email
+                logArea.text += "\\n[" + new Date().toLocaleTimeString() +
+                               "] 邮箱生成成功: " + email
             } else {
                 logArea.text += "\\n[" + new Date().toLocaleTimeString() + "] 邮箱生成失败"
             }
             generateButton.enabled = true
         }
-        
+
         function onStatusChanged(message) {
             statusLabel.text = message
             logArea.text += "\\n[" + new Date().toLocaleTimeString() + "] " + message
         }
-        
+
         function onProgressChanged(value) {
             progressBar.value = value / 100.0
         }
-        
+
         function onVerificationCodeReceived(code) {
             logArea.text += "\\n[" + new Date().toLocaleTimeString() + "] 验证码: " + code
         }
