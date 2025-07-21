@@ -205,3 +205,27 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+/cursor-auto-free/
+/cursor-auto-free-core/
+
+# 项目特定文件
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+logs/*.log
+logs/*.txt
+config/*.conf
+config/*.json
+config/backups/
+
+# QML编译文件
+*.qmlc
+*.jsc
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.backup
