@@ -105,7 +105,7 @@ jobs:
         echo "🔬 运行pytest测试..."
         export QT_QPA_PLATFORM=offscreen
         export DISPLAY=:99
-        xvfb-run -a pytest tests/ -v --cov=src --cov-report=xml --cov-report=term
+        xvfb-run -a pytest tests/ -v --cov=src --cov-report=xml --cov-report=term -p no:qt
         
     - name: 上传覆盖率报告
       uses: codecov/codecov-action@v3
