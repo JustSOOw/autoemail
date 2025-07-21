@@ -368,9 +368,9 @@ class DatabaseService:
             ]
 
             for table in tables:
-                count = self.execute_query(
-                    f"SELECT COUNT(*) as count FROM {table}", fetch_one=True
-                )
+                # 使用预定义的表名，安全的SQL查询
+                query = "SELECT COUNT(*) as count FROM " + table  # nosec B608
+                count = self.execute_query(query, fetch_one=True)
                 stats[f"{table}_count"] = count["count"] if count else 0
 
             # 数据库文件大小

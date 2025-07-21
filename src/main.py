@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent))  # 添加src目录
 
 from PyQt6.QtCore import QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
+
 # PyQt6导入
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
@@ -328,7 +329,8 @@ def main():
         try:
             logger = get_logger(__name__)
             logger.critical(error_msg, exc_info=(exc_type, exc_value, exc_traceback))
-        except:
+        except Exception:  # nosec B110
+            # 如果日志记录失败，静默忽略，因为错误信息已经打印到控制台
             pass
 
     sys.excepthook = exception_hook

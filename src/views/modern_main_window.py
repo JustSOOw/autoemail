@@ -82,8 +82,8 @@ class EmailController(QObject):
             # 模拟获取过程
             time.sleep(2)
 
-            # 生成示例验证码
-            verification_code = f"{random.randint(100000, 999999)}"
+            # 生成示例验证码（仅用于演示）
+            verification_code = f"{random.randint(100000, 999999)}"  # nosec B311
 
             self.verificationCodeReceived.emit(verification_code)
             self.statusChanged.emit(f"验证码获取成功: {verification_code}")
