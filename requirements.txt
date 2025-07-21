@@ -9,7 +9,7 @@ PyQt6==6.6.1
 requests==2.31.0
 aiohttp==3.9.1
 
-# Encryption - 使用稳定版本
+# Encryption
 cryptography==42.0.8
 
 # Configuration management
@@ -19,29 +19,28 @@ python-dotenv==1.0.0
 loguru==0.7.2
 
 # Data validation
-pydantic==2.5.2
+pydantic==2.9.2
 
 # Async support
 asyncqt==0.8.0
 
 # Regular expressions
-regex==2023.10.3
+regex==2024.11.6
 
 # Date/time handling
 python-dateutil==2.8.2
 
 # JSON processing
-orjson==3.9.10
+ujson==5.8.0
 
 # System information
-psutil==5.9.6
+psutil==6.1.1
 
 # Build tools
-PyInstaller==6.3.0
+PyInstaller==6.14.2
 
 # Development tools (optional)
 pytest==7.4.3
-pytest-qt==4.2.0
 pytest-asyncio==0.21.1
 black==23.11.0
 flake8==6.1.0
@@ -50,10 +49,10 @@ isort==5.12.0
 
 # Security tools
 bandit==1.7.5
-safety==2.3.5
+safety==3.6.0
 
 # Test coverage
 pytest-cov==4.1.0
 
 # Type hints
-typing-extensions==4.8.0
+typing-extensions==4.14.1
