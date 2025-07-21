@@ -1,0 +1,270 @@
+# Develop分支持续集成
+# 当代码推送到develop分支时触发
+name: Develop分支CI
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+jobs:
+  # 完整测试套件
+  full-test-suite:
+    name: 完整测试套件
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 缓存依赖
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-xvfb flake8 black isort
+        
+    - name: 运行完整测试
+      run: |
+        echo "🧪 运行完整测试套件..."
+        python scripts/run_tests.py
+        pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
+        
+    - name: 上传测试覆盖率
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: develop
+        name: develop-coverage
+        
+    - name: 保存覆盖率报告
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+
+  # 多平台构建测试
+  multi-platform-build:
+    name: 多平台构建测试
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11']
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: 运行基础测试
+      run: |
+        echo "🧪 在 ${{ matrix.os }} Python ${{ matrix.python-version }} 上运行测试..."
+        python scripts/run_tests.py
+
+  # 性能测试
+  performance-test:
+    name: 性能测试
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-benchmark memory-profiler
+        
+    - name: 运行性能测试
+      run: |
+        echo "⚡ 运行性能测试..."
+        # 这里可以添加性能测试脚本
+        python -c "
+        import time
+        import psutil
+        import os
+        
+        print('📊 系统性能基准测试')
+        print(f'CPU核心数: {psutil.cpu_count()}')
+        print(f'内存总量: {psutil.virtual_memory().total / 1024**3:.2f} GB')
+        
+        # 测试导入时间
+        start_time = time.time()
+        try:
+            import sys
+            sys.path.insert(0, 'src')
+            from models.email_model import EmailModel
+            from models.config_model import ConfigModel
+            from services.database_service import DatabaseService
+            import_time = time.time() - start_time
+            print(f'✅ 模块导入时间: {import_time:.3f}s')
+        except Exception as e:
+            print(f'❌ 模块导入失败: {e}')
+        "
+
+  # 代码质量分析
+  code-analysis:
+    name: 代码质量分析
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装分析工具
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pylint mypy radon complexity
+        
+    - name: 代码复杂度分析
+      run: |
+        echo "📈 分析代码复杂度..."
+        radon cc src/ -a -nc
+        radon mi src/ -nc
+        
+    - name: 类型检查
+      run: |
+        echo "🔍 运行类型检查..."
+        mypy src/ --ignore-missing-imports --no-strict-optional || true
+        
+    - name: 代码质量评分
+      run: |
+        echo "⭐ 代码质量评分..."
+        pylint src/ --exit-zero --output-format=text --reports=yes
+
+  # 安全扫描
+  security-scan:
+    name: 安全扫描
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装安全工具
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit semgrep
+        
+    - name: 依赖漏洞扫描
+      run: |
+        echo "🔒 扫描依赖漏洞..."
+        safety check -r requirements.txt --json --output safety-report.json || true
+        safety check -r requirements.txt
+        
+    - name: 代码安全扫描
+      run: |
+        echo "🛡️ 扫描代码安全问题..."
+        bandit -r src/ -f json -o bandit-report.json || true
+        bandit -r src/
+        
+    - name: 上传安全报告
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          bandit-report.json
+
+  # 文档检查
+  documentation-check:
+    name: 文档检查
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 检查文档完整性
+      run: |
+        echo "📚 检查文档完整性..."
+        
+        # 检查必要文档是否存在
+        required_docs=("README.md" "GEMINI.md" "docs/architecture-design.md" "docs/development-plan.md")
+        
+        for doc in "${required_docs[@]}"; do
+          if [[ -f "$doc" ]]; then
+            echo "✅ 文档存在: $doc"
+          else
+            echo "❌ 缺少文档: $doc"
+            exit 1
+          fi
+        done
+        
+        # 检查README文档的基本结构
+        if grep -q "## 📧 项目简介" README.md && \
+           grep -q "## ✨ 主要功能" README.md && \
+           grep -q "## 🏗️ 技术架构" README.md; then
+          echo "✅ README文档结构完整"
+        else
+          echo "❌ README文档结构不完整"
+          exit 1
+        fi
+
+  # 通知
+  notification:
+    name: 构建通知
+    runs-on: ubuntu-latest
+    needs: [full-test-suite, multi-platform-build, performance-test, code-analysis, security-scan, documentation-check]
+    if: always()
+    
+    steps:
+    - name: 构建结果通知
+      run: |
+        echo "📢 Develop分支CI构建完成"
+        echo "=========================="
+        
+        if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+          echo "❌ 构建失败，请检查日志"
+          echo "失败的任务:"
+          [[ "${{ needs.full-test-suite.result }}" == "failure" ]] && echo "  - 完整测试套件"
+          [[ "${{ needs.multi-platform-build.result }}" == "failure" ]] && echo "  - 多平台构建测试"
+          [[ "${{ needs.performance-test.result }}" == "failure" ]] && echo "  - 性能测试"
+          [[ "${{ needs.code-analysis.result }}" == "failure" ]] && echo "  - 代码质量分析"
+          [[ "${{ needs.security-scan.result }}" == "failure" ]] && echo "  - 安全扫描"
+          [[ "${{ needs.documentation-check.result }}" == "failure" ]] && echo "  - 文档检查"
+        else
+          echo "🎉 所有检查通过，develop分支状态良好！"
+        fi
