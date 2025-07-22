@@ -18,24 +18,22 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                   Controller Layer (控制层)                   │
 ├─────────────────────────────────────────────────────────────┤
-│     EmailController     │     ConfigController              │
-│     DatabaseController  │     ValidationController          │
+│          EmailController     │     ConfigController         │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   Service Layer (服务层)                      │
 ├─────────────────────────────────────────────────────────────┤
-│   EmailService    │   ConfigService    │   DatabaseService   │
-│   ValidationService │   CryptoService  │   LoggingService    │
+│      EmailService      │     ConfigService      │ DatabaseService │
+│                        │     LoggingService     │                 │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Model Layer (模型层)                       │
 ├─────────────────────────────────────────────────────────────┤
-│     EmailModel      │     ConfigModel     │     TagModel     │
-│     UserModel       │     LogModel        │     BaseModel    │
+│        EmailModel        │      ConfigModel      │    TagModel    │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -51,7 +49,7 @@
 
 ### 1. 单一职责原则 (SRP)
 每个类和模块都有明确的单一职责：
-- **EmailService**: 只负责邮箱生成和验证
+- **EmailService**: 只负责邮箱生成和管理
 - **ConfigService**: 只负责配置管理
 - **DatabaseService**: 只负责数据持久化
 
@@ -62,8 +60,8 @@
 
 ### 3. 开闭原则 (OCP)
 对扩展开放，对修改关闭：
-- 插件化的验证码获取机制
 - 可扩展的导出格式支持
+- 可自定义的生成规则
 
 ## 📦 详细模块设计
 
@@ -96,7 +94,6 @@ class EmailGenerationPage(QWidget):
     
     # 信号定义
     email_generation_requested = pyqtSignal()
-    verification_code_requested = pyqtSignal(str)
     
     def __init__(self, email_controller):
         self.email_controller = email_controller
@@ -105,14 +102,13 @@ class EmailGenerationPage(QWidget):
         
     def setup_ui(self):
         # 左侧：配置信息展示
-        # 中央：生成按钮和进度条
-        # 右侧：日志输出区域
+        # 中央：生成按钮和交互反馈
         
     def on_generate_email(self):
         # 触发邮箱生成请求
         
-    def update_progress(self, value, message):
-        # 更新进度条和状态信息
+    def update_status(self, message):
+        # 更新状态信息
 ```
 
 #### 1.3 EmailManagementPage (邮箱管理页面)
@@ -150,12 +146,8 @@ class ConfigurationPage(QWidget):
         
     def setup_ui(self):
         # 域名配置组
-        # IMAP配置组
-        # tempmail配置组
         # 安全设置组
-        
-    def validate_config(self):
-        # 验证配置有效性
+        # 系统设置组
         
     def save_config(self):
         # 保存配置更改
@@ -170,33 +162,20 @@ class ConfigurationPage(QWidget):
 class EmailController:
     """邮箱相关业务逻辑控制器"""
     
-    def __init__(self, email_service, database_service):
+    def __init__(self, email_service):
         self.email_service = email_service
-        self.database_service = database_service
         
-    async def generate_email(self, config):
+    def generate_email(self, config):
         """生成新邮箱"""
-        try:
-            # 1. 验证配置
-            # 2. 生成邮箱地址
-            # 3. 保存到数据库
-            # 4. 返回结果
-            pass
-        except Exception as e:
-            # 错误处理和日志记录
-            pass
-            
-    async def get_verification_code(self, email_address):
-        """获取验证码"""
-        # 调用邮箱服务获取验证码
+        # 调用邮箱服务生成并保存邮箱
         
     def get_email_list(self, filters=None):
         """获取邮箱列表"""
-        # 从数据库获取邮箱列表
+        # 从邮箱服务获取邮箱列表
         
     def search_emails(self, query):
         """搜索邮箱"""
-        # 执行搜索逻辑
+        # 调用邮箱服务执行搜索逻辑
 ```
 
 #### 2.2 ConfigController (配置控制器)
@@ -204,21 +183,14 @@ class EmailController:
 class ConfigController:
     """配置管理控制器"""
     
-    def __init__(self, config_service, validation_service):
+    def __init__(self, config_service):
         self.config_service = config_service
-        self.validation_service = validation_service
         
     def load_config(self):
         """加载配置"""
         
     def save_config(self, config_data):
         """保存配置"""
-        
-    def validate_config(self, config_data):
-        """验证配置"""
-        
-    def test_connection(self, config_type, config_data):
-        """测试连接"""
 ```
 
 ### 3. Service Layer (服务层)
@@ -228,37 +200,44 @@ class ConfigController:
 #### 3.1 EmailService (邮箱服务)
 ```python
 class EmailService:
-    """邮箱生成和验证服务"""
+    """邮箱生成和管理服务"""
     
-    def __init__(self, config_service):
-        self.config_service = config_service
-        self.name_generator = NameGenerator()
+    def __init__(self, config: ConfigModel, db_service: DatabaseService):
+        self.config = config
+        self.db_service = db_service
+        self.email_generator = EmailGenerator(config)
         
-    def generate_email_address(self, domain, prefix_length=4):
-        """生成邮箱地址"""
-        # 重构自cursor-auto-free的EmailGenerator
+    def create_email(
+        self, 
+        prefix_type: str = "random_name",
+        custom_prefix: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        notes: str = ""
+    ) -> EmailModel:
+        """创建新邮箱并持久化到数据库"""
+        pass
         
-    async def get_verification_code(self, email_address, method='auto'):
-        """获取验证码"""
-        # 支持多种获取方式：tempmail.plus, IMAP, POP3
-        
-    def validate_email_format(self, email):
-        """验证邮箱格式"""
-        
-class VerificationCodeHandler:
-    """验证码处理器基类"""
-    
-    async def get_code(self, email_address):
-        raise NotImplementedError
-        
-class TempMailHandler(VerificationCodeHandler):
-    """tempmail.plus处理器"""
-    
-class IMAPHandler(VerificationCodeHandler):
-    """IMAP处理器"""
-    
-class POP3Handler(VerificationCodeHandler):
-    """POP3处理器"""
+    def get_email_by_id(self, email_id: int) -> Optional[EmailModel]:
+        """根据ID获取单个邮箱记录"""
+        pass
+
+    def search_emails(
+        self, 
+        keyword: str = "",
+        status: Optional[EmailStatus] = None,
+        tags: Optional[List[str]] = None,
+        limit: int = 100
+    ) -> List[EmailModel]:
+        """根据条件搜索邮箱记录"""
+        pass
+
+    def update_email(self, email_model: EmailModel) -> bool:
+        """更新一个已存在的邮箱记录"""
+        pass
+
+    def delete_email(self, email_id: int) -> bool:
+        """软删除一个邮箱记录"""
+        pass
 ```
 
 #### 3.2 ConfigService (配置服务)
@@ -266,21 +245,24 @@ class POP3Handler(VerificationCodeHandler):
 class ConfigService:
     """配置管理服务"""
     
-    def __init__(self, crypto_service):
-        self.crypto_service = crypto_service
-        self.config_file_path = "config/app.conf"
+    def __init__(self, db_service: DatabaseService):
+        self.db_service = db_service
         
-    def load_config(self):
-        """加载配置文件"""
+    def load_config(self, master_password: Optional[str] = None) -> ConfigModel:
+        """从数据库加载完整的应用程序配置"""
+        pass
         
-    def save_config(self, config_data):
-        """保存配置文件"""
-        
-    def encrypt_sensitive_data(self, data):
-        """加密敏感数据"""
-        
-    def decrypt_sensitive_data(self, encrypted_data):
-        """解密敏感数据"""
+    def save_config(self, config: ConfigModel, master_password: Optional[str] = None) -> bool:
+        """将完整的配置模型保存到数据库"""
+        pass
+
+    def export_config(self, include_sensitive: bool = False) -> str:
+        """将当前配置导出为JSON字符串"""
+        pass
+
+    def import_config(self, config_json: str, master_password: Optional[str] = None) -> bool:
+        """从JSON字符串导入配置并保存"""
+        pass
 ```
 
 #### 3.3 DatabaseService (数据库服务)
@@ -295,27 +277,13 @@ class DatabaseService:
     def init_database(self):
         """初始化数据库表结构"""
         
-    def create_email_record(self, email_data):
-        """创建邮箱记录"""
-        
-    def get_email_records(self, filters=None):
-        """获取邮箱记录"""
-        
-    def update_email_record(self, email_id, update_data):
-        """更新邮箱记录"""
-        
-    def delete_email_record(self, email_id):
-        """删除邮箱记录"""
-        
-    # 标签相关操作
-    def create_tag(self, tag_data):
-        """创建标签"""
-        
-    def get_tags(self):
-        """获取所有标签"""
-        
-    def associate_email_tag(self, email_id, tag_id):
-        """关联邮箱和标签"""
+    def execute_query(self, query: str, params: tuple = (), fetch_one: bool = False) -> Optional[List[sqlite3.Row]]:
+        """执行查询语句"""
+        pass
+
+    def execute_update(self, query: str, params: tuple = ()) -> int:
+        """执行更新语句"""
+        pass
 ```
 
 ### 4. Model Layer (模型层)
@@ -324,43 +292,41 @@ class DatabaseService:
 
 #### 4.1 数据模型定义
 ```python
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
+from enum import Enum
+
+class EmailStatus(Enum):
+    """邮箱状态枚举"""
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    ARCHIVED = "archived"
 
 @dataclass
 class EmailModel:
-    """邮箱数据模型"""
+    """邮箱核心数据模型"""
     id: Optional[int] = None
     email_address: str = ""
     domain: str = ""
-    created_at: datetime = None
+    prefix: str = ""
+    timestamp_suffix: str = ""
+    created_at: Optional[datetime] = None
     last_used: Optional[datetime] = None
-    verification_status: str = "pending"  # pending, verified, failed
-    tags: List[str] = None
+    updated_at: Optional[datetime] = None
+    status: EmailStatus = EmailStatus.ACTIVE
+    tags: List[str] = field(default_factory=list)
     notes: str = ""
-    
-    def __post_init__(self):
-        if self.tags is None:
-            self.tags = []
-        if self.created_at is None:
-            self.created_at = datetime.now()
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    is_active: bool = True
+    created_by: str = "system"
 
 @dataclass
 class ConfigModel:
-    """配置数据模型"""
-    domain: str = ""
-    temp_mail_config: dict = None
-    imap_config: dict = None
-    security_config: dict = None
-    
-    def __post_init__(self):
-        if self.temp_mail_config is None:
-            self.temp_mail_config = {}
-        if self.imap_config is None:
-            self.imap_config = {}
-        if self.security_config is None:
-            self.security_config = {}
+    """应用程序所有配置的统一数据模型"""
+    domain_config: dict = field(default_factory=dict)
+    security_config: dict = field(default_factory=dict)
+    system_config: dict = field(default_factory=dict)
 
 @dataclass
 class TagModel:
@@ -368,39 +334,22 @@ class TagModel:
     id: Optional[int] = None
     name: str = ""
     color: str = "#3498db"
+    icon: str = ""
     description: str = ""
-    created_at: datetime = None
-    
-    def __post_init__(self):
-        if self.created_at is None:
-            self.created_at = datetime.now()
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    is_system: bool = False
+    sort_order: int = 0
+    usage_count: int = 0
 ```
 
 ## 🔐 安全架构设计
 
 ### 1. 数据加密
-```python
-class CryptoService:
-    """加密服务"""
-    
-    def __init__(self, master_password):
-        self.master_password = master_password
-        self.key = self.derive_key(master_password)
-        
-    def encrypt(self, data: str) -> str:
-        """AES加密"""
-        
-    def decrypt(self, encrypted_data: str) -> str:
-        """AES解密"""
-        
-    def derive_key(self, password: str) -> bytes:
-        """从密码派生加密密钥"""
-```
+- 敏感配置数据（如主密码哈希）加密存储
+- 内存中敏感数据及时清理
 
 ### 2. 敏感数据保护
-- IMAP密码加密存储
-- API密钥加密存储
-- 内存中敏感数据及时清理
 - 日志文件脱敏处理
 
 ### 3. 配置文件安全
@@ -411,21 +360,7 @@ class CryptoService:
 ## 📊 性能优化设计
 
 ### 1. 异步处理
-```python
-import asyncio
-from PyQt6.QtCore import QThread, pyqtSignal
-
-class EmailGenerationWorker(QThread):
-    """邮箱生成工作线程"""
-    
-    progress_updated = pyqtSignal(int, str)
-    generation_completed = pyqtSignal(dict)
-    error_occurred = pyqtSignal(str)
-    
-    def run(self):
-        # 在后台线程执行邮箱生成
-        pass
-```
+- 针对耗时操作（如数据库批量处理、文件导入导出）考虑异步化，避免阻塞UI。
 
 ### 2. 数据库优化
 - 索引优化
@@ -448,15 +383,12 @@ from unittest.mock import Mock, patch
 class TestEmailService(unittest.TestCase):
     
     def setUp(self):
-        self.config_service = Mock()
-        self.email_service = EmailService(self.config_service)
+        self.config = Mock()
+        self.db_service = Mock()
+        self.email_service = EmailService(self.config, self.db_service)
         
-    def test_generate_email_address(self):
-        # 测试邮箱地址生成
-        pass
-        
-    def test_get_verification_code(self):
-        # 测试验证码获取
+    def test_create_email(self):
+        # 测试邮箱创建
         pass
 ```
 
@@ -500,25 +432,7 @@ PyInstaller.__main__.run([
 ## 📈 扩展性设计
 
 ### 1. 插件架构
-```python
-class VerificationPlugin:
-    """验证码获取插件接口"""
-    
-    def get_name(self) -> str:
-        """获取插件名称"""
-        
-    async def get_verification_code(self, email: str) -> str:
-        """获取验证码"""
-        
-class PluginManager:
-    """插件管理器"""
-    
-    def load_plugins(self):
-        """加载所有插件"""
-        
-    def get_plugin(self, name: str) -> VerificationPlugin:
-        """获取指定插件"""
-```
+- 考虑未来功能扩展的插件化机制，例如自定义邮箱生成规则插件。
 
 ### 2. 配置扩展
 - 支持多种配置格式

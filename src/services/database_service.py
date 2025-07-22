@@ -94,11 +94,7 @@ class DatabaseService:
                         timestamp_suffix VARCHAR(20),
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         last_used DATETIME,
-                        verification_status VARCHAR(20) DEFAULT 'pending',
-                        verification_code VARCHAR(10),
-                        verification_method VARCHAR(20),
-                        verification_attempts INTEGER DEFAULT 0,
-                        last_verification_at DATETIME,
+                        status VARCHAR(20) DEFAULT 'active',
                         notes TEXT,
                         is_active BOOLEAN DEFAULT 1,
                         metadata TEXT,
@@ -120,6 +116,7 @@ class DatabaseService:
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         is_system BOOLEAN DEFAULT 0,
+                        is_active BOOLEAN DEFAULT 1,
                         sort_order INTEGER DEFAULT 0
                     )
                 """
@@ -459,3 +456,176 @@ class DatabaseService:
     def __del__(self):
         """析构函数"""
         self.close()
+
+    @contextmanager
+    def transaction(self):
+        """
+        事务上下文管理器
+
+        Yields:
+            数据库连接对象
+        """
+        conn = self.get_connection()
+        try:
+            yield conn
+            conn.commit()
+            self.logger.debug("事务提交成功")
+        except Exception as e:
+            conn.rollback()
+            self.logger.error(f"事务回滚: {e}")
+            raise
+
+    def execute_batch(self, query: str, params_list: List[tuple]) -> int:
+        """
+        批量执行SQL语句
+
+        Args:
+            query: SQL语句
+            params_list: 参数列表
+
+        Returns:
+            影响的行数
+        """
+        if not params_list:
+            return 0
+
+        try:
+            with self.transaction() as conn:
+                cursor = conn.cursor()
+                cursor.executemany(query, params_list)
+                affected_rows = cursor.rowcount
+
+                self.logger.debug(f"批量执行完成，影响行数: {affected_rows}")
+                return affected_rows
+
+        except Exception as e:
+            self.logger.error(f"批量执行失败: {e}")
+            return 0
+
+    def optimize_database(self) -> bool:
+        """
+        优化数据库性能
+
+        Returns:
+            是否优化成功
+        """
+        try:
+            with self.get_cursor() as cursor:
+                # 分析查询计划
+                cursor.execute("ANALYZE")
+
+                # 重建索引
+                cursor.execute("REINDEX")
+
+                # 更新统计信息
+                cursor.execute("PRAGMA optimize")
+
+                self.logger.info("数据库优化完成")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"数据库优化失败: {e}")
+            return False
+
+    def check_database_integrity(self) -> Dict[str, Any]:
+        """
+        检查数据库完整性
+
+        Returns:
+            完整性检查结果
+        """
+        try:
+            result = {"status": "unknown", "errors": [], "warnings": []}
+
+            with self.get_cursor() as cursor:
+                # 完整性检查
+                cursor.execute("PRAGMA integrity_check")
+                integrity_result = cursor.fetchall()
+
+                if len(integrity_result) == 1 and integrity_result[0][0] == "ok":
+                    result["status"] = "ok"
+                else:
+                    result["status"] = "error"
+                    result["errors"] = [row[0] for row in integrity_result]
+
+                # 外键检查
+                cursor.execute("PRAGMA foreign_key_check")
+                fk_errors = cursor.fetchall()
+                if fk_errors:
+                    result["warnings"].extend([f"外键错误: {row}" for row in fk_errors])
+
+                self.logger.info(f"数据库完整性检查完成: {result['status']}")
+                return result
+
+        except Exception as e:
+            self.logger.error(f"数据库完整性检查失败: {e}")
+            return {"status": "error", "errors": [str(e)], "warnings": []}
+
+    def get_connection_info(self) -> Dict[str, Any]:
+        """
+        获取数据库连接信息
+
+        Returns:
+            连接信息字典
+        """
+        try:
+            info = {
+                "database_path": str(self.db_path),
+                "database_size": self.db_path.stat().st_size if self.db_path.exists() else 0,
+                "connected": hasattr(self._local, "connection"),
+                "thread_id": threading.current_thread().ident
+            }
+
+            if hasattr(self._local, "connection"):
+                with self.get_cursor() as cursor:
+                    # SQLite版本
+                    cursor.execute("SELECT sqlite_version()")
+                    info["sqlite_version"] = cursor.fetchone()[0]
+
+                    # 数据库页面大小
+                    cursor.execute("PRAGMA page_size")
+                    info["page_size"] = cursor.fetchone()[0]
+
+                    # 数据库页面数量
+                    cursor.execute("PRAGMA page_count")
+                    info["page_count"] = cursor.fetchone()[0]
+
+                    # WAL模式状态
+                    cursor.execute("PRAGMA journal_mode")
+                    info["journal_mode"] = cursor.fetchone()[0]
+
+            return info
+
+        except Exception as e:
+            self.logger.error(f"获取连接信息失败: {e}")
+            return {"error": str(e)}
+
+    def reset_database(self) -> bool:
+        """
+        重置数据库（删除所有数据但保留结构）
+
+        Returns:
+            是否重置成功
+        """
+        try:
+            with self.transaction() as conn:
+                cursor = conn.cursor()
+
+                # 获取所有表名
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+                tables = [row[0] for row in cursor.fetchall()]
+
+                # 删除所有表数据
+                for table in tables:
+                    cursor.execute(f"DELETE FROM {table}")
+                    self.logger.debug(f"清空表: {table}")
+
+                # 重新插入系统数据
+                self._insert_system_data(cursor)
+
+                self.logger.info("数据库重置完成")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"数据库重置失败: {e}")
+            return False
