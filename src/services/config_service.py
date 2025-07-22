@@ -123,7 +123,26 @@ class ConfigService:
             配置值
         """
         try:
-            # 首先尝试从数据库直接获取
+            # 对于嵌套键，优先从配置模型获取（因为数据库可能没有完整的嵌套键）
+            if '.' in key:
+                if not self._config_cache:
+                    self._config_cache = self.load_config()
+
+                # 解析嵌套键
+                keys = key.split('.')
+                value = self._config_cache.to_dict()
+
+                for k in keys:
+                    if isinstance(value, dict) and k in value:
+                        value = value[k]
+                    else:
+                        # 如果嵌套键不存在，尝试从数据库获取
+                        break
+                else:
+                    # 成功获取到嵌套值
+                    return value
+
+            # 尝试从数据库直接获取
             query = "SELECT config_value, config_type FROM configurations WHERE config_key = ? AND is_active = 1"
             result = self.db_service.execute_query(query, (key,), fetch_one=True)
 
@@ -152,21 +171,7 @@ class ConfigService:
                 else:
                     return config_value
 
-            # 如果数据库中没有，尝试从配置模型获取
-            if not self._config_cache:
-                self._config_cache = self.load_config()
-
-            # 解析嵌套键
-            keys = key.split('.')
-            value = self._config_cache.to_dict()
-
-            for k in keys:
-                if isinstance(value, dict) and k in value:
-                    value = value[k]
-                else:
-                    return default
-
-            return value
+            return default
 
         except Exception as e:
             self.logger.error(f"获取配置值失败: {e}")
@@ -184,7 +189,7 @@ class ConfigService:
             是否设置成功
         """
         try:
-            # 直接保存到数据库
+            # 1. 保存到数据库
             query = """
                 INSERT OR REPLACE INTO configurations
                 (config_key, config_value, config_type, updated_at, is_active)
@@ -200,8 +205,21 @@ class ConfigService:
                 (key, config_value, config_type, datetime.now().isoformat())
             )
 
-            # 清除缓存
-            self.clear_cache()
+            # 2. 同时更新配置模型缓存（用于嵌套配置）
+            if not self._config_cache:
+                self._config_cache = self.load_config()
+
+            # 更新嵌套配置
+            if '.' in key:
+                config_dict = self._config_cache.to_dict()
+                self._set_nested_value(config_dict, key, value)
+                self._config_cache = ConfigModel.from_dict(config_dict)
+
+                # 保存更新后的完整配置
+                self.save_config(self._config_cache)
+            else:
+                # 清除缓存，强制重新加载
+                self.clear_cache()
 
             success = affected_rows > 0
             if success:

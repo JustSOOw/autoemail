@@ -16,7 +16,7 @@ from utils.logger import get_logger
 
 # 安全常量：允许的表名白名单
 ALLOWED_TABLE_NAMES = {
-    'emails', 'tags', 'email_tags', 'configurations'
+    'emails', 'tags', 'email_tags', 'configurations', 'operation_logs'
 }
 
 
@@ -200,7 +200,7 @@ class DatabaseService:
             # 邮箱表索引
             "CREATE INDEX IF NOT EXISTS idx_emails_domain ON emails(domain)",
             "CREATE INDEX IF NOT EXISTS idx_emails_created_at ON emails(created_at)",
-            "CREATE INDEX IF NOT EXISTS idx_emails_verification_status ON emails(verification_status)",
+            "CREATE INDEX IF NOT EXISTS idx_emails_status ON emails(status)",
             "CREATE INDEX IF NOT EXISTS idx_emails_is_active ON emails(is_active)",
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_emails_address ON emails(email_address)",
             # 标签表索引
