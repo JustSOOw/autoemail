@@ -124,35 +124,35 @@ class EmailService:
             邮箱模型列表
         """
         try:
-            conditions = ["is_active = 1"]
+            # 构建安全的查询条件
+            base_query = "SELECT * FROM emails WHERE is_active = 1"
+            where_conditions = []
             params = []
-            
+
             if keyword:
-                conditions.append("(email_address LIKE ? OR notes LIKE ?)")
+                where_conditions.append("(email_address LIKE ? OR notes LIKE ?)")
                 params.extend([f"%{keyword}%", f"%{keyword}%"])
-            
+
             if domain:
-                conditions.append("domain = ?")
+                where_conditions.append("domain = ?")
                 params.append(domain)
-            
+
             if status:
-                conditions.append("status = ?")
+                where_conditions.append("status = ?")
                 params.append(status.value)
-            
+
             # 标签搜索需要JOIN操作
             if tags:
-                tag_conditions = []
                 for tag in tags:
-                    tag_conditions.append("EXISTS (SELECT 1 FROM email_tags et JOIN tags t ON et.tag_id = t.id WHERE et.email_id = emails.id AND t.name = ?)")
+                    where_conditions.append("EXISTS (SELECT 1 FROM email_tags et JOIN tags t ON et.tag_id = t.id WHERE et.email_id = emails.id AND t.name = ?)")
                     params.append(tag)
-                conditions.extend(tag_conditions)
-            
-            query = f"""
-                SELECT * FROM emails 
-                WHERE {' AND '.join(conditions)}
-                ORDER BY created_at DESC 
-                LIMIT ?
-            """
+
+            # 安全地构建完整查询
+            if where_conditions:
+                query = f"{base_query} AND {' AND '.join(where_conditions)} ORDER BY created_at DESC LIMIT ?"
+            else:
+                query = f"{base_query} ORDER BY created_at DESC LIMIT ?"
+
             params.append(limit)
             
             results = self.db_service.execute_query(query, tuple(params))

@@ -4,7 +4,7 @@
 负责生成唯一的邮箱地址
 """
 
-import random
+import secrets
 import string
 import time
 from datetime import datetime
@@ -124,31 +124,33 @@ class EmailGenerator:
         """生成随机名字前缀"""
         if not self.names_dataset:
             return "user"
-        
-        base_name = random.choice(self.names_dataset)
-        
+
+        # 使用加密安全的随机选择
+        base_name = secrets.choice(self.names_dataset)
+
         # 有30%的概率添加数字后缀
-        if random.random() < 0.3:
-            suffix = random.randint(1, 999)
+        if secrets.randbelow(100) < 30:  # 30% 概率
+            suffix = secrets.randbelow(999) + 1  # 1-999
             return f"{base_name}{suffix}"
-        
+
         return base_name
 
     def _generate_random_string(self, length: int = 8) -> str:
         """
         生成随机字符串前缀
-        
+
         Args:
             length: 字符串长度
-            
+
         Returns:
             随机字符串
         """
         # 使用字母和数字，但避免容易混淆的字符
         chars = string.ascii_lowercase + string.digits
         chars = chars.replace('0', '').replace('o', '').replace('1', '').replace('l', '')
-        
-        return ''.join(random.choice(chars) for _ in range(length))
+
+        # 使用加密安全的随机字符生成
+        return ''.join(secrets.choice(chars) for _ in range(length))
 
     def _sanitize_prefix(self, prefix: str) -> str:
         """

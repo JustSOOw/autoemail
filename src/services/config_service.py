@@ -13,6 +13,9 @@ from models.config_model import ConfigModel
 from services.database_service import DatabaseService
 from utils.logger import get_logger
 
+# 安全常量：用于清空敏感数据的占位符
+SENSITIVE_DATA_PLACEHOLDER = "[REDACTED]"
+
 
 class ConfigService:
     """
@@ -229,11 +232,11 @@ class ConfigService:
             # 如果不包含敏感数据，则移除敏感字段
             if not include_sensitive:
                 if "imap_config" in config_dict:
-                    config_dict["imap_config"]["password"] = ""
+                    config_dict["imap_config"]["password"] = SENSITIVE_DATA_PLACEHOLDER
                 if "tempmail_config" in config_dict:
-                    config_dict["tempmail_config"]["epin"] = ""
+                    config_dict["tempmail_config"]["epin"] = SENSITIVE_DATA_PLACEHOLDER
                 if "security_config" in config_dict:
-                    config_dict["security_config"]["master_password_hash"] = ""
+                    config_dict["security_config"]["master_password_hash"] = SENSITIVE_DATA_PLACEHOLDER
             
             return json.dumps(config_dict, ensure_ascii=False, indent=2)
             
@@ -370,7 +373,9 @@ class ConfigService:
                 if config_type == "json" and value:
                     try:
                         value = json.loads(value)
-                    except:
+                    except (json.JSONDecodeError, TypeError) as e:
+                        self.logger.warning(f"解析JSON配置值失败: {key}={value}, 错误: {e}")
+                        # 保持原始字符串值
                         pass
                 
                 # 设置嵌套键值

@@ -10,8 +10,14 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import re
 
 from utils.logger import get_logger
+
+# 安全常量：允许的表名白名单
+ALLOWED_TABLE_NAMES = {
+    'emails', 'tags', 'email_tags', 'configurations'
+}
 
 
 class DatabaseService:
@@ -325,8 +331,19 @@ class DatabaseService:
             表结构信息列表
         """
         try:
+            # 安全检查：验证表名是否在白名单中
+            if table_name not in ALLOWED_TABLE_NAMES:
+                self.logger.error(f"不允许的表名: {table_name}")
+                return []
+
+            # 额外的安全检查：确保表名只包含字母、数字和下划线
+            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table_name):
+                self.logger.error(f"表名格式不安全: {table_name}")
+                return []
+
             with self.get_cursor() as cursor:
-                cursor.execute(f"PRAGMA table_info({table_name})")
+                # 使用参数化查询（虽然PRAGMA不支持参数，但我们已经验证了表名）
+                cursor.execute(f"PRAGMA table_info({table_name})")  # nosec B608
                 columns = cursor.fetchall()
 
                 return [
@@ -617,7 +634,17 @@ class DatabaseService:
 
                 # 删除所有表数据
                 for table in tables:
-                    cursor.execute(f"DELETE FROM {table}")
+                    # 安全检查：验证表名是否在白名单中
+                    if table not in ALLOWED_TABLE_NAMES:
+                        self.logger.warning(f"跳过不在白名单中的表: {table}")
+                        continue
+
+                    # 额外的安全检查：确保表名只包含字母、数字和下划线
+                    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table):
+                        self.logger.warning(f"跳过格式不安全的表名: {table}")
+                        continue
+
+                    cursor.execute(f"DELETE FROM {table}")  # nosec B608
                     self.logger.debug(f"清空表: {table}")
 
                 # 重新插入系统数据
