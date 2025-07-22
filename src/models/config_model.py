@@ -338,6 +338,153 @@ class ConfigModel:
         data = json.loads(json_str)
         return cls.from_dict(data)
 
+    def encrypt_sensitive_data(self, master_password: Optional[str] = None):
+        """
+        加密敏感数据
+
+        Args:
+            master_password: 主密码，如果为None则使用默认加密
+        """
+        try:
+            from utils.encryption import get_encryption_manager
+            encryption_manager = get_encryption_manager(master_password)
+
+            # 加密IMAP密码
+            if self.imap_config.password and not encryption_manager.is_encrypted(self.imap_config.password):
+                self.imap_config.password = encryption_manager.encrypt(self.imap_config.password)
+
+            # 加密TempMail EPIN
+            if self.tempmail_config.epin and not encryption_manager.is_encrypted(self.tempmail_config.epin):
+                self.tempmail_config.epin = encryption_manager.encrypt(self.tempmail_config.epin)
+
+            # 标记已启用加密
+            self.security_config.encrypt_sensitive_data = True
+
+        except Exception as e:
+            raise ValueError(f"加密敏感数据失败: {e}")
+
+    def decrypt_sensitive_data(self, master_password: Optional[str] = None):
+        """
+        解密敏感数据
+
+        Args:
+            master_password: 主密码，如果为None则使用默认加密
+        """
+        try:
+            from utils.encryption import get_encryption_manager
+            encryption_manager = get_encryption_manager(master_password)
+
+            # 解密IMAP密码
+            if self.imap_config.password and encryption_manager.is_encrypted(self.imap_config.password):
+                self.imap_config.password = encryption_manager.decrypt(self.imap_config.password)
+
+            # 解密TempMail EPIN
+            if self.tempmail_config.epin and encryption_manager.is_encrypted(self.tempmail_config.epin):
+                self.tempmail_config.epin = encryption_manager.decrypt(self.tempmail_config.epin)
+
+        except Exception as e:
+            raise ValueError(f"解密敏感数据失败: {e}")
+
+    def get_decrypted_imap_password(self, master_password: Optional[str] = None) -> str:
+        """
+        获取解密后的IMAP密码
+
+        Args:
+            master_password: 主密码
+
+        Returns:
+            解密后的密码
+        """
+        if not self.imap_config.password:
+            return ""
+
+        try:
+            from utils.encryption import get_encryption_manager
+            encryption_manager = get_encryption_manager(master_password)
+            if encryption_manager.is_encrypted(self.imap_config.password):
+                return encryption_manager.decrypt(self.imap_config.password)
+            else:
+                return self.imap_config.password
+        except:
+            return self.imap_config.password
+
+    def get_decrypted_tempmail_epin(self, master_password: Optional[str] = None) -> str:
+        """
+        获取解密后的TempMail EPIN
+
+        Args:
+            master_password: 主密码
+
+        Returns:
+            解密后的EPIN
+        """
+        if not self.tempmail_config.epin:
+            return ""
+
+        try:
+            from utils.encryption import get_encryption_manager
+            encryption_manager = get_encryption_manager(master_password)
+            if encryption_manager.is_encrypted(self.tempmail_config.epin):
+                return encryption_manager.decrypt(self.tempmail_config.epin)
+            else:
+                return self.tempmail_config.epin
+        except:
+            return self.tempmail_config.epin
+
+    def set_master_password(self, password: str) -> tuple:
+        """
+        设置主密码
+
+        Args:
+            password: 主密码
+
+        Returns:
+            (密码哈希, 盐值) 的元组
+        """
+        from utils.encryption import hash_master_password
+
+        password_hash, salt = hash_master_password(password)
+        self.security_config.master_password_hash = f"{password_hash}:{salt}"
+
+        return password_hash, salt
+
+    def verify_master_password(self, password: str) -> bool:
+        """
+        验证主密码
+
+        Args:
+            password: 输入的密码
+
+        Returns:
+            密码是否正确
+        """
+        if not self.security_config.master_password_hash:
+            return False
+
+        try:
+            from utils.encryption import verify_master_password
+
+            parts = self.security_config.master_password_hash.split(':')
+            if len(parts) != 2:
+                return False
+
+            password_hash, salt = parts
+            return verify_master_password(password, password_hash, salt)
+
+        except:
+            return False
+
+    def is_master_password_set(self) -> bool:
+        """是否已设置主密码"""
+        return bool(self.security_config.master_password_hash)
+
+    def get_sensitive_fields(self) -> list:
+        """获取敏感字段列表"""
+        return [
+            "imap_config.password",
+            "tempmail_config.epin"
+        ]
+
     def __str__(self) -> str:
         """字符串表示"""
         return f"ConfigModel(domain={self.get_domain()}, method={self.get_verification_method()})"
