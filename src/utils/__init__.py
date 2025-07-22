@@ -4,7 +4,6 @@
 包含各种工具类和辅助函数
 """
 
-from .config_manager import ConfigManager
 from .logger import get_logger, setup_logger
 
-__all__ = ["setup_logger", "get_logger", "ConfigManager"]
+__all__ = ["setup_logger", "get_logger"]
