@@ -5,12 +5,16 @@
 """
 
 import json
+from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from models.config_model import ConfigModel
 from services.database_service import DatabaseService
 from utils.logger import get_logger
+
+# 安全常量：用于清空敏感数据的占位符
+SENSITIVE_DATA_PLACEHOLDER = "[REDACTED]"
 
 
 class ConfigService:
@@ -110,30 +114,65 @@ class ConfigService:
     def get_config_value(self, key: str, default: Any = None) -> Any:
         """
         获取配置值
-        
+
         Args:
             key: 配置键，支持点分隔的嵌套键
             default: 默认值
-            
+
         Returns:
             配置值
         """
         try:
-            if not self._config_cache:
-                self._config_cache = self.load_config()
-            
-            # 解析嵌套键
-            keys = key.split('.')
-            value = self._config_cache.to_dict()
-            
-            for k in keys:
-                if isinstance(value, dict) and k in value:
-                    value = value[k]
+            # 对于嵌套键，优先从配置模型获取（因为数据库可能没有完整的嵌套键）
+            if '.' in key:
+                if not self._config_cache:
+                    self._config_cache = self.load_config()
+
+                # 解析嵌套键
+                keys = key.split('.')
+                value = self._config_cache.to_dict()
+
+                for k in keys:
+                    if isinstance(value, dict) and k in value:
+                        value = value[k]
+                    else:
+                        # 如果嵌套键不存在，尝试从数据库获取
+                        break
                 else:
-                    return default
-            
-            return value
-            
+                    # 成功获取到嵌套值
+                    return value
+
+            # 尝试从数据库直接获取
+            query = "SELECT config_value, config_type FROM configurations WHERE config_key = ? AND is_active = 1"
+            result = self.db_service.execute_query(query, (key,), fetch_one=True)
+
+            if result:
+                config_value = result["config_value"]
+                config_type = result["config_type"]
+
+                # 根据类型转换值
+                if config_type == "dict" or config_type == "list":
+                    try:
+                        return json.loads(config_value)
+                    except json.JSONDecodeError:
+                        return default
+                elif config_type == "int":
+                    try:
+                        return int(config_value)
+                    except ValueError:
+                        return default
+                elif config_type == "float":
+                    try:
+                        return float(config_value)
+                    except ValueError:
+                        return default
+                elif config_type == "bool":
+                    return config_value.lower() in ("true", "1", "yes")
+                else:
+                    return config_value
+
+            return default
+
         except Exception as e:
             self.logger.error(f"获取配置值失败: {e}")
             return default
@@ -141,38 +180,53 @@ class ConfigService:
     def set_config_value(self, key: str, value: Any) -> bool:
         """
         设置配置值
-        
+
         Args:
             key: 配置键，支持点分隔的嵌套键
             value: 配置值
-            
+
         Returns:
             是否设置成功
         """
         try:
+            # 1. 保存到数据库
+            query = """
+                INSERT OR REPLACE INTO configurations
+                (config_key, config_value, config_type, updated_at, is_active)
+                VALUES (?, ?, ?, ?, 1)
+            """
+
+            # 确定配置值类型
+            config_type = type(value).__name__
+            config_value = json.dumps(value) if isinstance(value, (dict, list)) else str(value)
+
+            affected_rows = self.db_service.execute_update(
+                query,
+                (key, config_value, config_type, datetime.now().isoformat())
+            )
+
+            # 2. 同时更新配置模型缓存（用于嵌套配置）
             if not self._config_cache:
                 self._config_cache = self.load_config()
-            
-            # 更新配置
-            config_dict = self._config_cache.to_dict()
-            keys = key.split('.')
-            
-            # 导航到目标位置
-            current = config_dict
-            for k in keys[:-1]:
-                if k not in current:
-                    current[k] = {}
-                current = current[k]
-            
-            # 设置值
-            current[keys[-1]] = value
-            
-            # 重新创建配置模型
-            self._config_cache = ConfigModel.from_dict(config_dict)
-            
-            # 保存配置
-            return self.save_config(self._config_cache)
-            
+
+            # 更新嵌套配置
+            if '.' in key:
+                config_dict = self._config_cache.to_dict()
+                self._set_nested_value(config_dict, key, value)
+                self._config_cache = ConfigModel.from_dict(config_dict)
+
+                # 保存更新后的完整配置
+                self.save_config(self._config_cache)
+            else:
+                # 清除缓存，强制重新加载
+                self.clear_cache()
+
+            success = affected_rows > 0
+            if success:
+                self.logger.debug(f"设置配置值成功: {key} = {value}")
+
+            return success
+
         except Exception as e:
             self.logger.error(f"设置配置值失败: {e}")
             return False
@@ -196,11 +250,11 @@ class ConfigService:
             # 如果不包含敏感数据，则移除敏感字段
             if not include_sensitive:
                 if "imap_config" in config_dict:
-                    config_dict["imap_config"]["password"] = ""
+                    config_dict["imap_config"]["password"] = SENSITIVE_DATA_PLACEHOLDER
                 if "tempmail_config" in config_dict:
-                    config_dict["tempmail_config"]["epin"] = ""
+                    config_dict["tempmail_config"]["epin"] = SENSITIVE_DATA_PLACEHOLDER
                 if "security_config" in config_dict:
-                    config_dict["security_config"]["master_password_hash"] = ""
+                    config_dict["security_config"]["master_password_hash"] = SENSITIVE_DATA_PLACEHOLDER
             
             return json.dumps(config_dict, ensure_ascii=False, indent=2)
             
@@ -337,7 +391,9 @@ class ConfigService:
                 if config_type == "json" and value:
                     try:
                         value = json.loads(value)
-                    except:
+                    except (json.JSONDecodeError, TypeError) as e:
+                        self.logger.warning(f"解析JSON配置值失败: {key}={value}, 错误: {e}")
+                        # 保持原始字符串值
                         pass
                 
                 # 设置嵌套键值
@@ -402,3 +458,134 @@ class ConfigService:
         for k in keys[:-1]:
             d = d.setdefault(k, {})
         d[keys[-1]] = value
+
+    def validate_config(self, config: ConfigModel) -> Dict[str, str]:
+        """
+        验证配置
+
+        Args:
+            config: 配置模型实例
+
+        Returns:
+            验证错误字典，键为字段名，值为错误信息
+        """
+        try:
+            return config.validate_config()
+        except Exception as e:
+            self.logger.error(f"验证配置失败: {e}")
+            return {"validation_error": str(e)}
+
+    def get_config_summary(self) -> Dict[str, Any]:
+        """
+        获取配置摘要信息
+
+        Returns:
+            配置摘要字典
+        """
+        try:
+            if not self._config_cache:
+                self._config_cache = self.load_config()
+
+            config = self._config_cache
+
+            return {
+                "domain": config.get_domain(),
+                "verification_method": config.get_verification_method(),
+                "domain_configured": config.is_domain_configured(),
+                "encryption_enabled": config.security_config.encrypt_sensitive_data,
+                "master_password_set": config.is_master_password_set(),
+                "last_updated": datetime.now().isoformat()
+            }
+
+        except Exception as e:
+            self.logger.error(f"获取配置摘要失败: {e}")
+            return {}
+
+    def update_domain_config(self, domain: str, enable_wildcard: bool = False) -> bool:
+        """
+        更新域名配置
+
+        Args:
+            domain: 域名
+            enable_wildcard: 是否启用通配符
+
+        Returns:
+            是否更新成功
+        """
+        try:
+            if not self._config_cache:
+                self._config_cache = self.load_config()
+
+            self._config_cache.domain_config.domain = domain
+            self._config_cache.domain_config.enable_wildcard = enable_wildcard
+
+            return self.save_config(self._config_cache)
+
+        except Exception as e:
+            self.logger.error(f"更新域名配置失败: {e}")
+            return False
+
+    def update_verification_method(self, method: str) -> bool:
+        """
+        更新验证方式
+
+        Args:
+            method: 验证方式 ("tempmail" 或 "imap")
+
+        Returns:
+            是否更新成功
+        """
+        try:
+            if method not in ["tempmail", "imap"]:
+                raise ValueError(f"不支持的验证方式: {method}")
+
+            if not self._config_cache:
+                self._config_cache = self.load_config()
+
+            self._config_cache.verification_method = method
+
+            return self.save_config(self._config_cache)
+
+        except Exception as e:
+            self.logger.error(f"更新验证方式失败: {e}")
+            return False
+
+    def clear_cache(self):
+        """清除配置缓存"""
+        self._config_cache = None
+        self.logger.debug("配置缓存已清除")
+
+    def get_config_history(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        获取配置变更历史
+
+        Args:
+            limit: 限制数量
+
+        Returns:
+            配置历史列表
+        """
+        try:
+            query = """
+                SELECT config_key, config_value, updated_at, version
+                FROM configurations
+                WHERE is_active = 1
+                ORDER BY updated_at DESC
+                LIMIT ?
+            """
+            results = self.db_service.execute_query(query, (limit,))
+
+            history = []
+            for row in results or []:
+                history.append({
+                    "key": row["config_key"],
+                    "value": row["config_value"],
+                    "updated_at": row["updated_at"],
+                    "version": row.get("version", 1)
+                })
+
+            return history
+
+        except Exception as e:
+            self.logger.error(f"获取配置历史失败: {e}")
+            return []

@@ -13,13 +13,13 @@ from datetime import datetime
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from models.email_model import EmailModel, VerificationStatus, VerificationMethod, create_email_model
+from models.email_model import EmailModel, EmailStatus, create_email_model
 from models.config_model import ConfigModel, DomainConfig, IMAPConfig, TempMailConfig
 from services.database_service import DatabaseService
 from services.email_generator import EmailGenerator
 from services.email_service import EmailService
 from services.config_service import ConfigService
-from utils.database_validator import DatabaseValidator
+# from utils.database_validator import DatabaseValidator  # 已移除
 from utils.encryption import EncryptionManager
 
 
@@ -73,13 +73,19 @@ class TestPhase1ACore:
 
     def test_database_validation(self, db_service):
         """测试数据库验证"""
-        validator = DatabaseValidator(db_service)
-        results = validator.validate_database()
-        
-        assert results["overall_status"] in ["success", "warning"]
-        assert "tables" in results
-        assert "emails" in results["tables"]
-        assert results["tables"]["emails"]["exists"]
+        # DatabaseValidator 已移除，使用简化的验证方法
+        # validator = DatabaseValidator(db_service)
+        # results = validator.validate_database()
+
+        # 简化的数据库验证
+        tables = ["emails", "tags", "email_tags", "configurations"]
+        for table in tables:
+            table_info = db_service.get_table_info(table)
+            assert len(table_info) > 0, f"表 {table} 不存在或没有列"
+
+        # 检查数据库完整性
+        integrity = db_service.check_database_integrity()
+        assert integrity.get("status") == "ok", f"数据库完整性检查失败: {integrity}"
 
     def test_email_model_creation(self):
         """测试邮箱模型创建"""
@@ -95,7 +101,7 @@ class TestPhase1ACore:
         assert email.prefix == "test"
         assert "测试" in email.tags
         assert email.notes == "测试邮箱"
-        assert email.verification_status == VerificationStatus.PENDING
+        assert email.status == EmailStatus.ACTIVE
 
     def test_email_model_serialization(self):
         """测试邮箱模型序列化"""
@@ -104,12 +110,12 @@ class TestPhase1ACore:
         # 测试转换为字典
         email_dict = email.to_dict()
         assert email_dict["email_address"] == "test@example.com"
-        assert email_dict["verification_status"] == "pending"
-        
+        assert email_dict["status"] == "active"
+
         # 测试从字典创建
         email2 = EmailModel.from_dict(email_dict)
         assert email2.email_address == email.email_address
-        assert email2.verification_status == email.verification_status
+        assert email2.status == email.status
         
         # 测试JSON序列化
         json_str = email.to_json()

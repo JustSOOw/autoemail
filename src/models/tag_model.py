@@ -31,6 +31,7 @@ class TagModel:
 
     # 系统标识
     is_system: bool = False  # 是否为系统预定义标签
+    is_active: bool = True   # 是否激活状态
     sort_order: int = 0  # 排序顺序
 
     # 使用统计

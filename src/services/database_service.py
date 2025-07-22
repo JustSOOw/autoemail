@@ -10,8 +10,14 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import re
 
 from utils.logger import get_logger
+
+# 安全常量：允许的表名白名单
+ALLOWED_TABLE_NAMES = {
+    'emails', 'tags', 'email_tags', 'configurations', 'operation_logs'
+}
 
 
 class DatabaseService:
@@ -94,11 +100,7 @@ class DatabaseService:
                         timestamp_suffix VARCHAR(20),
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         last_used DATETIME,
-                        verification_status VARCHAR(20) DEFAULT 'pending',
-                        verification_code VARCHAR(10),
-                        verification_method VARCHAR(20),
-                        verification_attempts INTEGER DEFAULT 0,
-                        last_verification_at DATETIME,
+                        status VARCHAR(20) DEFAULT 'active',
                         notes TEXT,
                         is_active BOOLEAN DEFAULT 1,
                         metadata TEXT,
@@ -120,6 +122,7 @@ class DatabaseService:
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         is_system BOOLEAN DEFAULT 0,
+                        is_active BOOLEAN DEFAULT 1,
                         sort_order INTEGER DEFAULT 0
                     )
                 """
@@ -197,7 +200,7 @@ class DatabaseService:
             # 邮箱表索引
             "CREATE INDEX IF NOT EXISTS idx_emails_domain ON emails(domain)",
             "CREATE INDEX IF NOT EXISTS idx_emails_created_at ON emails(created_at)",
-            "CREATE INDEX IF NOT EXISTS idx_emails_verification_status ON emails(verification_status)",
+            "CREATE INDEX IF NOT EXISTS idx_emails_status ON emails(status)",
             "CREATE INDEX IF NOT EXISTS idx_emails_is_active ON emails(is_active)",
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_emails_address ON emails(email_address)",
             # 标签表索引
@@ -328,8 +331,19 @@ class DatabaseService:
             表结构信息列表
         """
         try:
+            # 安全检查：验证表名是否在白名单中
+            if table_name not in ALLOWED_TABLE_NAMES:
+                self.logger.error(f"不允许的表名: {table_name}")
+                return []
+
+            # 额外的安全检查：确保表名只包含字母、数字和下划线
+            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table_name):
+                self.logger.error(f"表名格式不安全: {table_name}")
+                return []
+
             with self.get_cursor() as cursor:
-                cursor.execute(f"PRAGMA table_info({table_name})")
+                # 使用参数化查询（虽然PRAGMA不支持参数，但我们已经验证了表名）
+                cursor.execute(f"PRAGMA table_info({table_name})")  # nosec B608
                 columns = cursor.fetchall()
 
                 return [
@@ -459,3 +473,186 @@ class DatabaseService:
     def __del__(self):
         """析构函数"""
         self.close()
+
+    @contextmanager
+    def transaction(self):
+        """
+        事务上下文管理器
+
+        Yields:
+            数据库连接对象
+        """
+        conn = self.get_connection()
+        try:
+            yield conn
+            conn.commit()
+            self.logger.debug("事务提交成功")
+        except Exception as e:
+            conn.rollback()
+            self.logger.error(f"事务回滚: {e}")
+            raise
+
+    def execute_batch(self, query: str, params_list: List[tuple]) -> int:
+        """
+        批量执行SQL语句
+
+        Args:
+            query: SQL语句
+            params_list: 参数列表
+
+        Returns:
+            影响的行数
+        """
+        if not params_list:
+            return 0
+
+        try:
+            with self.transaction() as conn:
+                cursor = conn.cursor()
+                cursor.executemany(query, params_list)
+                affected_rows = cursor.rowcount
+
+                self.logger.debug(f"批量执行完成，影响行数: {affected_rows}")
+                return affected_rows
+
+        except Exception as e:
+            self.logger.error(f"批量执行失败: {e}")
+            return 0
+
+    def optimize_database(self) -> bool:
+        """
+        优化数据库性能
+
+        Returns:
+            是否优化成功
+        """
+        try:
+            with self.get_cursor() as cursor:
+                # 分析查询计划
+                cursor.execute("ANALYZE")
+
+                # 重建索引
+                cursor.execute("REINDEX")
+
+                # 更新统计信息
+                cursor.execute("PRAGMA optimize")
+
+                self.logger.info("数据库优化完成")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"数据库优化失败: {e}")
+            return False
+
+    def check_database_integrity(self) -> Dict[str, Any]:
+        """
+        检查数据库完整性
+
+        Returns:
+            完整性检查结果
+        """
+        try:
+            result = {"status": "unknown", "errors": [], "warnings": []}
+
+            with self.get_cursor() as cursor:
+                # 完整性检查
+                cursor.execute("PRAGMA integrity_check")
+                integrity_result = cursor.fetchall()
+
+                if len(integrity_result) == 1 and integrity_result[0][0] == "ok":
+                    result["status"] = "ok"
+                else:
+                    result["status"] = "error"
+                    result["errors"] = [row[0] for row in integrity_result]
+
+                # 外键检查
+                cursor.execute("PRAGMA foreign_key_check")
+                fk_errors = cursor.fetchall()
+                if fk_errors:
+                    result["warnings"].extend([f"外键错误: {row}" for row in fk_errors])
+
+                self.logger.info(f"数据库完整性检查完成: {result['status']}")
+                return result
+
+        except Exception as e:
+            self.logger.error(f"数据库完整性检查失败: {e}")
+            return {"status": "error", "errors": [str(e)], "warnings": []}
+
+    def get_connection_info(self) -> Dict[str, Any]:
+        """
+        获取数据库连接信息
+
+        Returns:
+            连接信息字典
+        """
+        try:
+            info = {
+                "database_path": str(self.db_path),
+                "database_size": self.db_path.stat().st_size if self.db_path.exists() else 0,
+                "connected": hasattr(self._local, "connection"),
+                "thread_id": threading.current_thread().ident
+            }
+
+            if hasattr(self._local, "connection"):
+                with self.get_cursor() as cursor:
+                    # SQLite版本
+                    cursor.execute("SELECT sqlite_version()")
+                    info["sqlite_version"] = cursor.fetchone()[0]
+
+                    # 数据库页面大小
+                    cursor.execute("PRAGMA page_size")
+                    info["page_size"] = cursor.fetchone()[0]
+
+                    # 数据库页面数量
+                    cursor.execute("PRAGMA page_count")
+                    info["page_count"] = cursor.fetchone()[0]
+
+                    # WAL模式状态
+                    cursor.execute("PRAGMA journal_mode")
+                    info["journal_mode"] = cursor.fetchone()[0]
+
+            return info
+
+        except Exception as e:
+            self.logger.error(f"获取连接信息失败: {e}")
+            return {"error": str(e)}
+
+    def reset_database(self) -> bool:
+        """
+        重置数据库（删除所有数据但保留结构）
+
+        Returns:
+            是否重置成功
+        """
+        try:
+            with self.transaction() as conn:
+                cursor = conn.cursor()
+
+                # 获取所有表名
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+                tables = [row[0] for row in cursor.fetchall()]
+
+                # 删除所有表数据
+                for table in tables:
+                    # 安全检查：验证表名是否在白名单中
+                    if table not in ALLOWED_TABLE_NAMES:
+                        self.logger.warning(f"跳过不在白名单中的表: {table}")
+                        continue
+
+                    # 额外的安全检查：确保表名只包含字母、数字和下划线
+                    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table):
+                        self.logger.warning(f"跳过格式不安全的表名: {table}")
+                        continue
+
+                    cursor.execute(f"DELETE FROM {table}")  # nosec B608
+                    self.logger.debug(f"清空表: {table}")
+
+                # 重新插入系统数据
+                self._insert_system_data(cursor)
+
+                self.logger.info("数据库重置完成")
+                return True
+
+        except Exception as e:
+            self.logger.error(f"数据库重置失败: {e}")
+            return False
