@@ -15,7 +15,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 from models.config_model import ConfigModel
-from models.email_model import EmailModel, VerificationStatus
+from models.email_model import EmailModel, EmailStatus
 from models.tag_model import TagModel
 from services.database_service import DatabaseService
 from utils.config_manager import ConfigManager
@@ -32,7 +32,7 @@ class TestEmailModel(unittest.TestCase):
         self.assertEqual(email.domain, "example.com")
         self.assertEqual(email.prefix, "test")
         self.assertEqual(email.notes, "测试邮箱")
-        self.assertEqual(email.verification_status, VerificationStatus.PENDING)
+        self.assertEqual(email.status, EmailStatus.ACTIVE)
         self.assertIsNotNone(email.created_at)
 
     def test_email_model_tags(self):

@@ -73,17 +73,49 @@ class EmailModel:
         self.last_used = datetime.now()
         self.updated_at = datetime.now()
 
-    def add_tag(self, tag: str):
-        """添加标签"""
+    def add_tag(self, tag: str) -> bool:
+        """
+        添加标签
+
+        Args:
+            tag: 标签名称
+
+        Returns:
+            是否添加成功（如果标签已存在则返回False）
+        """
         if tag and tag not in self.tags:
             self.tags.append(tag)
             self.updated_at = datetime.now()
+            return True
+        return False
 
-    def remove_tag(self, tag: str):
-        """移除标签"""
+    def remove_tag(self, tag: str) -> bool:
+        """
+        移除标签
+
+        Args:
+            tag: 标签名称
+
+        Returns:
+            是否移除成功
+        """
         if tag in self.tags:
             self.tags.remove(tag)
             self.updated_at = datetime.now()
+            return True
+        return False
+
+    def has_tag(self, tag: str) -> bool:
+        """
+        检查是否有指定标签
+
+        Args:
+            tag: 标签名称
+
+        Returns:
+            是否包含该标签
+        """
+        return tag in self.tags
 
     def set_status(self, status: EmailStatus):
         """设置状态"""
