@@ -261,8 +261,17 @@ def test_models():
 
 def main():
     """主函数"""
+    # 设置UTF-8编码输出，避免Windows下的编码问题
+    import sys
+    if sys.platform.startswith('win'):
+        import os
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
+
     print("=" * 60)
-    print("🚀 域名邮箱管理器 - 测试运行器")
+    try:
+        print("🚀 域名邮箱管理器 - 测试运行器")
+    except UnicodeEncodeError:
+        print("Domain Email Manager - Test Runner")
     print("=" * 60)
 
     # 测试步骤
