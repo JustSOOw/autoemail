@@ -680,3 +680,596 @@ class EmailService:
             writer.writerow(row)
 
         return output.getvalue()
+
+    # ==================== Phase 3A: 高级搜索和筛选功能 ====================
+
+    def advanced_search_emails(self,
+                              keyword: str = "",
+                              domain: str = "",
+                              status: Optional[EmailStatus] = None,
+                              tags: Optional[List[str]] = None,
+                              date_from: Optional[str] = None,
+                              date_to: Optional[str] = None,
+                              created_by: str = "",
+                              has_notes: Optional[bool] = None,
+                              page: int = 1,
+                              page_size: int = 20,
+                              sort_by: str = "created_at",
+                              sort_order: str = "desc") -> Dict[str, Any]:
+        """
+        高级搜索邮箱（支持分页和多条件筛选）
+
+        Args:
+            keyword: 搜索关键词（邮箱地址、备注）
+            domain: 域名筛选
+            status: 状态筛选
+            tags: 标签筛选（包含任一标签）
+            date_from: 开始日期 (YYYY-MM-DD)
+            date_to: 结束日期 (YYYY-MM-DD)
+            created_by: 创建者筛选
+            has_notes: 是否有备注
+            page: 页码（从1开始）
+            page_size: 每页大小
+            sort_by: 排序字段 ("created_at", "email_address", "domain", "status")
+            sort_order: 排序方向 ("asc", "desc")
+
+        Returns:
+            搜索结果和分页信息
+        """
+        try:
+            # 计算偏移量
+            offset = (page - 1) * page_size
+
+            # 构建查询条件
+            where_conditions = ["e.is_active = 1"]
+            params = []
+
+            if keyword:
+                where_conditions.append("(e.email_address LIKE ? OR e.notes LIKE ?)")
+                params.extend([f"%{keyword}%", f"%{keyword}%"])
+
+            if domain:
+                where_conditions.append("e.domain = ?")
+                params.append(domain)
+
+            if status:
+                where_conditions.append("e.status = ?")
+                params.append(status.value)
+
+            if created_by:
+                where_conditions.append("e.created_by = ?")
+                params.append(created_by)
+
+            if has_notes is not None:
+                if has_notes:
+                    where_conditions.append("e.notes IS NOT NULL AND e.notes != ''")
+                else:
+                    where_conditions.append("(e.notes IS NULL OR e.notes = '')")
+
+            if date_from:
+                where_conditions.append("DATE(e.created_at) >= ?")
+                params.append(date_from)
+
+            if date_to:
+                where_conditions.append("DATE(e.created_at) <= ?")
+                params.append(date_to)
+
+            # 标签筛选
+            if tags:
+                tag_conditions = []
+                for tag in tags:
+                    tag_conditions.append("""
+                        EXISTS (
+                            SELECT 1 FROM email_tags et
+                            JOIN tags t ON et.tag_id = t.id
+                            WHERE et.email_id = e.id AND t.name = ?
+                        )
+                    """)
+                    params.append(tag)
+                where_conditions.append(f"({' OR '.join(tag_conditions)})")
+
+            where_clause = " AND ".join(where_conditions)
+
+            # 构建排序子句
+            sort_column = "e.created_at"
+            if sort_by == "email_address":
+                sort_column = "e.email_address"
+            elif sort_by == "domain":
+                sort_column = "e.domain"
+            elif sort_by == "status":
+                sort_column = "e.status"
+
+            sort_direction = "ASC" if sort_order.lower() == "asc" else "DESC"
+
+            # 查询总数
+            count_query = f"""
+                SELECT COUNT(*) as total
+                FROM emails e
+                WHERE {where_clause}
+            """
+            count_result = self.db_service.execute_query(count_query, params, fetch_one=True)
+            total = count_result["total"] if count_result else 0
+
+            # 查询数据
+            data_query = f"""
+                SELECT e.*
+                FROM emails e
+                WHERE {where_clause}
+                ORDER BY {sort_column} {sort_direction}
+                LIMIT ? OFFSET ?
+            """
+            params.extend([page_size, offset])
+
+            results = self.db_service.execute_query(data_query, params)
+
+            # 转换为邮箱模型
+            emails = [self._row_to_email_model(row) for row in results or []]
+
+            # 计算分页信息
+            total_pages = (total + page_size - 1) // page_size
+
+            return {
+                "emails": emails,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_items": total,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_prev": page > 1
+                },
+                "filters": {
+                    "keyword": keyword,
+                    "domain": domain,
+                    "status": status.value if status else None,
+                    "tags": tags,
+                    "date_from": date_from,
+                    "date_to": date_to,
+                    "created_by": created_by,
+                    "has_notes": has_notes,
+                    "sort_by": sort_by,
+                    "sort_order": sort_order
+                }
+            }
+
+        except Exception as e:
+            self.logger.error(f"高级搜索邮箱失败: {e}")
+            return {
+                "emails": [],
+                "pagination": {
+                    "current_page": 1,
+                    "page_size": page_size,
+                    "total_items": 0,
+                    "total_pages": 0,
+                    "has_next": False,
+                    "has_prev": False
+                },
+                "filters": {}
+            }
+
+    def get_emails_by_multiple_tags(self, tag_names: List[str],
+                                   match_all: bool = True,
+                                   limit: int = 100) -> List[EmailModel]:
+        """
+        根据多个标签获取邮箱
+
+        Args:
+            tag_names: 标签名称列表
+            match_all: True=必须包含所有标签，False=包含任一标签
+            limit: 限制数量
+
+        Returns:
+            邮箱模型列表
+        """
+        try:
+            if not tag_names:
+                return []
+
+            if match_all:
+                # 必须包含所有标签
+                query = """
+                    SELECT e.* FROM emails e
+                    WHERE e.is_active = 1
+                """
+
+                for i, tag_name in enumerate(tag_names):
+                    query += f"""
+                        AND EXISTS (
+                            SELECT 1 FROM email_tags et{i}
+                            JOIN tags t{i} ON et{i}.tag_id = t{i}.id
+                            WHERE et{i}.email_id = e.id AND t{i}.name = ?
+                        )
+                    """
+
+                query += " ORDER BY e.created_at DESC LIMIT ?"
+                params = tag_names + [limit]
+            else:
+                # 包含任一标签
+                placeholders = ",".join(["?" for _ in tag_names])
+                query = f"""
+                    SELECT DISTINCT e.* FROM emails e
+                    JOIN email_tags et ON e.id = et.email_id
+                    JOIN tags t ON et.tag_id = t.id
+                    WHERE e.is_active = 1 AND t.name IN ({placeholders})
+                    ORDER BY e.created_at DESC
+                    LIMIT ?
+                """
+                params = tag_names + [limit]
+
+            results = self.db_service.execute_query(query, params)
+            return [self._row_to_email_model(row) for row in results or []]
+
+        except Exception as e:
+            self.logger.error(f"根据多个标签获取邮箱失败: {e}")
+            return []
+
+    def get_emails_by_date_range(self,
+                                start_date: str,
+                                end_date: str,
+                                date_field: str = "created_at",
+                                limit: int = 100) -> List[EmailModel]:
+        """
+        根据日期范围获取邮箱
+
+        Args:
+            start_date: 开始日期 (YYYY-MM-DD)
+            end_date: 结束日期 (YYYY-MM-DD)
+            date_field: 日期字段 ("created_at", "last_used", "updated_at")
+            limit: 限制数量
+
+        Returns:
+            邮箱模型列表
+        """
+        try:
+            # 验证日期字段
+            valid_fields = ["created_at", "last_used", "updated_at"]
+            if date_field not in valid_fields:
+                date_field = "created_at"
+
+            query = f"""
+                SELECT * FROM emails
+                WHERE is_active = 1
+                AND DATE({date_field}) >= ?
+                AND DATE({date_field}) <= ?
+                ORDER BY {date_field} DESC
+                LIMIT ?
+            """
+
+            results = self.db_service.execute_query(query, (start_date, end_date, limit))
+            return [self._row_to_email_model(row) for row in results or []]
+
+        except Exception as e:
+            self.logger.error(f"根据日期范围获取邮箱失败: {e}")
+            return []
+
+    def get_email_statistics_by_period(self,
+                                      period: str = "month",
+                                      limit: int = 12) -> List[Dict[str, Any]]:
+        """
+        获取按时间段的邮箱统计
+
+        Args:
+            period: 时间段 ("day", "week", "month", "year")
+            limit: 限制数量
+
+        Returns:
+            统计数据列表
+        """
+        try:
+            # 根据时间段构建查询
+            if period == "day":
+                date_format = "%Y-%m-%d"
+                group_by = "DATE(created_at)"
+            elif period == "week":
+                date_format = "%Y-W%W"
+                group_by = "strftime('%Y-W%W', created_at)"
+            elif period == "year":
+                date_format = "%Y"
+                group_by = "strftime('%Y', created_at)"
+            else:  # month
+                date_format = "%Y-%m"
+                group_by = "strftime('%Y-%m', created_at)"
+
+            query = f"""
+                SELECT
+                    {group_by} as period,
+                    COUNT(*) as total_count,
+                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count,
+                    SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_count,
+                    SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) as archived_count
+                FROM emails
+                WHERE is_active = 1
+                GROUP BY {group_by}
+                ORDER BY period DESC
+                LIMIT ?
+            """
+
+            results = self.db_service.execute_query(query, (limit,))
+
+            return [
+                {
+                    "period": row["period"],
+                    "total_count": row["total_count"],
+                    "active_count": row["active_count"],
+                    "inactive_count": row["inactive_count"],
+                    "archived_count": row["archived_count"]
+                }
+                for row in results or []
+            ]
+
+        except Exception as e:
+            self.logger.error(f"获取时间段统计失败: {e}")
+            return []
+
+    def search_emails_with_filters(self, filters: Dict[str, Any]) -> List[EmailModel]:
+        """
+        使用过滤器字典搜索邮箱
+
+        Args:
+            filters: 过滤条件字典
+
+        Returns:
+            邮箱模型列表
+        """
+        try:
+            # 提取过滤条件
+            keyword = filters.get("keyword", "")
+            domain = filters.get("domain", "")
+            status = filters.get("status")
+            tags = filters.get("tags", [])
+            date_from = filters.get("date_from")
+            date_to = filters.get("date_to")
+            created_by = filters.get("created_by", "")
+            has_notes = filters.get("has_notes")
+            limit = filters.get("limit", 100)
+
+            # 转换状态
+            email_status = None
+            if status:
+                try:
+                    email_status = EmailStatus(status)
+                except ValueError:
+                    pass
+
+            # 使用高级搜索
+            result = self.advanced_search_emails(
+                keyword=keyword,
+                domain=domain,
+                status=email_status,
+                tags=tags,
+                date_from=date_from,
+                date_to=date_to,
+                created_by=created_by,
+                has_notes=has_notes,
+                page=1,
+                page_size=limit
+            )
+
+            return result.get("emails", [])
+
+        except Exception as e:
+            self.logger.error(f"使用过滤器搜索邮箱失败: {e}")
+            return []
+
+    # ==================== Phase 3A: 高级数据导出功能 ====================
+
+    def export_emails_advanced(self,
+                              format_type: str = "json",
+                              filters: Optional[Dict[str, Any]] = None,
+                              fields: Optional[List[str]] = None,
+                              include_tags: bool = True,
+                              include_metadata: bool = False) -> str:
+        """
+        高级邮箱数据导出
+
+        Args:
+            format_type: 导出格式 ("json", "csv", "xlsx")
+            filters: 过滤条件
+            fields: 要导出的字段列表
+            include_tags: 是否包含标签信息
+            include_metadata: 是否包含元数据
+
+        Returns:
+            导出的数据字符串
+        """
+        try:
+            # 获取邮箱列表
+            emails = self.search_emails_with_filters(filters or {})
+
+            if format_type.lower() == "csv":
+                return self._export_to_csv_advanced(emails, fields, include_tags, include_metadata)
+            elif format_type.lower() == "xlsx":
+                return self._export_to_xlsx(emails, fields, include_tags, include_metadata)
+            else:
+                return self._export_to_json_advanced(emails, fields, include_tags, include_metadata)
+
+        except Exception as e:
+            self.logger.error(f"高级导出邮箱数据失败: {e}")
+            raise
+
+    def _export_to_json_advanced(self,
+                                emails: List[EmailModel],
+                                fields: Optional[List[str]] = None,
+                                include_tags: bool = True,
+                                include_metadata: bool = False) -> str:
+        """高级JSON导出"""
+        import json
+
+        try:
+            # 默认字段
+            default_fields = [
+                "id", "email_address", "domain", "prefix", "timestamp_suffix",
+                "created_at", "last_used", "updated_at", "status", "notes", "created_by"
+            ]
+
+            export_fields = fields or default_fields
+            export_data = []
+
+            for email in emails:
+                email_data = {}
+
+                # 导出指定字段
+                for field in export_fields:
+                    if hasattr(email, field):
+                        value = getattr(email, field)
+                        if isinstance(value, datetime):
+                            value = value.isoformat()
+                        elif hasattr(value, 'value'):  # Enum类型
+                            value = value.value
+                        email_data[field] = value
+
+                # 包含标签
+                if include_tags:
+                    email_data["tags"] = email.tags
+
+                # 包含元数据
+                if include_metadata and email.metadata:
+                    email_data["metadata"] = email.metadata
+
+                export_data.append(email_data)
+
+            return json.dumps(export_data, ensure_ascii=False, indent=2)
+
+        except Exception as e:
+            self.logger.error(f"JSON高级导出失败: {e}")
+            return ""
+
+    def _export_to_csv_advanced(self,
+                               emails: List[EmailModel],
+                               fields: Optional[List[str]] = None,
+                               include_tags: bool = True,
+                               include_metadata: bool = False) -> str:
+        """高级CSV导出"""
+        import csv
+        import io
+
+        try:
+            output = io.StringIO()
+
+            # 默认字段
+            default_fields = [
+                "id", "email_address", "domain", "prefix", "timestamp_suffix",
+                "created_at", "last_used", "updated_at", "status", "notes", "created_by"
+            ]
+
+            export_fields = fields or default_fields
+
+            # 添加标签和元数据字段
+            if include_tags:
+                export_fields.append("tags")
+            if include_metadata:
+                export_fields.append("metadata")
+
+            writer = csv.DictWriter(output, fieldnames=export_fields)
+            writer.writeheader()
+
+            for email in emails:
+                row_data = {}
+
+                # 导出指定字段
+                for field in export_fields:
+                    if field == "tags":
+                        row_data[field] = ",".join(email.tags) if email.tags else ""
+                    elif field == "metadata":
+                        row_data[field] = json.dumps(email.metadata) if email.metadata else ""
+                    elif hasattr(email, field):
+                        value = getattr(email, field)
+                        if isinstance(value, datetime):
+                            value = value.isoformat()
+                        elif hasattr(value, 'value'):  # Enum类型
+                            value = value.value
+                        row_data[field] = value
+                    else:
+                        row_data[field] = ""
+
+                writer.writerow(row_data)
+
+            return output.getvalue()
+
+        except Exception as e:
+            self.logger.error(f"CSV高级导出失败: {e}")
+            return ""
+
+    def _export_to_xlsx(self,
+                       emails: List[EmailModel],
+                       fields: Optional[List[str]] = None,
+                       include_tags: bool = True,
+                       include_metadata: bool = False) -> bytes:
+        """导出为Excel格式"""
+        try:
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill
+
+            # 创建工作簿
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "邮箱数据"
+
+            # 默认字段
+            default_fields = [
+                "id", "email_address", "domain", "prefix", "timestamp_suffix",
+                "created_at", "last_used", "updated_at", "status", "notes", "created_by"
+            ]
+
+            export_fields = fields or default_fields
+
+            # 添加标签和元数据字段
+            if include_tags:
+                export_fields.append("tags")
+            if include_metadata:
+                export_fields.append("metadata")
+
+            # 写入表头
+            header_font = Font(bold=True)
+            header_fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+
+            for col, field in enumerate(export_fields, 1):
+                cell = ws.cell(row=1, column=col, value=field)
+                cell.font = header_font
+                cell.fill = header_fill
+
+            # 写入数据
+            for row, email in enumerate(emails, 2):
+                for col, field in enumerate(export_fields, 1):
+                    if field == "tags":
+                        value = ",".join(email.tags) if email.tags else ""
+                    elif field == "metadata":
+                        value = json.dumps(email.metadata) if email.metadata else ""
+                    elif hasattr(email, field):
+                        value = getattr(email, field)
+                        if isinstance(value, datetime):
+                            value = value.isoformat()
+                        elif hasattr(value, 'value'):  # Enum类型
+                            value = value.value
+                    else:
+                        value = ""
+
+                    ws.cell(row=row, column=col, value=value)
+
+            # 调整列宽
+            for column in ws.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                ws.column_dimensions[column_letter].width = adjusted_width
+
+            # 保存到字节流
+            from io import BytesIO
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+
+            return output.getvalue()
+
+        except ImportError:
+            self.logger.error("openpyxl库未安装，无法导出Excel格式")
+            raise ValueError("Excel导出功能需要安装openpyxl库")
+        except Exception as e:
+            self.logger.error(f"Excel导出失败: {e}")
+            raise

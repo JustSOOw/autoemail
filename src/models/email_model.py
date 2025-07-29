@@ -250,17 +250,19 @@ def create_email_model(email_address: str,
                       tags: Optional[List[str]] = None,
                       notes: str = "",
                       status: EmailStatus = EmailStatus.ACTIVE,
-                      metadata: Optional[Dict[str, Any]] = None) -> EmailModel:
+                      metadata: Optional[Dict[str, Any]] = None,
+                      created_by: str = "system") -> EmailModel:
     """
     创建邮箱模型的便捷函数
-    
+
     Args:
         email_address: 邮箱地址
         tags: 标签列表
         notes: 备注
         status: 状态
         metadata: 元数据
-        
+        created_by: 创建者
+
     Returns:
         邮箱模型实例
     """
@@ -269,7 +271,8 @@ def create_email_model(email_address: str,
         tags=tags or [],
         notes=notes,
         status=status,
-        metadata=metadata or {}
+        metadata=metadata or {},
+        created_by=created_by
     )
 
 

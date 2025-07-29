@@ -306,6 +306,33 @@ python -m pytest tests/test_basic.py -v
 python -m pytest tests/ --cov=src --cov-report=html
 ```
 
+## 📚 API文档
+
+### 后端接口文档 (Phase 3A)
+
+为前端开发提供完整的后端API接口文档：
+
+- **[API接口总结](docs/api-summary-for-frontend.md)** - 快速参考所有接口
+- **[前端API使用指南](docs/frontend-api-guide.md)** - 详细使用说明和示例
+- **[完整API规范](docs/api-specification.md)** - 技术规范文档
+
+#### 核心功能接口
+
+- 🔍 **高级搜索**: `advanced_search_emails()` - 支持多条件筛选和分页
+- 🏷️ **标签管理**: `TagService` - 完整的标签CRUD和关联操作
+- ⚡ **批量操作**: `BatchService` - 邮箱和标签的批量处理
+- 📤 **数据导出**: `ExportService` - 多格式数据导出功能
+- 🔒 **安全功能**: 加密、脱敏、安全配置管理
+
+#### 接口特性
+
+- **35+ 核心接口**: 覆盖所有业务功能
+- **分页查询**: 支持大数据量处理
+- **多条件筛选**: 灵活的搜索和筛选
+- **批量操作**: 高效的批量处理
+- **数据导出**: JSON/CSV/Excel多格式支持
+- **安全保护**: 数据加密和日志脱敏
+
 ## 🎨 UI界面特性
 
 ### 现代化QML界面
