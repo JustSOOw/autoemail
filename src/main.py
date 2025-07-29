@@ -52,7 +52,7 @@ class ApplicationManager:
 
     def __init__(self):
         self.app: Optional[QApplication] = None
-        self.main_window: Optional[MainWindow] = None
+        self.main_window: Optional[ModernMainWindow] = None
         self.logger = None
         self.config_manager: Optional[ConfigManager] = None
         self.database_service: Optional[DatabaseService] = None
