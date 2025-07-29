@@ -3,6 +3,8 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls.Material 2.15
 import EmailManager 1.0
+import "pages"
+import "components"
 
 ApplicationWindow {
     id: window
@@ -18,10 +20,77 @@ ApplicationWindow {
     Material.primary: Material.Blue
     Material.accent: Material.Cyan
 
+    // 键盘快捷键支持
+    focus: true
+
+    Keys.onPressed: function(event) {
+        // Ctrl+数字键切换页面
+        if (event.modifiers & Qt.ControlModifier) {
+            switch (event.key) {
+                case Qt.Key_1:
+                    tabBar.currentIndex = 0
+                    event.accepted = true
+                    break
+                case Qt.Key_2:
+                    tabBar.currentIndex = 1
+                    event.accepted = true
+                    break
+                case Qt.Key_3:
+                    tabBar.currentIndex = 2
+                    event.accepted = true
+                    break
+                case Qt.Key_4:
+                    tabBar.currentIndex = 3
+                    event.accepted = true
+                    break
+                case Qt.Key_R:
+                    // Ctrl+R 刷新当前页面
+                    refreshCurrentPage()
+                    event.accepted = true
+                    break
+                case Qt.Key_N:
+                    // Ctrl+N 生成新邮箱
+                    if (tabBar.currentIndex === 0 && window.isConfigured) {
+                        emailGenerationPage.generateButton.clicked()
+                    }
+                    event.accepted = true
+                    break
+                case Qt.Key_D:
+                    // Ctrl+D 显示/隐藏调试面板
+                    debugPanel.toggle()
+                    event.accepted = true
+                    break
+            }
+        }
+
+        // F5 刷新
+        if (event.key === Qt.Key_F5) {
+            refreshCurrentPage()
+            event.accepted = true
+        }
+
+        // Escape 清除选择或关闭对话框
+        if (event.key === Qt.Key_Escape) {
+            if (tabBar.currentIndex === 1) {
+                emailManagementPage.clearSelection()
+            }
+            event.accepted = true
+        }
+    }
+
     // 应用程序状态
     property bool isConfigured: configController ? configController.isConfigured() : false
     property string currentDomain: emailController ? emailController.getCurrentDomain() : "未配置"
     property var statistics: emailController ? emailController.getStatistics() : ({})
+
+    // 全局状态管理
+    property var globalState: ({
+        emailList: [],
+        tagList: [],
+        currentPage: 1,
+        totalPages: 1,
+        isLoading: false
+    })
 
     // 初始化
     Component.onCompleted: {
@@ -32,6 +101,227 @@ ApplicationWindow {
         if (emailController) {
             emailController.refreshEmailList()
         }
+
+        // 初始化全局状态
+        initializeGlobalState()
+    }
+
+    // 页面切换处理
+    function handlePageSwitch(pageIndex) {
+        switch (pageIndex) {
+            case 0: // 邮箱生成页面
+                mainLogArea.addLog("📄 切换到邮箱生成页面")
+                // 刷新统计信息
+                if (emailController) {
+                    window.statistics = emailController.getStatistics()
+                }
+                break
+
+            case 1: // 邮箱管理页面
+                mainLogArea.addLog("📄 切换到邮箱管理页面")
+                // 刷新邮箱列表
+                if (emailController) {
+                    emailController.refreshEmailList()
+                }
+                break
+
+            case 2: // 标签管理页面
+                mainLogArea.addLog("📄 切换到标签管理页面")
+                // 刷新标签列表
+                refreshTagList()
+                break
+
+            case 3: // 配置管理页面
+                mainLogArea.addLog("📄 切换到配置管理页面")
+                // 加载最新配置
+                if (configController) {
+                    configController.loadConfig()
+                }
+                break
+        }
+    }
+
+    // 初始化全局状态
+    function initializeGlobalState() {
+        window.globalState = {
+            emailList: [],
+            tagList: [],
+            currentPage: 1,
+            totalPages: 1,
+            isLoading: false,
+            selectedEmails: [],
+            lastRefreshTime: new Date()
+        }
+    }
+
+    // 刷新标签列表
+    function refreshTagList() {
+        // 这里应该调用后端API获取标签列表
+        // 暂时使用模拟数据
+        window.globalState.tagList = [
+            {id: 1, name: "工作", description: "工作相关邮箱", color: "#2196F3", icon: "💼", usage_count: 5},
+            {id: 2, name: "个人", description: "个人使用邮箱", color: "#4CAF50", icon: "👤", usage_count: 3},
+            {id: 3, name: "测试", description: "测试用途邮箱", color: "#FF9800", icon: "🧪", usage_count: 2}
+        ]
+    }
+
+    // 刷新当前页面
+    function refreshCurrentPage() {
+        switch (tabBar.currentIndex) {
+            case 0: // 邮箱生成页面
+                if (emailController) {
+                    window.statistics = emailController.getStatistics()
+                }
+                globalStatusMessage.showInfo("邮箱生成页面已刷新")
+                break
+
+            case 1: // 邮箱管理页面
+                if (emailController) {
+                    emailController.refreshEmailList()
+                }
+                emailManagementPage.clearSelection()
+                globalStatusMessage.showInfo("邮箱列表已刷新")
+                break
+
+            case 2: // 标签管理页面
+                refreshTagList()
+                globalStatusMessage.showInfo("标签列表已刷新")
+                break
+
+            case 3: // 配置管理页面
+                if (configController) {
+                    configController.loadConfig()
+                }
+                globalStatusMessage.showInfo("配置已重新加载")
+                break
+        }
+    }
+
+    // 导航到指定页面
+    function navigateToPage(pageIndex, showMessage) {
+        if (pageIndex >= 0 && pageIndex < 4) {
+            tabBar.currentIndex = pageIndex
+            if (showMessage) {
+                var pageNames = ["邮箱生成", "邮箱管理", "标签管理", "配置管理"]
+                globalStatusMessage.showInfo("已切换到" + pageNames[pageIndex] + "页面")
+            }
+        }
+    }
+
+    // 检查页面访问权限
+    function checkPageAccess(pageIndex) {
+        // 邮箱生成和管理页面需要配置完成
+        if ((pageIndex === 0 || pageIndex === 1) && !window.isConfigured) {
+            globalStatusMessage.showWarning("请先完成域名配置")
+            navigateToPage(3, false) // 跳转到配置页面
+            return false
+        }
+        return true
+    }
+
+    // 错误处理
+    function handleError(errorType, errorMessage, context) {
+        console.error("错误类型:", errorType, "错误信息:", errorMessage, "上下文:", context)
+
+        // 记录错误日志
+        mainLogArea.addLog("❌ 错误: " + errorType + " - " + errorMessage)
+
+        // 显示用户友好的错误消息
+        var userMessage = getUserFriendlyErrorMessage(errorType, errorMessage)
+        globalStatusMessage.showError(userMessage)
+
+        // 根据错误类型执行相应的恢复操作
+        performErrorRecovery(errorType, context)
+    }
+
+    // 获取用户友好的错误消息
+    function getUserFriendlyErrorMessage(errorType, errorMessage) {
+        var errorMap = {
+            "网络错误": "网络连接失败，请检查网络设置",
+            "配置错误": "配置信息有误，请检查配置设置",
+            "验证失败": "验证失败，请重试",
+            "权限错误": "权限不足，请检查权限设置",
+            "数据错误": "数据处理失败，请重试"
+        }
+
+        return errorMap[errorType] || errorMessage || "发生未知错误"
+    }
+
+    // 执行错误恢复
+    function performErrorRecovery(errorType, context) {
+        switch (errorType) {
+            case "配置错误":
+                // 跳转到配置页面
+                navigateToPage(3, false)
+                break
+
+            case "网络错误":
+                // 重试网络操作
+                Qt.callLater(function() {
+                    if (context && context.retryFunction) {
+                        context.retryFunction()
+                    }
+                })
+                break
+
+            case "数据错误":
+                // 刷新数据
+                refreshCurrentPage()
+                break
+        }
+    }
+
+    // 性能监控
+    property var performanceMetrics: ({
+        pageLoadTimes: {},
+        apiCallTimes: {},
+        renderTimes: {}
+    })
+
+    function recordPerformanceMetric(category, operation, startTime) {
+        var endTime = Date.now()
+        var duration = endTime - startTime
+
+        if (!performanceMetrics[category]) {
+            performanceMetrics[category] = {}
+        }
+
+        performanceMetrics[category][operation] = duration
+
+        // 记录性能日志
+        if (duration > 1000) { // 超过1秒的操作
+            console.warn("性能警告:", category, operation, "耗时", duration, "ms")
+        }
+    }
+
+    // 内存清理
+    function performMemoryCleanup() {
+        // 清理过期的日志
+        if (mainLogArea.text.length > 10000) {
+            var lines = mainLogArea.text.split('\n')
+            mainLogArea.text = lines.slice(-100).join('\n')
+        }
+
+        // 清理过期的性能指标
+        var now = Date.now()
+        for (var category in performanceMetrics) {
+            for (var operation in performanceMetrics[category]) {
+                if (now - performanceMetrics[category][operation].timestamp > 300000) { // 5分钟
+                    delete performanceMetrics[category][operation]
+                }
+            }
+        }
+
+        // 触发垃圾回收
+        gc()
+    }
+
+    // 定期内存清理
+    Timer {
+        interval: 60000 // 1分钟
+        running: true
+        repeat: true
+        onTriggered: performMemoryCleanup()
     }
     
     // 主布局
@@ -41,46 +331,17 @@ ApplicationWindow {
         spacing: 0
 
         // 顶部工具栏
-        Rectangle {
+        AppToolBar {
+            id: appToolBar
             Layout.fillWidth: true
-            height: 40
-            color: Material.primary
+            title: window.title
+            isConfigured: window.isConfigured
+            currentDomain: window.currentDomain
 
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-
-                Label {
-                    text: window.title
-                    color: "white"
-                    font.bold: true
-                    font.pixelSize: 16
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // 配置状态指示器
-                Rectangle {
-                    width: 12
-                    height: 12
-                    radius: 6
-                    color: window.isConfigured ? "#4CAF50" : "#F44336"
-
-                    ToolTip.visible: configStatusArea.containsMouse
-                    ToolTip.text: window.isConfigured ? "已配置" : "未配置"
-
-                    MouseArea {
-                        id: configStatusArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                    }
-                }
-
-                Label {
-                    text: window.currentDomain
-                    color: "white"
-                    font.pixelSize: 12
-                }
+            onConfigStatusClicked: {
+                // 切换到配置页面
+                tabBar.currentIndex = 3
+                globalStatusMessage.showInfo("请完成配置设置")
             }
         }
 
@@ -90,25 +351,115 @@ ApplicationWindow {
             Layout.fillWidth: true
             Material.background: "#FAFAFA"
 
+            // 页面切换动画
+            property int previousIndex: 0
+
+            onCurrentIndexChanged: {
+                // 记录上一个页面索引用于动画
+                if (currentIndex !== previousIndex) {
+                    stackLayout.switchPage(previousIndex, currentIndex)
+                    previousIndex = currentIndex
+                }
+
+                // 页面切换时的逻辑处理
+                handlePageSwitch(currentIndex)
+            }
+
             TabButton {
                 text: "🏠 邮箱生成"
                 font.pixelSize: 14
                 width: implicitWidth
+
+                // 未配置时的提示
+                ToolTip.visible: !window.isConfigured && hovered
+                ToolTip.text: "请先完成域名配置"
             }
             TabButton {
                 text: "📋 邮箱管理"
                 font.pixelSize: 14
                 width: implicitWidth
+
+                // 显示邮箱数量
+                Rectangle {
+                    visible: window.globalState.emailList.length > 0
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 5
+                    width: 20
+                    height: 20
+                    radius: 10
+                    color: Material.Red
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: window.globalState.emailList.length > 99 ? "99+" : window.globalState.emailList.length.toString()
+                        font.pixelSize: 10
+                        color: "white"
+                    }
+                }
             }
             TabButton {
                 text: "🏷️ 标签管理"
                 font.pixelSize: 14
                 width: implicitWidth
+
+                // 显示标签数量
+                Rectangle {
+                    visible: window.globalState.tagList.length > 0
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 5
+                    width: 20
+                    height: 20
+                    radius: 10
+                    color: Material.Green
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: window.globalState.tagList.length.toString()
+                        font.pixelSize: 10
+                        color: "white"
+                    }
+                }
             }
             TabButton {
                 text: "⚙️ 配置管理"
                 font.pixelSize: 14
                 width: implicitWidth
+
+                // 配置状态指示
+                Rectangle {
+                    visible: !window.isConfigured
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 5
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: Material.Red
+
+                    // 闪烁动画
+                    SequentialAnimation {
+                        running: !window.isConfigured
+                        loops: Animation.Infinite
+
+                        NumberAnimation {
+                            target: parent
+                            property: "opacity"
+                            from: 1.0
+                            to: 0.3
+                            duration: 800
+                        }
+
+                        NumberAnimation {
+                            target: parent
+                            property: "opacity"
+                            from: 0.3
+                            to: 1.0
+                            duration: 800
+                        }
+                    }
+                }
             }
         }
         
@@ -119,445 +470,215 @@ ApplicationWindow {
             Layout.fillHeight: true
             currentIndex: tabBar.currentIndex
 
+            // 页面切换动画
+            property bool animationEnabled: true
+            property int animationDuration: 300
+
+            function switchPage(fromIndex, toIndex) {
+                if (!animationEnabled) return
+
+                // 这里可以添加页面切换的动画效果
+                // 由于StackLayout的限制，我们使用透明度动画
+                var currentItem = itemAt(fromIndex)
+                var nextItem = itemAt(toIndex)
+
+                if (currentItem && nextItem) {
+                    // 淡出当前页面
+                    fadeOutAnimation.target = currentItem
+                    fadeOutAnimation.start()
+
+                    // 延迟淡入下一个页面
+                    Qt.callLater(function() {
+                        fadeInAnimation.target = nextItem
+                        fadeInAnimation.start()
+                    })
+                }
+            }
+
+            // 淡出动画
+            NumberAnimation {
+                id: fadeOutAnimation
+                property: "opacity"
+                from: 1.0
+                to: 0.7
+                duration: stackLayout.animationDuration / 2
+                easing.type: Easing.OutQuad
+
+                onFinished: {
+                    target.opacity = 1.0
+                }
+            }
+
+            // 淡入动画
+            NumberAnimation {
+                id: fadeInAnimation
+                property: "opacity"
+                from: 0.7
+                to: 1.0
+                duration: stackLayout.animationDuration / 2
+                easing.type: Easing.InQuad
+            }
+
             // 邮箱生成页面
-            Rectangle {
-                color: "#f5f5f5"
+            EmailGenerationPage {
+                id: emailGenerationPage
+                isConfigured: window.isConfigured
+                currentDomain: window.currentDomain
+                statistics: window.statistics
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 20
+                onStatusChanged: function(message) {
+                    statusLabel.text = message
+                    mainLogArea.addLog("ℹ️ " + message)
+                }
 
-                    // 左侧配置信息
-                    Rectangle {
-                        Layout.preferredWidth: 250
-                        Layout.fillHeight: true
-                        color: "white"
-                        radius: 8
-                        border.color: "#e0e0e0"
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 20
-                            spacing: 15
-
-                            // 域名信息
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 8
-
-                                Label {
-                                    text: "📍 当前域名"
-                                    font.bold: true
-                                    font.pixelSize: 16
-                                    color: "#333"
-                                }
-
-                                Label {
-                                    id: domainLabel
-                                    text: window.currentDomain
-                                    font.pixelSize: 14
-                                    color: window.isConfigured ? "#4CAF50" : "#F44336"
-                                    wrapMode: Text.WordWrap
-                                    width: parent.width
-                                }
-                            }
-
-                            Rectangle {
-                                Layout.fillWidth: true
-                                height: 1
-                                color: "#e0e0e0"
-                            }
-
-                            // 统计信息
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 8
-
-                                Label {
-                                    text: "📊 统计信息"
-                                    font.bold: true
-                                    font.pixelSize: 16
-                                    color: "#333"
-                                }
-
-                                Label {
-                                    text: "总邮箱数: " + (window.statistics.total_emails || 0)
-                                    font.pixelSize: 14
-                                    color: "#666"
-                                }
-
-                                Label {
-                                    text: "今日创建: " + (window.statistics.today_created || 0)
-                                    font.pixelSize: 14
-                                    color: "#666"
-                                }
-
-                                Label {
-                                    text: "活跃状态: " + (window.statistics.active_emails || 0)
-                                    font.pixelSize: 14
-                                    color: "#666"
-                                }
-
-                                Label {
-                                    text: "成功率: " + (window.statistics.success_rate || 100) + "%"
-                                    font.pixelSize: 14
-                                    color: "#666"
-                                }
-                            }
-
-                            Item { Layout.fillHeight: true }
-                        }
-                    }
-                    
-                    // 中央操作区域
-                    Rectangle {
-                        Layout.preferredWidth: 320
-                        Layout.fillHeight: true
-                        color: "white"
-                        radius: 8
-                        border.color: "#e0e0e0"
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 20
-                            spacing: 20
-
-                            Label {
-                                text: "🎯 邮箱生成"
-                                font.bold: true
-                                font.pixelSize: 18
-                                color: "#333"
-                                Layout.alignment: Qt.AlignHCenter
-                            }
-
-                            // 生成模式选择
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 10
-
-                                Label {
-                                    text: "生成模式:"
-                                    font.pixelSize: 14
-                                    color: "#666"
-                                }
-
-                                ButtonGroup {
-                                    id: prefixTypeGroup
-                                }
-
-                                RadioButton {
-                                    id: randomNameRadio
-                                    text: "随机名字"
-                                    checked: true
-                                    ButtonGroup.group: prefixTypeGroup
-                                }
-
-                                RadioButton {
-                                    id: randomStringRadio
-                                    text: "随机字符串"
-                                    ButtonGroup.group: prefixTypeGroup
-                                }
-
-                                RadioButton {
-                                    id: customPrefixRadio
-                                    text: "自定义前缀"
-                                    ButtonGroup.group: prefixTypeGroup
-                                }
-                            }
-
-                            // 自定义前缀输入
-                            TextField {
-                                id: customPrefixField
-                                Layout.fillWidth: true
-                                placeholderText: "输入自定义前缀..."
-                                enabled: customPrefixRadio.checked
-                                font.pixelSize: 14
-                            }
-
-                            // 标签输入
-                            TextField {
-                                id: tagsField
-                                Layout.fillWidth: true
-                                placeholderText: "标签 (用逗号分隔)..."
-                                font.pixelSize: 14
-                            }
-
-                            // 生成按钮
-                            Button {
-                                id: generateButton
-                                text: "🎯 生成新邮箱"
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 50
-                                font.pixelSize: 16
-                                Material.background: Material.Blue
-                                enabled: window.isConfigured
-
-                                onClicked: {
-                                    generateButton.enabled = false
-
-                                    var prefixType = "random_name"
-                                    if (randomStringRadio.checked) prefixType = "random_string"
-                                    else if (customPrefixRadio.checked) prefixType = "custom"
-
-                                    emailController.generateCustomEmail(
-                                        prefixType,
-                                        customPrefixField.text,
-                                        tagsField.text
-                                    )
-                                }
-                            }
-
-                            // 进度条
-                            ProgressBar {
-                                id: progressBar
-                                Layout.fillWidth: true
-                                value: 0
-                                visible: value > 0
-                            }
-
-                            Item { Layout.fillHeight: true }
-                        }
-                    }
-                    
-                    // 右侧结果和日志区域
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        color: "white"
-                        radius: 8
-                        border.color: "#e0e0e0"
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 20
-                            spacing: 15
-
-                            Label {
-                                text: "📝 操作日志"
-                                font.bold: true
-                                font.pixelSize: 16
-                                color: "#333"
-                            }
-
-                            // 最新生成的邮箱显示
-                            Rectangle {
-                                id: latestEmailCard
-                                Layout.fillWidth: true
-                                height: 80
-                                color: "#f8f9fa"
-                                radius: 6
-                                border.color: "#e9ecef"
-                                visible: latestEmailLabel.text !== ""
-
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 15
-
-                                    Label {
-                                        text: "✅ 最新生成的邮箱:"
-                                        font.pixelSize: 12
-                                        color: "#666"
-                                    }
-
-                                    Label {
-                                        id: latestEmailLabel
-                                        text: ""
-                                        font.pixelSize: 14
-                                        font.bold: true
-                                        color: "#2196F3"
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            onClicked: {
-                                                // 复制到剪贴板的功能可以在这里实现
-                                                console.log("复制邮箱地址:", latestEmailLabel.text)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // 日志区域
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-
-                                TextArea {
-                                    id: logArea
-                                    readOnly: true
-                                    wrapMode: TextArea.Wrap
-                                    font.family: "Consolas, Monaco, monospace"
-                                    font.pixelSize: 12
-                                    color: "#333"
-                                    text: "[" + new Date().toLocaleTimeString() + "] 应用程序启动完成\n[" + new Date().toLocaleTimeString() + "] 等待用户操作..."
-
-                                    function addLog(message) {
-                                        var timestamp = new Date().toLocaleTimeString()
-                                        text += "\n[" + timestamp + "] " + message
-                                        // 自动滚动到底部
-                                        cursorPosition = length
-                                    }
-                                }
-                            }
-                        }
-                    }
+                onLogMessage: function(message) {
+                    mainLogArea.addLog(message)
                 }
             }
 
             // 邮箱管理页面
-            Rectangle {
-                color: "#f5f5f5"
+            EmailManagementPage {
+                id: emailManagementPage
+                emailList: window.globalState.emailList
+                tagList: window.globalState.tagList
+                currentPage: window.globalState.currentPage
+                totalPages: window.globalState.totalPages
+                isLoading: window.globalState.isLoading
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 20
-
-                    Label {
-                        text: "📋 邮箱管理"
-                        font.bold: true
-                        font.pixelSize: 24
-                        color: "#333"
-                        Layout.alignment: Qt.AlignHCenter
+                onSearchEmails: function(keyword, status, tags, page) {
+                    // 调用后端搜索接口
+                    if (emailController) {
+                        // 这里需要实现搜索逻辑
+                        console.log("搜索邮箱:", keyword, status, tags, page)
                     }
+                }
 
-                    Label {
-                        text: "此页面将显示所有生成的邮箱列表，支持搜索、筛选和管理功能。\n\n功能开发中，敬请期待..."
-                        font.pixelSize: 16
-                        color: "#666"
-                        horizontalAlignment: Text.AlignHCenter
-                        Layout.alignment: Qt.AlignHCenter
-                        wrapMode: Text.WordWrap
+                onDeleteEmail: function(emailId) {
+                    // 调用后端删除接口
+                    if (emailController) {
+                        // 这里需要实现删除逻辑
+                        console.log("删除邮箱:", emailId)
                     }
+                }
 
-                    Item { Layout.fillHeight: true }
+                onEditEmail: function(emailId, emailData) {
+                    // 调用后端编辑接口
+                    if (emailController) {
+                        // 这里需要实现编辑逻辑
+                        console.log("编辑邮箱:", emailId, emailData)
+                    }
+                }
+
+                onExportEmails: function(format) {
+                    // 调用后端导出接口
+                    if (emailController) {
+                        // 这里需要实现导出逻辑
+                        console.log("导出邮箱:", format)
+                    }
+                }
+
+                onRefreshRequested: function() {
+                    // 刷新邮箱列表
+                    if (emailController) {
+                        emailController.refreshEmailList()
+                    }
                 }
             }
 
             // 标签管理页面
-            Rectangle {
-                color: "#f5f5f5"
+            TagManagementPage {
+                id: tagManagementPage
+                tagList: window.globalState.tagList
+                isLoading: window.globalState.isLoading
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 20
+                onCreateTag: function(name, description, color, icon) {
+                    // 调用后端创建标签接口
+                    console.log("创建标签:", name, description, color, icon)
+                    globalStatusMessage.showInfo("正在创建标签...")
+                }
 
-                    Label {
-                        text: "🏷️ 标签管理"
-                        font.bold: true
-                        font.pixelSize: 24
-                        color: "#333"
-                        Layout.alignment: Qt.AlignHCenter
-                    }
+                onUpdateTag: function(tagId, tagData) {
+                    // 调用后端更新标签接口
+                    console.log("更新标签:", tagId, tagData)
+                    globalStatusMessage.showInfo("正在更新标签...")
+                }
 
-                    Label {
-                        text: "此页面将提供标签的创建、编辑、删除和管理功能。\n\n功能开发中，敬请期待..."
-                        font.pixelSize: 16
-                        color: "#666"
-                        horizontalAlignment: Text.AlignHCenter
-                        Layout.alignment: Qt.AlignHCenter
-                        wrapMode: Text.WordWrap
-                    }
+                onDeleteTag: function(tagId) {
+                    // 调用后端删除标签接口
+                    console.log("删除标签:", tagId)
+                    globalStatusMessage.showInfo("正在删除标签...")
+                }
 
-                    Item { Layout.fillHeight: true }
+                onRefreshTags: function() {
+                    // 刷新标签列表
+                    console.log("刷新标签列表")
+                    globalStatusMessage.showInfo("正在刷新标签列表...")
                 }
             }
 
             // 配置管理页面
-            Rectangle {
-                color: "#f5f5f5"
+            ConfigurationPage {
+                id: configurationPage
+                isConfigured: window.isConfigured
+                currentDomain: window.currentDomain
+                configData: ({}) // 这里需要从控制器获取配置数据
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 20
-
-                    Label {
-                        text: "⚙️ 配置管理"
-                        font.bold: true
-                        font.pixelSize: 24
-                        color: "#333"
-                        Layout.alignment: Qt.AlignHCenter
+                onValidateDomain: function(domain) {
+                    if (configController) {
+                        configController.validateDomain(domain)
                     }
+                }
 
-                    // 域名配置区域
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 200
-                        color: "white"
-                        radius: 8
-                        border.color: "#e0e0e0"
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 20
-                            spacing: 15
-
-                            Label {
-                                text: "🌐 域名配置"
-                                font.bold: true
-                                font.pixelSize: 18
-                                color: "#333"
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 10
-
-                                TextField {
-                                    id: domainField
-                                    Layout.fillWidth: true
-                                    placeholderText: "请输入域名 (例如: example.com)"
-                                    font.pixelSize: 14
-                                    text: window.currentDomain !== "未配置" ? window.currentDomain : ""
-                                }
-
-                                Button {
-                                    text: "🔍 验证"
-                                    Material.background: Material.Orange
-
-                                    onClicked: {
-                                        if (configController && domainField.text.trim()) {
-                                            configController.validateDomain(domainField.text.trim())
-                                        }
-                                    }
-                                }
-
-                                Button {
-                                    text: "💾 保存"
-                                    Material.background: Material.Green
-
-                                    onClicked: {
-                                        if (configController && domainField.text.trim()) {
-                                            configController.setDomain(domainField.text.trim())
-                                        }
-                                    }
-                                }
-                            }
-
-                            Label {
-                                id: domainStatusLabel
-                                text: window.isConfigured ? "✅ 域名已配置" : "❌ 请配置域名"
-                                font.pixelSize: 14
-                                color: window.isConfigured ? "#4CAF50" : "#F44336"
-                            }
-
-                            Item { Layout.fillHeight: true }
-                        }
+                onSaveDomain: function(domain) {
+                    if (configController) {
+                        configController.setDomain(domain)
                     }
+                }
 
-                    Label {
-                        text: "更多配置选项开发中，敬请期待..."
-                        font.pixelSize: 14
-                        color: "#666"
-                        Layout.alignment: Qt.AlignHCenter
+                onSaveConfig: function(config) {
+                    if (configController) {
+                        configController.saveConfig(config)
                     }
+                }
 
-                    Item { Layout.fillHeight: true }
+                onResetConfig: function() {
+                    if (configController) {
+                        configController.resetConfig()
+                    }
+                }
+
+                onExportConfig: function() {
+                    if (configController) {
+                        // 这里需要实现导出配置逻辑
+                        console.log("导出配置")
+                    }
+                }
+
+                onImportConfig: function(configJson) {
+                    if (configController) {
+                        // 这里需要实现导入配置逻辑
+                        console.log("导入配置:", configJson)
+                    }
                 }
             }
+        }
+
+        // 全局状态消息
+        StatusMessage {
+            id: globalStatusMessage
+            Layout.fillWidth: true
+            Layout.margins: 20
+        }
+    }
+
+    // 全局日志区域（隐藏，用于调试）
+    TextArea {
+        id: mainLogArea
+        visible: false
+
+        function addLog(message) {
+            var timestamp = new Date().toLocaleTimeString()
+            text += "\n[" + timestamp + "] " + message
         }
     }
 
@@ -623,41 +744,70 @@ ApplicationWindow {
         }
     }
 
+    // 调试面板
+    DebugPanel {
+        id: debugPanel
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: 20
+        z: 1000
+
+        globalState: window.globalState
+        statistics: window.statistics
+        isConfigured: window.isConfigured
+        currentDomain: window.currentDomain
+    }
+
     // 连接邮箱控制器信号
     Connections {
         target: emailController
 
         function onEmailGenerated(email, status, message) {
             if (status === "success") {
-                latestEmailLabel.text = email
-                logArea.addLog("✅ " + message)
+                emailGenerationPage.updateLatestEmail(email)
+                emailGenerationPage.addLogMessage("✅ " + message)
+                globalStatusMessage.showSuccess("邮箱生成成功: " + email)
                 // 更新统计信息
                 window.statistics = emailController.getStatistics()
             } else {
-                logArea.addLog("❌ " + message)
+                emailGenerationPage.addLogMessage("❌ " + message)
+                globalStatusMessage.showError("邮箱生成失败: " + message)
             }
-            generateButton.enabled = true
+            emailGenerationPage.enableGenerateButton()
         }
 
         function onStatusChanged(message) {
             statusLabel.text = message
-            logArea.addLog("ℹ️ " + message)
+            mainLogArea.addLog("ℹ️ " + message)
+            emailGenerationPage.addLogMessage("ℹ️ " + message)
         }
 
         function onProgressChanged(value) {
-            progressBar.value = value / 100.0
+            emailGenerationPage.updateProgress(value)
         }
 
         function onVerificationCodeReceived(email, code) {
-            logArea.addLog("📧 验证码 (" + email + "): " + code)
+            var message = "📧 验证码 (" + email + "): " + code
+            mainLogArea.addLog(message)
+            emailGenerationPage.addLogMessage(message)
+            globalStatusMessage.showInfo("验证码已接收")
         }
 
         function onErrorOccurred(errorType, errorMessage) {
-            logArea.addLog("❌ " + errorType + ": " + errorMessage)
+            var message = "❌ " + errorType + ": " + errorMessage
+            mainLogArea.addLog(message)
+            emailGenerationPage.addLogMessage(message)
+            globalStatusMessage.showError(errorType + ": " + errorMessage)
         }
 
         function onStatisticsUpdated(stats) {
             window.statistics = stats
+        }
+
+        function onEmailListUpdated(emailList) {
+            window.globalState.emailList = emailList
+            window.globalState.lastRefreshTime = new Date()
+            mainLogArea.addLog("📧 邮箱列表已更新，共 " + emailList.length + " 个邮箱")
         }
     }
 
@@ -668,24 +818,32 @@ ApplicationWindow {
         function onConfigLoaded(configData) {
             window.currentDomain = configData.domain || "未配置"
             window.isConfigured = configData.is_configured || false
-            logArea.addLog("⚙️ 配置加载完成")
+            mainLogArea.addLog("⚙️ 配置加载完成")
+            configurationPage.loadConfigData(configData)
+            globalStatusMessage.showInfo("配置加载完成")
         }
 
         function onConfigSaved(success, message) {
             if (success) {
-                logArea.addLog("✅ " + message)
+                mainLogArea.addLog("✅ " + message)
+                globalStatusMessage.showSuccess(message)
                 // 重新加载配置状态
                 window.currentDomain = configController.getCurrentDomain()
                 window.isConfigured = configController.isConfigured()
             } else {
-                logArea.addLog("❌ " + message)
+                mainLogArea.addLog("❌ " + message)
+                globalStatusMessage.showError(message)
             }
         }
 
         function onDomainValidated(isValid, message) {
-            domainStatusLabel.text = isValid ? "✅ " + message : "❌ " + message
-            domainStatusLabel.color = isValid ? "#4CAF50" : "#F44336"
-            logArea.addLog((isValid ? "✅ " : "❌ ") + "域名验证: " + message)
+            configurationPage.updateDomainStatus(isValid, message)
+            mainLogArea.addLog((isValid ? "✅ " : "❌ ") + "域名验证: " + message)
+            if (isValid) {
+                globalStatusMessage.showSuccess("域名验证: " + message)
+            } else {
+                globalStatusMessage.showError("域名验证: " + message)
+            }
         }
 
         function onStatusChanged(message) {
@@ -693,7 +851,8 @@ ApplicationWindow {
         }
 
         function onErrorOccurred(errorType, errorMessage) {
-            logArea.addLog("❌ " + errorType + ": " + errorMessage)
+            mainLogArea.addLog("❌ " + errorType + ": " + errorMessage)
+            globalStatusMessage.showError(errorType + ": " + errorMessage)
         }
     }
 }
