@@ -1,0 +1,52 @@
+# QML模块定义文件
+# 注册单例和组件
+
+# 设计系统单例
+singleton DesignSystem 1.0 DesignSystem.qml
+singleton ThemeManager 1.0 ThemeManager.qml
+singleton AnimationLibrary 1.0 AnimationLibrary.qml
+singleton MicroInteractions 1.0 MicroInteractions.qml
+
+# 增强组件
+EnhancedButton 1.0 EnhancedButton.qml
+EnhancedTextField 1.0 EnhancedTextField.qml
+LoadingIndicator 1.0 LoadingIndicator.qml
+StatusMessage 1.0 StatusMessage.qml
+ConfirmDialog 1.0 ConfirmDialog.qml
+Pagination 1.0 Pagination.qml
+AppToolBar 1.0 AppToolBar.qml
+DebugPanel 1.0 DebugPanel.qml
+
+# 动画组件
+AnimatedListItem 1.0 AnimatedListItem.qml
+AnimatedListView 1.0 AnimatedListView.qml
+AnimatedButton 1.0 AnimatedButton.qml
+PageTransition 1.0 PageTransition.qml
+
+# 高级组件
+DraggableTagItem 1.0 DraggableTagItem.qml
+TagStatisticsChart 1.0 TagStatisticsChart.qml
+
+# 搜索组件
+AdvancedSearchBar 1.0 AdvancedSearchBar.qml
+HighlightedText 1.0 HighlightedText.qml
+SearchResultStats 1.0 SearchResultStats.qml
+
+# 导出组件
+AdvancedExportDialog 1.0 AdvancedExportDialog.qml
+ExportTaskManager 1.0 ExportTaskManager.qml
+ExportTaskItem 1.0 ExportTaskItem.qml
+
+# 批量操作组件
+BatchOperationPanel 1.0 BatchOperationPanel.qml
+UndoManager 1.0 UndoManager.qml
+
+# 响应式布局组件
+ResponsiveLayout 1.0 ResponsiveLayout.qml
+AdaptiveGrid 1.0 AdaptiveGrid.qml
+TouchOptimizedScrollView 1.0 TouchOptimizedScrollView.qml
+
+# 性能和测试组件
+PerformanceMonitor 1.0 PerformanceMonitor.qml
+UXTestSuite 1.0 UXTestSuite.qml
+singleton PerformanceOptimizer 1.0 PerformanceOptimizer.qml

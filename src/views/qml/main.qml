@@ -20,6 +20,19 @@ ApplicationWindow {
     Material.primary: Material.Blue
     Material.accent: Material.Cyan
 
+    // 响应式布局检测
+    readonly property string screenSize: {
+        if (width < 480) return "xs"
+        if (width < 768) return "sm"
+        if (width < 1024) return "md"
+        if (width < 1440) return "lg"
+        return "xl"
+    }
+
+    readonly property bool isMobile: screenSize === "xs" || screenSize === "sm"
+    readonly property bool isTablet: screenSize === "md"
+    readonly property bool isDesktop: screenSize === "lg" || screenSize === "xl"
+
     // 键盘快捷键支持
     focus: true
 
@@ -324,6 +337,90 @@ ApplicationWindow {
         onTriggered: performMemoryCleanup()
     }
     
+    // 移动设备抽屉导航
+    Drawer {
+        id: mobileDrawer
+        width: Math.min(window.width * 0.8, 300)
+        height: window.height
+        visible: window.isMobile
+
+        background: Rectangle {
+            color: ThemeManager.colors.surface
+            border.width: 1
+            border.color: ThemeManager.colors.outline
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: DesignSystem.spacing.md
+            spacing: DesignSystem.spacing.md
+
+            // 抽屉标题
+            Label {
+                text: "邮箱管理系统"
+                font.pixelSize: DesignSystem.typography.headline.small
+                font.weight: DesignSystem.typography.weight.semiBold
+                color: ThemeManager.colors.onSurface
+                Layout.fillWidth: true
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: ThemeManager.colors.outline
+            }
+
+            // 导航项目
+            Repeater {
+                model: [
+                    {text: "邮箱生成", icon: "📧", index: 0},
+                    {text: "邮箱管理", icon: "📋", index: 1},
+                    {text: "标签管理", icon: "🏷️", index: 2},
+                    {text: "配置管理", icon: "⚙️", index: 3}
+                ]
+
+                ItemDelegate {
+                    Layout.fillWidth: true
+                    height: 48
+
+                    background: Rectangle {
+                        color: tabBar.currentIndex === modelData.index ?
+                               Qt.rgba(DesignSystem.colors.primary.r,
+                                      DesignSystem.colors.primary.g,
+                                      DesignSystem.colors.primary.b, 0.1) :
+                               "transparent"
+                        radius: DesignSystem.radius.sm
+                    }
+
+                    contentItem: RowLayout {
+                        spacing: DesignSystem.spacing.md
+
+                        Label {
+                            text: modelData.icon
+                            font.pixelSize: DesignSystem.icons.size.medium
+                        }
+
+                        Label {
+                            text: modelData.text
+                            font.pixelSize: DesignSystem.typography.body.medium
+                            color: tabBar.currentIndex === modelData.index ?
+                                   DesignSystem.colors.primary :
+                                   ThemeManager.colors.onSurface
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    onClicked: {
+                        tabBar.currentIndex = modelData.index
+                        mobileDrawer.close()
+                    }
+                }
+            }
+
+            Item { Layout.fillHeight: true }
+        }
+    }
+
     // 主布局
     ColumnLayout {
         anchors.fill: parent
@@ -338,6 +435,13 @@ ApplicationWindow {
             isConfigured: window.isConfigured
             currentDomain: window.currentDomain
 
+            // 移动设备支持
+            showMenuButton: window.isMobile
+
+            onMenuClicked: {
+                mobileDrawer.open()
+            }
+
             onConfigStatusClicked: {
                 // 切换到配置页面
                 tabBar.currentIndex = 3
@@ -350,6 +454,12 @@ ApplicationWindow {
             id: tabBar
             Layout.fillWidth: true
             Material.background: "#FAFAFA"
+
+            // 响应式布局调整
+            visible: !window.isMobile || !mobileDrawer.opened
+
+            // 移动设备上的标签样式调整
+            property real tabWidth: window.isMobile ? Math.max(80, width / 4) : implicitWidth
 
             // 页面切换动画
             property int previousIndex: 0
@@ -853,6 +963,78 @@ ApplicationWindow {
         function onErrorOccurred(errorType, errorMessage) {
             mainLogArea.addLog("❌ " + errorType + ": " + errorMessage)
             globalStatusMessage.showError(errorType + ": " + errorMessage)
+        }
+    }
+
+    // ==================== 性能监控和测试工具 ====================
+
+    // 性能监控器
+    PerformanceMonitor {
+        id: performanceMonitor
+        anchors.fill: parent
+        enabled: false
+        showOverlay: false
+    }
+
+    // UX测试套件
+    UXTestSuite {
+        id: uxTestSuite
+        anchors.fill: parent
+        testingEnabled: false
+
+        onTestCompleted: function(testName, results) {
+            if (!results.passed) {
+                globalStatusMessage.showError("测试失败: " + testName)
+            }
+        }
+
+        onAllTestsCompleted: function(summary) {
+            globalStatusMessage.showSuccess(
+                "测试完成: " + summary.passedTests + "/" + summary.totalTests +
+                " 通过 (" + summary.successRate + ")"
+            )
+        }
+    }
+
+    // ==================== 快捷键支持 ====================
+
+    Keys.onPressed: function(event) {
+        if (event.modifiers & Qt.ControlModifier) {
+            switch (event.key) {
+                case Qt.Key_P:
+                    // Ctrl+P: 显示/隐藏性能监控
+                    performanceMonitor.showOverlay = !performanceMonitor.showOverlay
+                    if (performanceMonitor.showOverlay) {
+                        performanceMonitor.enabled = true
+                    }
+                    event.accepted = true
+                    break
+                case Qt.Key_T:
+                    // Ctrl+T: 显示/隐藏测试面板
+                    uxTestSuite.testingEnabled = !uxTestSuite.testingEnabled
+                    event.accepted = true
+                    break
+                case Qt.Key_R:
+                    // Ctrl+R: 刷新当前页面
+                    refreshCurrentPage()
+                    event.accepted = true
+                    break
+            }
+        }
+    }
+
+    // ==================== 初始化和优化 ====================
+
+    Component.onCompleted: {
+        console.log("应用程序初始化完成")
+        console.log("快捷键:")
+        console.log("  Ctrl+P: 性能监控")
+        console.log("  Ctrl+T: UX测试")
+        console.log("  Ctrl+R: 刷新页面")
+
+        // 应用性能优化
+        if (PerformanceOptimizer) {
+            PerformanceOptimizer.autoOptimize(window)
         }
     }
 }

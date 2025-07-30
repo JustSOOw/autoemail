@@ -7,6 +7,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls.Material 2.15
+import QtGraphicalEffects 1.15
 import "../components"
 
 Rectangle {
@@ -35,6 +36,14 @@ Rectangle {
             font.pixelSize: 24
             color: "#333"
             Layout.alignment: Qt.AlignHCenter
+        }
+
+        // 统计图表区域
+        TagStatisticsChart {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 200
+            tagList: root.tagList
+            visible: root.tagList.length > 0
         }
 
         // 创建标签区域
@@ -182,17 +191,32 @@ Rectangle {
                         model: root.tagList
                         spacing: 8
 
-                        delegate: Rectangle {
+                        // 启用拖拽重排序
+                        property int dragItemIndex: -1
+                        property bool dragActive: false
+
+                        delegate: DraggableTagItem {
                             width: tagListView.width
                             height: 80
-                            color: "#f8f9fa"
-                            radius: 6
-                            border.color: "#e9ecef"
+                            tagData: modelData
+                            listView: tagListView
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 15
-                                spacing: 15
+                            onEditRequested: function(tagData) {
+                                editTagDialog.tagData = tagData
+                                editTagDialog.open()
+                            }
+
+                            onDeleteRequested: function(tagId, tagName) {
+                                deleteTagDialog.tagId = tagId
+                                deleteTagDialog.tagName = tagName
+                                deleteTagDialog.open()
+                            }
+
+                            onQuickEditRequested: function(tagData) {
+                                quickEditPopup.tagData = tagData
+                                quickEditPopup.open()
+                            }
+                        }
 
                                 // 标签图标和颜色
                                 Rectangle {
@@ -374,17 +398,176 @@ Rectangle {
         }
     }
 
+    // 快速编辑弹出框
+    Popup {
+        id: quickEditPopup
+        width: 320
+        height: 200
+        modal: true
+        anchors.centerIn: parent
+
+        property var tagData: ({})
+
+        Rectangle {
+            anchors.fill: parent
+            color: ThemeManager.colors.surface
+            radius: DesignSystem.radius.lg
+            border.width: 1
+            border.color: ThemeManager.colors.outline
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: DesignSystem.spacing.md
+                spacing: DesignSystem.spacing.md
+
+                Label {
+                    text: "快速编辑标签"
+                    font.pixelSize: DesignSystem.typography.headline.small
+                    font.weight: DesignSystem.typography.weight.semiBold
+                    color: ThemeManager.colors.onSurface
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: DesignSystem.spacing.md
+
+                    // 颜色选择
+                    Rectangle {
+                        width: 40
+                        height: 40
+                        color: quickEditPopup.tagData.color || DesignSystem.colors.primary
+                        radius: 20
+                        border.width: 2
+                        border.color: ThemeManager.colors.outline
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: quickColorPicker.open()
+                        }
+                    }
+
+                    // 图标选择
+                    EnhancedTextField {
+                        id: quickIconField
+                        Layout.preferredWidth: 80
+                        text: quickEditPopup.tagData.icon || "🏷️"
+                        labelText: "图标"
+                        variant: EnhancedTextField.TextFieldVariant.Outlined
+                    }
+
+                    // 名称编辑
+                    EnhancedTextField {
+                        id: quickNameField
+                        Layout.fillWidth: true
+                        text: quickEditPopup.tagData.name || ""
+                        labelText: "标签名称"
+                        variant: EnhancedTextField.TextFieldVariant.Outlined
+                    }
+                }
+
+                // 描述编辑
+                EnhancedTextField {
+                    id: quickDescField
+                    Layout.fillWidth: true
+                    text: quickEditPopup.tagData.description || ""
+                    labelText: "描述"
+                    variant: EnhancedTextField.TextFieldVariant.Outlined
+                }
+
+                // 操作按钮
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Item { Layout.fillWidth: true }
+
+                    EnhancedButton {
+                        text: "取消"
+                        variant: EnhancedButton.ButtonVariant.Text
+                        onClicked: quickEditPopup.close()
+                    }
+
+                    EnhancedButton {
+                        text: "保存"
+                        variant: EnhancedButton.ButtonVariant.Filled
+                        onClicked: {
+                            saveQuickEdit()
+                            quickEditPopup.close()
+                        }
+                    }
+                }
+            }
+        }
+
+        // 快速颜色选择器
+        Popup {
+            id: quickColorPicker
+            width: 240
+            height: 80
+
+            Flow {
+                anchors.fill: parent
+                spacing: 8
+
+                property var colors: [
+                    "#2196F3", "#4CAF50", "#F44336", "#FF9800",
+                    "#9C27B0", "#00BCD4", "#795548", "#607D8B",
+                    "#E91E63", "#3F51B5", "#009688", "#8BC34A"
+                ]
+
+                Repeater {
+                    model: parent.colors
+
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        color: modelData
+                        radius: 16
+                        border.width: 2
+                        border.color: "white"
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                quickEditPopup.tagData.color = modelData
+                                quickColorPicker.close()
+                            }
+                        }
+
+                        // 悬停效果
+                        scale: parent.hovered ? 1.1 : 1.0
+                        Behavior on scale {
+                            PropertyAnimation {
+                                duration: DesignSystem.animation.duration.fast
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function saveQuickEdit() {
+            var updatedData = {
+                id: quickEditPopup.tagData.id,
+                name: quickNameField.text.trim(),
+                description: quickDescField.text.trim(),
+                icon: quickIconField.text.trim() || "🏷️",
+                color: quickEditPopup.tagData.color
+            }
+            root.updateTag(quickEditPopup.tagData.id, updatedData)
+        }
+    }
+
     // 删除确认对话框
     ConfirmDialog {
         id: deleteTagDialog
-        
+
         property int tagId: 0
         property string tagName: ""
-        
+
         titleText: "确认删除标签"
         messageText: "确定要删除标签 \"" + tagName + "\" 吗？\n此操作不可撤销。"
         destructive: true
-        
+
         onConfirmed: {
             root.deleteTag(tagId)
         }
