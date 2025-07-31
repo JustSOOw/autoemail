@@ -1380,14 +1380,4 @@ Rectangle {
         }
     }
 
-    // ==================== 新的创建标签对话框 ====================
-
-    CreateTagDialog {
-        id: newCreateTagDialog
-        
-        onTagCreated: function(tagData) {
-            console.log("创建标签:", JSON.stringify(tagData))
-            root.createTag(tagData)
-        }
-    }
 }
