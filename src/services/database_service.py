@@ -34,8 +34,14 @@ class DatabaseService:
         self.logger = get_logger(__name__)
         self._local = threading.local()
 
-        # 确保数据库目录存在
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        # 确保数据库目录存在（仅对文件数据库）
+        if db_path != ":memory:" and hasattr(db_path, 'parent'):
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        elif db_path != ":memory:" and isinstance(db_path, str):
+            # 如果是字符串路径，转换为Path对象
+            from pathlib import Path
+            path_obj = Path(db_path)
+            path_obj.parent.mkdir(parents=True, exist_ok=True)
 
         self.logger.info(f"数据库服务初始化: {db_path}")
 

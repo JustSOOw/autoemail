@@ -12,6 +12,8 @@ LoadingIndicator 1.0 LoadingIndicator.qml
 StatusMessage 1.0 StatusMessage.qml
 ConfirmDialog 1.0 ConfirmDialog.qml
 Pagination 1.0 Pagination.qml
+CustomIconUpload 1.0 CustomIconUpload.qml
+CreateTagDialog 1.0 CreateTagDialog.qml
 
 # 高级组件
 AnimatedButton 1.0 AnimatedButton.qml
@@ -38,3 +40,4 @@ TouchOptimizedScrollView 1.0 TouchOptimizedScrollView.qml
 UXTestSuite 1.0 UXTestSuite.qml
 UndoManager 1.0 UndoManager.qml
 AdaptiveGrid 1.0 AdaptiveGrid.qml
+EmailImportDialog 1.0 EmailImportDialog.qml

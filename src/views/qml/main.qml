@@ -134,15 +134,31 @@ ApplicationWindow {
         console.log("  Ctrl+T: UX测试")
         console.log("  F5: 刷新页面")
 
-        if (configController) {
-            configController.loadConfig()
-        }
-        if (emailController) {
-            emailController.refreshEmailList()
-        }
-
         // 初始化全局状态
         initializeGlobalState()
+
+        // 延迟初始化，确保所有组件都已加载
+        Qt.callLater(function() {
+            console.log("开始延迟初始化...")
+
+            if (configController) {
+                console.log("加载配置...")
+                configController.loadConfig()
+            }
+
+            // 再次延迟加载邮箱列表，确保配置已加载
+            Qt.callLater(function() {
+                if (emailController) {
+                    console.log("刷新邮箱列表...")
+                    emailController.refreshEmailList()
+                }
+
+                // 刷新标签列表
+                refreshTagList()
+
+                console.log("初始化完成")
+            })
+        })
 
         // 应用性能优化
         if (typeof PerformanceOptimizer !== 'undefined') {
@@ -200,13 +216,37 @@ ApplicationWindow {
 
     // 刷新标签列表
     function refreshTagList() {
-        // 这里应该调用后端API获取标签列表
-        // 暂时使用模拟数据
-        window.globalState.tagList = [
-            {id: 1, name: "工作", description: "工作相关邮箱", color: "#2196F3", icon: "💼", usage_count: 5},
-            {id: 2, name: "个人", description: "个人使用邮箱", color: "#4CAF50", icon: "👤", usage_count: 3},
-            {id: 3, name: "测试", description: "测试用途邮箱", color: "#FF9800", icon: "🧪", usage_count: 2}
-        ]
+        console.log("刷新标签列表")
+
+        if (typeof tagController !== 'undefined') {
+            // 调用后端API获取标签列表
+            var result = tagController.getAllTags()
+            var resultData = JSON.parse(result)
+
+            if (resultData.success) {
+                window.globalState.tagList = resultData.tags
+                console.log("成功获取标签列表，数量:", resultData.count)
+            } else {
+                console.error("获取标签列表失败:", resultData.message)
+                // 使用空列表作为后备
+                window.globalState.tagList = []
+            }
+        } else {
+            console.log("tagController不可用，使用模拟数据")
+            // 后备模拟数据
+            window.globalState.tagList = [
+                {id: 1, name: "工作", description: "工作相关邮箱", color: "#2196F3", icon: "💼", usage_count: 5},
+                {id: 2, name: "个人", description: "个人使用邮箱", color: "#4CAF50", icon: "👤", usage_count: 3},
+                {id: 3, name: "测试", description: "测试用途邮箱", color: "#FF9800", icon: "🧪", usage_count: 2}
+            ]
+        }
+
+        // 更新标签管理页面的数据
+        if (tagManagementPage) {
+            console.log("更新标签管理页面数据，标签数量:", window.globalState.tagList.length)
+            tagManagementPage.tagList = window.globalState.tagList
+            tagManagementPage.isLoading = false  // 重置加载状态
+        }
     }
 
     // 刷新当前页面
@@ -711,11 +751,19 @@ ApplicationWindow {
                     }
                 }
 
-                onExportEmails: function(format) {
-                    // 调用后端导出接口
+                onImportEmails: function(filePath, format, conflictStrategy) {
+                    // 调用后端导入接口
                     if (emailController) {
-                        // 这里需要实现导出逻辑
-                        console.log("导出邮箱:", format)
+                        console.log("导入邮箱:", filePath, format, conflictStrategy)
+                        emailController.importEmails(filePath, format, conflictStrategy)
+                    }
+                }
+
+                onRequestFileSelection: function() {
+                    // 请求文件选择
+                    if (emailController) {
+                        console.log("请求文件选择")
+                        emailController.selectImportFile()
                     }
                 }
 
@@ -733,28 +781,123 @@ ApplicationWindow {
                 tagList: window.globalState.tagList
                 isLoading: window.globalState.isLoading
 
-                onCreateTag: function(name, description, color, icon) {
+                onCreateTag: function(tagData) {
                     // 调用后端创建标签接口
-                    console.log("创建标签:", name, description, color, icon)
-                    globalStatusMessage.showInfo("正在创建标签...")
+                    console.log("创建标签:", JSON.stringify(tagData))
+                    globalStatusMessage.showInfo("正在创建标签: " + tagData.name)
+
+                    if (typeof tagController !== 'undefined') {
+                        // 调用真正的后端API
+                        var result = tagController.createTag(JSON.stringify(tagData))
+                        var resultData = JSON.parse(result)
+
+                        if (resultData.success) {
+                            // 创建成功，刷新标签列表
+                            refreshTagList()
+                            globalStatusMessage.showSuccess(resultData.message)
+                            console.log("标签创建成功:", resultData.tag.name)
+                        } else {
+                            // 创建失败，显示错误信息
+                            globalStatusMessage.showError(resultData.message)
+                            console.error("标签创建失败:", resultData.message)
+                        }
+                    } else {
+                        // 后备模拟逻辑
+                        console.log("tagController不可用，使用模拟创建")
+                        Qt.callLater(function() {
+                            try {
+                                // 生成新的标签ID
+                                var newId = Math.max(...window.globalState.tagList.map(tag => tag.id || 0)) + 1
+
+                                // 创建新标签对象
+                                var newTag = {
+                                    id: newId,
+                                    name: tagData.name,
+                                    description: tagData.description || "",
+                                    color: tagData.color || "#2196F3",
+                                    icon: tagData.icon || "🏷️",
+                                    usage_count: 0,
+                                    created_at: new Date().toISOString()
+                                }
+
+                                // 添加到标签列表
+                                window.globalState.tagList.push(newTag)
+
+                                // 更新标签管理页面
+                                if (tagManagementPage) {
+                                    tagManagementPage.tagList = window.globalState.tagList
+                                }
+
+                                globalStatusMessage.showSuccess("标签 '" + tagData.name + "' 创建成功！")
+                                console.log("标签创建成功，当前标签数量:", window.globalState.tagList.length)
+
+                            } catch (e) {
+                                console.error("创建标签失败:", e)
+                                globalStatusMessage.showError("创建标签失败: " + e.message)
+                            }
+                        })
+                    }
                 }
 
                 onUpdateTag: function(tagId, tagData) {
                     // 调用后端更新标签接口
-                    console.log("更新标签:", tagId, tagData)
+                    console.log("更新标签:", tagId, JSON.stringify(tagData))
                     globalStatusMessage.showInfo("正在更新标签...")
+
+                    if (typeof tagController !== 'undefined') {
+                        var result = tagController.updateTag(tagId, JSON.stringify(tagData))
+                        var resultData = JSON.parse(result)
+
+                        if (resultData.success) {
+                            refreshTagList()
+                            globalStatusMessage.showSuccess(resultData.message)
+                        } else {
+                            globalStatusMessage.showError(resultData.message)
+                        }
+                    }
                 }
 
                 onDeleteTag: function(tagId) {
                     // 调用后端删除标签接口
                     console.log("删除标签:", tagId)
                     globalStatusMessage.showInfo("正在删除标签...")
+
+                    if (typeof tagController !== 'undefined') {
+                        var result = tagController.deleteTag(tagId)
+                        var resultData = JSON.parse(result)
+
+                        if (resultData.success) {
+                            refreshTagList()
+                            globalStatusMessage.showSuccess(resultData.message)
+                        } else {
+                            globalStatusMessage.showError(resultData.message)
+                        }
+                    }
+                }
+
+                onSearchTags: function(keyword) {
+                    // 调用后端搜索标签接口
+                    console.log("搜索标签:", keyword)
+
+                    if (typeof tagController !== 'undefined') {
+                        var result = tagController.searchTags(keyword)
+                        var resultData = JSON.parse(result)
+
+                        if (resultData.success) {
+                            // 更新搜索结果
+                            if (tagManagementPage) {
+                                tagManagementPage.searchResults = resultData.tags
+                                tagManagementPage.lastSearchQuery = keyword
+                            }
+                        }
+                    }
                 }
 
                 onRefreshRequested: function() {
                     // 刷新标签列表
                     console.log("刷新标签列表")
                     globalStatusMessage.showInfo("正在刷新标签列表...")
+                    refreshTagList()
                 }
             }
 
@@ -960,7 +1103,33 @@ ApplicationWindow {
             // 强制更新邮箱管理页面
             if (emailManagementPage) {
                 emailManagementPage.emailList = emailList
+                emailManagementPage.totalEmails = emailList.length
+                emailManagementPage.isLoading = false  // 重置加载状态
+                console.log("邮箱管理页面数据已更新，加载状态已重置")
             }
+        }
+
+        function onFileSelected(filePath) {
+            console.log("用户选择了文件:", filePath)
+            // 将选中的文件路径传递给导入对话框
+            if (emailManagementPage && emailManagementPage.emailImportDialog) {
+                emailManagementPage.emailImportDialog.selectedFilePath = filePath
+            }
+            mainLogArea.addLog("📁 选择了导入文件: " + filePath)
+        }
+
+        function onImportCompleted(result) {
+            console.log("导入完成:", result)
+            var message = "导入完成: 成功 " + result.success + ", 失败 " + result.failed + ", 跳过 " + result.skipped
+            mainLogArea.addLog("📥 " + message)
+            globalStatusMessage.showSuccess(message)
+        }
+
+        function onImportFailed(errorType, errorMessage) {
+            console.log("导入失败:", errorType, errorMessage)
+            var message = "导入失败: " + errorMessage
+            mainLogArea.addLog("❌ " + message)
+            globalStatusMessage.showError(message)
         }
     }
 
@@ -1006,6 +1175,58 @@ ApplicationWindow {
         function onErrorOccurred(errorType, errorMessage) {
             mainLogArea.addLog("❌ " + errorType + ": " + errorMessage)
             globalStatusMessage.showError(errorType + ": " + errorMessage)
+        }
+    }
+
+    // 连接标签控制器信号
+    Connections {
+        target: tagController
+
+        function onTagCreated(tagData) {
+            console.log("标签创建信号:", JSON.stringify(tagData))
+            mainLogArea.addLog("🏷️ 标签创建: " + tagData.name)
+            // 自动刷新标签列表
+            refreshTagList()
+        }
+
+        function onTagUpdated(tagData) {
+            console.log("标签更新信号:", JSON.stringify(tagData))
+            mainLogArea.addLog("🏷️ 标签更新: " + tagData.name)
+            // 自动刷新标签列表
+            refreshTagList()
+        }
+
+        function onTagDeleted(tagId) {
+            console.log("标签删除信号:", tagId)
+            mainLogArea.addLog("🏷️ 标签删除: ID " + tagId)
+            // 自动刷新标签列表
+            refreshTagList()
+        }
+
+        function onTagListRefreshed(tagList) {
+            console.log("标签列表刷新信号，数量:", tagList.length)
+            window.globalState.tagList = tagList
+            if (tagManagementPage) {
+                tagManagementPage.tagList = tagList
+                tagManagementPage.isLoading = false
+            }
+        }
+
+        function onErrorOccurred(errorMessage) {
+            console.error("标签操作错误:", errorMessage)
+            mainLogArea.addLog("❌ 标签操作错误: " + errorMessage)
+            globalStatusMessage.showError(errorMessage)
+        }
+
+        function onOperationCompleted(operationType, success, message) {
+            console.log("标签操作完成:", operationType, success, message)
+            if (success) {
+                mainLogArea.addLog("✅ " + message)
+                globalStatusMessage.showSuccess(message)
+            } else {
+                mainLogArea.addLog("❌ " + message)
+                globalStatusMessage.showError(message)
+            }
         }
     }
 

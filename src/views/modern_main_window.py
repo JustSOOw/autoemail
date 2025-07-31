@@ -11,6 +11,7 @@ from PyQt6.QtQml import QQmlApplicationEngine
 
 from controllers.email_controller import EmailController
 from controllers.config_controller import ConfigController
+from controllers.tag_controller import TagController
 from services.database_service import DatabaseService
 from utils.config_manager import ConfigManager
 from utils.logger import get_logger
@@ -30,6 +31,7 @@ class ModernMainWindow:
         # 控制器
         self.email_controller = EmailController(config_manager, database_service)
         self.config_controller = ConfigController(config_manager, database_service)
+        self.tag_controller = TagController(database_service)
 
         # 注册QML类型
         self.register_qml_types()
@@ -47,6 +49,7 @@ class ModernMainWindow:
         # 注册控制器到QML
         EmailController.register_qml_type()
         ConfigController.register_qml_type()
+        TagController.register_qml_type()
 
     def setup_qml_context(self):
         """设置QML上下文"""
@@ -54,6 +57,7 @@ class ModernMainWindow:
         context = self.engine.rootContext()
         context.setContextProperty("emailController", self.email_controller)
         context.setContextProperty("configController", self.config_controller)
+        context.setContextProperty("tagController", self.tag_controller)
         context.setContextProperty("appVersion", "1.0.0")
         context.setContextProperty("appName", "域名邮箱管理器")
 
