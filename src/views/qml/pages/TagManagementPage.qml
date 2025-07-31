@@ -242,7 +242,10 @@ Rectangle {
                                 width: root.isMobile ? 40 : 80
                                 height: 36
                                 Material.background: Material.Blue
-                                onClicked: newCreateTagDialog.open()
+                                onClicked: {
+                                    unifiedTagDialog.setCreateMode()
+                                    unifiedTagDialog.open()
+                                }
                                 ToolTip.text: root.isMobile ? "创建标签" : ""
                                 ToolTip.visible: root.isMobile && hovered
                             }
@@ -856,8 +859,8 @@ Rectangle {
         MenuItem {
             text: "编辑标签"
             onTriggered: {
-                editTagDialog.tagData = tagContextMenu.tagData
-                editTagDialog.open()
+                unifiedTagDialog.setEditMode(tagContextMenu.tagData)
+                unifiedTagDialog.open()
             }
         }
         MenuItem {
