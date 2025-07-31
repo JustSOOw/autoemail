@@ -48,11 +48,11 @@ QtObject {
         readonly property color backgroundVariant: "#F5F5F5"
         
         // 文本颜色
-        readonly property color onSurface: "#212121"
-        readonly property color onSurfaceVariant: "#757575"
-        readonly property color onBackground: "#212121"
-        readonly property color onPrimary: "#FFFFFF"
-        readonly property color onSecondary: "#FFFFFF"
+        readonly property color textOnSurface: "#212121"
+        readonly property color textOnSurfaceVariant: "#757575"
+        readonly property color textOnBackground: "#212121"
+        readonly property color textOnPrimary: "#FFFFFF"
+        readonly property color textOnSecondary: "#FFFFFF"
         
         // 边框和分割线
         readonly property color outline: "#E0E0E0"
@@ -91,11 +91,11 @@ QtObject {
         readonly property color backgroundVariant: "#1E1E1E"
         
         // 文本颜色
-        readonly property color onSurface: "#FFFFFF"
-        readonly property color onSurfaceVariant: "#CCCCCC"
-        readonly property color onBackground: "#FFFFFF"
-        readonly property color onPrimary: "#000000"
-        readonly property color onSecondary: "#000000"
+        readonly property color textOnSurface: "#FFFFFF"
+        readonly property color textOnSurfaceVariant: "#CCCCCC"
+        readonly property color textOnBackground: "#FFFFFF"
+        readonly property color textOnPrimary: "#000000"
+        readonly property color textOnSecondary: "#000000"
         
         // 边框和分割线
         readonly property color outline: "#404040"
@@ -178,7 +178,7 @@ QtObject {
 
     function registerCustomTheme(name, themeData) {
         customThemes[name] = themeData
-        customThemesChanged()
+        customThemesUpdated()
     }
 
     function applyCustomTheme(name) {
@@ -232,26 +232,15 @@ QtObject {
     }
 
     // ==================== 信号 ====================
-    
+
     signal themeChanged()
-    signal customThemesChanged()
+    signal customThemesUpdated()
 
     // ==================== 初始化 ====================
-    
+
     Component.onCompleted: {
         loadThemePreference()
         updateSystemTheme()
-        
-        // 定期更新系统主题检测
-        systemThemeTimer.start()
-    }
-
-    Timer {
-        id: systemThemeTimer
-        interval: 60000 // 每分钟检查一次
-        running: currentTheme === ThemeManager.ThemeType.Auto
-        repeat: true
-        onTriggered: updateSystemTheme()
     }
 
     // ==================== 工具方法 ====================

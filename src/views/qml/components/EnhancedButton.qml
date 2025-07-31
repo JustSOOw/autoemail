@@ -6,7 +6,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.15
-import QtGraphicalEffects 1.15
 
 Button {
     id: root
@@ -79,13 +78,15 @@ Button {
         border.color: root.enabled ? root.customColor : DesignSystem.colors.disabled
         
         // 阴影效果（仅浮起按钮）
-        layer.enabled: root.variant === EnhancedButton.ButtonVariant.Elevated
-        layer.effect: DropShadow {
-            horizontalOffset: DesignSystem.elevation.level2.offsetX
-            verticalOffset: DesignSystem.elevation.level2.offsetY
-            radius: DesignSystem.elevation.level2.blur
-            color: DesignSystem.elevation.level2.color
-            spread: DesignSystem.elevation.level2.spread
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -8
+            visible: root.variant === EnhancedButton.ButtonVariant.Elevated
+            color: "#40000000"
+            radius: parent.radius
+            opacity: 0.3
+            z: -1
+            y: 2
         }
         
         // 悬停效果
@@ -120,13 +121,25 @@ Button {
             }
         }
         
-        // 涟漪效果
-        Ripple {
+        // 简化的涟漪效果
+        Rectangle {
             id: ripple
             anchors.fill: parent
-            pressed: root.pressed
-            active: root.enableRipple && (root.down || root.visualFocus || root.hovered)
-            color: getRippleColor()
+            color: "transparent"
+            radius: parent.radius
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: root.pressed ? parent.width : 0
+                height: root.pressed ? parent.height : 0
+                color: "#40FFFFFF"
+                radius: parent.radius
+                opacity: root.pressed ? 0.3 : 0
+
+                Behavior on width { PropertyAnimation { duration: 150 } }
+                Behavior on height { PropertyAnimation { duration: 150 } }
+                Behavior on opacity { PropertyAnimation { duration: 150 } }
+            }
         }
         
         // 按钮缩放动画

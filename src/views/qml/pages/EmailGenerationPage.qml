@@ -200,13 +200,22 @@ Rectangle {
                         font.pixelSize: 14
                     }
 
-                    SpinBox {
-                        id: batchCountSpinBox
-                        from: 1
-                        to: 100
-                        value: 5
-                        enabled: batchModeCheckBox.checked
-                        suffix: " 个"
+                    Row {
+                        spacing: 5
+                        SpinBox {
+                            id: batchCountSpinBox
+                            from: 1
+                            to: 100
+                            value: 5
+                            enabled: batchModeCheckBox.checked
+                        }
+
+                        Text {
+                            text: "个"
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: batchModeCheckBox.checked ? Material.foreground : Material.hintTextColor
+                            font.pixelSize: 14
+                        }
                     }
                 }
 

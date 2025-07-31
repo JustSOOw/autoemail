@@ -119,24 +119,55 @@ Rectangle {
             Button {
                 visible: root.showCloseButton
                 text: "✕"
-                font.pixelSize: 12
-                implicitWidth: 24
-                implicitHeight: 24
+                font.pixelSize: 14
+                font.weight: Font.Bold
+                implicitWidth: 28
+                implicitHeight: 28
+                flat: true
+
+                // 确保按钮在最上层
+                z: 10
+
+                // 简化的样式，确保按钮内容居中
                 background: Rectangle {
-                    color: "transparent"
-                    radius: 12
+                    color: parent.hovered ? Qt.rgba(0, 0, 0, 0.1) : "transparent"
+                    radius: 14
                     border.color: root.textColor
                     border.width: 1
-                    opacity: parent.hovered ? 0.8 : 0.6
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
                 }
+
+                // 确保文字居中显示
                 contentItem: Text {
                     text: parent.text
                     font: parent.font
                     color: root.textColor
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+                    anchors.centerIn: parent
                 }
-                onClicked: root.hide()
+
+                onClicked: {
+                    console.log("关闭按钮被点击")
+                    root.hide()
+                }
+
+                // 添加工具提示
+                ToolTip.text: "关闭"
+                ToolTip.visible: hovered
+
+                // 确保鼠标事件能正确处理
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        console.log("MouseArea点击事件")
+                        root.hide()
+                    }
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
         }
     }
@@ -188,6 +219,7 @@ Rectangle {
     MouseArea {
         anchors.fill: messageRect
         hoverEnabled: true
+        acceptedButtons: Qt.NoButton  // 不接受点击事件，避免干扰关闭按钮
         onEntered: autoHideTimer.stop()
         onExited: {
             if (root.duration > 0 && root.visible) {

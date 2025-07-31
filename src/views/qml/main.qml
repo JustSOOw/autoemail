@@ -34,9 +34,12 @@ ApplicationWindow {
     readonly property bool isDesktop: screenSize === "lg" || screenSize === "xl"
 
     // 键盘快捷键支持
-    focus: true
+    Item {
+        anchors.fill: parent
+        focus: true
+        z: -1
 
-    Keys.onPressed: function(event) {
+        Keys.onPressed: function(event) {
         // Ctrl+数字键切换页面
         if (event.modifiers & Qt.ControlModifier) {
             switch (event.key) {
@@ -73,6 +76,19 @@ ApplicationWindow {
                     debugPanel.toggle()
                     event.accepted = true
                     break
+                case Qt.Key_P:
+                    // Ctrl+P: 显示/隐藏性能监控
+                    performanceMonitor.showOverlay = !performanceMonitor.showOverlay
+                    if (performanceMonitor.showOverlay) {
+                        performanceMonitor.enabled = true
+                    }
+                    event.accepted = true
+                    break
+                case Qt.Key_T:
+                    // Ctrl+T: 显示/隐藏测试面板
+                    uxTestSuite.testingEnabled = !uxTestSuite.testingEnabled
+                    event.accepted = true
+                    break
             }
         }
 
@@ -89,6 +105,7 @@ ApplicationWindow {
             }
             event.accepted = true
         }
+    }
     }
 
     // 应用程序状态
@@ -108,6 +125,15 @@ ApplicationWindow {
     // 初始化
     Component.onCompleted: {
         console.log("应用程序启动完成")
+        console.log("快捷键:")
+        console.log("  Ctrl+1-4: 切换页面")
+        console.log("  Ctrl+N: 生成新邮箱")
+        console.log("  Ctrl+R: 刷新页面")
+        console.log("  Ctrl+D: 调试面板")
+        console.log("  Ctrl+P: 性能监控")
+        console.log("  Ctrl+T: UX测试")
+        console.log("  F5: 刷新页面")
+
         if (configController) {
             configController.loadConfig()
         }
@@ -117,6 +143,11 @@ ApplicationWindow {
 
         // 初始化全局状态
         initializeGlobalState()
+
+        // 应用性能优化
+        if (typeof PerformanceOptimizer !== 'undefined') {
+            PerformanceOptimizer.autoOptimize(window)
+        }
     }
 
     // 页面切换处理
@@ -360,7 +391,7 @@ ApplicationWindow {
                 text: "邮箱管理系统"
                 font.pixelSize: DesignSystem.typography.headline.small
                 font.weight: DesignSystem.typography.weight.semiBold
-                color: ThemeManager.colors.onSurface
+                color: ThemeManager.colors.textOnSurface
                 Layout.fillWidth: true
             }
 
@@ -405,7 +436,7 @@ ApplicationWindow {
                             font.pixelSize: DesignSystem.typography.body.medium
                             color: tabBar.currentIndex === modelData.index ?
                                    DesignSystem.colors.primary :
-                                   ThemeManager.colors.onSurface
+                                   ThemeManager.colors.textOnSurface
                             Layout.fillWidth: true
                         }
                     }
@@ -539,6 +570,7 @@ ApplicationWindow {
 
                 // 配置状态指示
                 Rectangle {
+                    id: configIndicator
                     visible: !window.isConfigured
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -554,7 +586,7 @@ ApplicationWindow {
                         loops: Animation.Infinite
 
                         NumberAnimation {
-                            target: parent
+                            target: configIndicator
                             property: "opacity"
                             from: 1.0
                             to: 0.3
@@ -562,7 +594,7 @@ ApplicationWindow {
                         }
 
                         NumberAnimation {
-                            target: parent
+                            target: configIndicator
                             property: "opacity"
                             from: 0.3
                             to: 1.0
@@ -719,7 +751,7 @@ ApplicationWindow {
                     globalStatusMessage.showInfo("正在删除标签...")
                 }
 
-                onRefreshTags: function() {
+                onRefreshRequested: function() {
                     // 刷新标签列表
                     console.log("刷新标签列表")
                     globalStatusMessage.showInfo("正在刷新标签列表...")
@@ -742,6 +774,11 @@ ApplicationWindow {
                 onSaveDomain: function(domain) {
                     if (configController) {
                         configController.setDomain(domain)
+                        // 保存后更新配置状态
+                        Qt.callLater(function() {
+                            window.isConfigured = configController.isConfigured()
+                            window.currentDomain = configController.getCurrentDomain()
+                        })
                     }
                 }
 
@@ -915,9 +952,15 @@ ApplicationWindow {
         }
 
         function onEmailListUpdated(emailList) {
+            console.log("收到邮箱列表更新信号，邮箱数量:", emailList.length)
             window.globalState.emailList = emailList
             window.globalState.lastRefreshTime = new Date()
             mainLogArea.addLog("📧 邮箱列表已更新，共 " + emailList.length + " 个邮箱")
+
+            // 强制更新邮箱管理页面
+            if (emailManagementPage) {
+                emailManagementPage.emailList = emailList
+            }
         }
     }
 
@@ -968,73 +1011,33 @@ ApplicationWindow {
 
     // ==================== 性能监控和测试工具 ====================
 
-    // 性能监控器
-    PerformanceMonitor {
-        id: performanceMonitor
-        anchors.fill: parent
-        enabled: false
-        showOverlay: false
-    }
+    // 性能监控器 (暂时禁用)
+    // PerformanceMonitor {
+    //     id: performanceMonitor
+    //     anchors.fill: parent
+    //     enabled: false
+    //     showOverlay: false
+    // }
 
-    // UX测试套件
-    UXTestSuite {
-        id: uxTestSuite
-        anchors.fill: parent
-        testingEnabled: false
+    // UX测试套件 (暂时禁用)
+    // UXTestSuite {
+    //     id: uxTestSuite
+    //     anchors.fill: parent
+    //     testingEnabled: false
 
-        onTestCompleted: function(testName, results) {
-            if (!results.passed) {
-                globalStatusMessage.showError("测试失败: " + testName)
-            }
-        }
+    //     onTestCompleted: function(testName, results) {
+    //         if (!results.passed) {
+    //             globalStatusMessage.showError("测试失败: " + testName)
+    //         }
+    //     }
 
-        onAllTestsCompleted: function(summary) {
-            globalStatusMessage.showSuccess(
-                "测试完成: " + summary.passedTests + "/" + summary.totalTests +
-                " 通过 (" + summary.successRate + ")"
-            )
-        }
-    }
-
-    // ==================== 快捷键支持 ====================
-
-    Keys.onPressed: function(event) {
-        if (event.modifiers & Qt.ControlModifier) {
-            switch (event.key) {
-                case Qt.Key_P:
-                    // Ctrl+P: 显示/隐藏性能监控
-                    performanceMonitor.showOverlay = !performanceMonitor.showOverlay
-                    if (performanceMonitor.showOverlay) {
-                        performanceMonitor.enabled = true
-                    }
-                    event.accepted = true
-                    break
-                case Qt.Key_T:
-                    // Ctrl+T: 显示/隐藏测试面板
-                    uxTestSuite.testingEnabled = !uxTestSuite.testingEnabled
-                    event.accepted = true
-                    break
-                case Qt.Key_R:
-                    // Ctrl+R: 刷新当前页面
-                    refreshCurrentPage()
-                    event.accepted = true
-                    break
-            }
-        }
-    }
+    //     onAllTestsCompleted: function(summary) {
+    //         globalStatusMessage.showSuccess(
+    //             "测试完成: " + summary.passedTests + "/" + summary.totalTests +
+    //             " 通过 (" + summary.successRate + ")"
+    //         )
+    //     }
+    // }
 
     // ==================== 初始化和优化 ====================
-
-    Component.onCompleted: {
-        console.log("应用程序初始化完成")
-        console.log("快捷键:")
-        console.log("  Ctrl+P: 性能监控")
-        console.log("  Ctrl+T: UX测试")
-        console.log("  Ctrl+R: 刷新页面")
-
-        // 应用性能优化
-        if (PerformanceOptimizer) {
-            PerformanceOptimizer.autoOptimize(window)
-        }
-    }
 }

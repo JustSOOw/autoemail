@@ -104,29 +104,29 @@ Rectangle {
                 radius: 6
                 color: root.isConfigured ? "#4CAF50" : "#F44336"
 
-                // 呼吸动画效果
-                SequentialAnimation {
-                    running: !root.isConfigured
-                    loops: Animation.Infinite
+                // 🔧 禁用呼吸动画 - 解决整个窗口闪烁问题
+                // SequentialAnimation {
+                //     running: !root.isConfigured
+                //     loops: Animation.Infinite
 
-                    NumberAnimation {
-                        target: parent
-                        property: "opacity"
-                        from: 1.0
-                        to: 0.3
-                        duration: 1000
-                        easing.type: Easing.InOutSine
-                    }
+                //     NumberAnimation {
+                //         target: parent
+                //         property: "opacity"
+                //         from: 1.0
+                //         to: 0.3
+                //         duration: 1000
+                //         easing.type: Easing.InOutSine
+                //     }
 
-                    NumberAnimation {
-                        target: parent
-                        property: "opacity"
-                        from: 0.3
-                        to: 1.0
-                        duration: 1000
-                        easing.type: Easing.InOutSine
-                    }
-                }
+                //     NumberAnimation {
+                //         target: parent
+                //         property: "opacity"
+                //         from: 0.3
+                //         to: 1.0
+                //         duration: 1000
+                //         easing.type: Easing.InOutSine
+                //     }
+                // }
 
                 MouseArea {
                     anchors.fill: parent

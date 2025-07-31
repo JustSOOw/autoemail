@@ -6,7 +6,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtGraphicalEffects 1.15
 
 Rectangle {
     id: root
@@ -49,13 +48,15 @@ Rectangle {
     }
     
     // 阴影效果
-    layer.enabled: selectionMode
-    layer.effect: DropShadow {
-        horizontalOffset: 0
-        verticalOffset: -2
-        radius: 8
-        color: DesignSystem.colors.shadow
-        spread: 0
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: -8
+        visible: selectionMode
+        color: "#40000000"
+        radius: parent.radius
+        opacity: 0.3
+        z: -1
+        y: -2
     }
 
     RowLayout {

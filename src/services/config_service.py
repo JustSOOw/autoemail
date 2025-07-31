@@ -428,11 +428,11 @@ class ConfigService:
                     # 插入或更新配置
                     cursor.execute(
                         """
-                        INSERT OR REPLACE INTO configurations 
-                        (config_key, config_value, config_type, updated_at) 
-                        VALUES (?, ?, ?, ?)
+                        INSERT OR REPLACE INTO configurations
+                        (config_key, config_value, config_type, updated_at, is_active)
+                        VALUES (?, ?, ?, datetime('now'), 1)
                         """,
-                        (key, value, config_type, "datetime('now')")
+                        (key, value, config_type)
                     )
             
             return True

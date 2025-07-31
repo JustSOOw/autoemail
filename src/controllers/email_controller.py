@@ -63,7 +63,14 @@ class EmailController(QObject):
         self._stats_timer = QTimer()
         self._stats_timer.timeout.connect(self._update_statistics)
         self._stats_timer.start(30000)  # 每30秒更新一次统计信息
-        
+
+        # 初始化时加载邮箱列表
+        try:
+            self.logger.info("EmailController初始化，开始加载邮箱列表...")
+            self._refresh_email_list()
+        except Exception as e:
+            self.logger.error(f"初始化加载邮箱列表失败: {e}")
+
         self.logger.info("邮箱控制器初始化完成")
 
     @pyqtSlot()
@@ -272,31 +279,59 @@ class EmailController(QObject):
     def _refresh_email_list(self):
         """刷新邮箱列表（内部方法）"""
         try:
-            # 获取邮箱列表 - 使用现有的方法获取活跃状态的邮箱
+            self.logger.info("开始刷新邮箱列表...")
+
+            # 方法1：获取所有活跃邮箱
             from models.email_model import EmailStatus
-            emails = self.email_service.get_emails_by_status(EmailStatus.ACTIVE, limit=50)
+            emails = self.email_service.get_emails_by_status(EmailStatus.ACTIVE, limit=100)
+
+            # 方法2：如果没有活跃邮箱，尝试获取所有邮箱
+            if not emails:
+                self.logger.info("未找到活跃邮箱，尝试获取所有邮箱...")
+                emails = self.email_service.search_emails(limit=100)
+
+            # 方法3：直接从数据库查询
+            if not emails:
+                self.logger.info("尝试直接从数据库查询邮箱...")
+                try:
+                    query = "SELECT * FROM emails WHERE is_active = 1 ORDER BY created_at DESC LIMIT 100"
+                    results = self.email_service.db_service.execute_query(query)
+                    if results:
+                        emails = [self.email_service._row_to_email_model(row) for row in results]
+                        self.logger.info(f"从数据库直接查询到 {len(emails)} 个邮箱")
+                except Exception as db_e:
+                    self.logger.error(f"直接数据库查询失败: {db_e}")
+
             self._current_emails = emails
-            
+            self.logger.info(f"获取到 {len(emails)} 个邮箱")
+
             # 转换为QML可用的格式
             email_list = []
             for email in emails:
-                email_dict = {
-                    "id": email.id or 0,
-                    "email_address": email.email_address,
-                    "domain": email.domain,
-                    "status": email.status.value,
-                    "created_at": email.created_at.isoformat() if email.created_at else "",
-                    "tags": email.tags,
-                    "notes": email.notes or "",
-                    "is_active": email.is_active
-                }
-                email_list.append(email_dict)
-            
+                try:
+                    email_dict = {
+                        "id": email.id or 0,
+                        "email_address": email.email_address or "",
+                        "domain": email.domain or "",
+                        "status": email.status.value if hasattr(email.status, 'value') else str(email.status),
+                        "created_at": email.created_at.isoformat() if email.created_at else "",
+                        "tags": email.tags or [],
+                        "notes": email.notes or "",
+                        "is_active": email.is_active
+                    }
+                    email_list.append(email_dict)
+                except Exception as convert_e:
+                    self.logger.error(f"转换邮箱数据失败: {convert_e}, 邮箱: {email}")
+
+            self.logger.info(f"成功转换 {len(email_list)} 个邮箱数据")
+
             # 发送信号
             self.emailListUpdated.emit(email_list)
-            
+
         except Exception as e:
             self.logger.error(f"刷新邮箱列表失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误信息: {traceback.format_exc()}")
             self.emailListUpdated.emit([])
 
     def _update_statistics(self):

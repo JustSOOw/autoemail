@@ -6,7 +6,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtGraphicalEffects 1.15
 
 Rectangle {
     id: root
@@ -39,15 +38,15 @@ Rectangle {
     border.color: searchField.activeFocus ? DesignSystem.colors.primary : ThemeManager.colors.outline
     
     // 阴影效果
-    layer.enabled: searchField.activeFocus
-    layer.effect: DropShadow {
-        horizontalOffset: 0
-        verticalOffset: 2
-        radius: 8
-        color: Qt.rgba(DesignSystem.colors.primary.r, 
-                      DesignSystem.colors.primary.g, 
-                      DesignSystem.colors.primary.b, 0.2)
-        spread: 0
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: -8
+        visible: searchField.activeFocus
+        color: "#4000BCD4"
+        radius: parent.radius
+        opacity: 0.3
+        z: -1
+        y: 2
     }
 
     RowLayout {
@@ -185,13 +184,14 @@ Rectangle {
             border.width: 1
             border.color: ThemeManager.colors.outline
             
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 4
-                radius: 12
-                color: DesignSystem.colors.shadow
-                spread: 0
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -12
+                color: "#40000000"
+                radius: parent.radius
+                opacity: 0.3
+                z: -1
+                y: 4
             }
         }
         
@@ -246,13 +246,14 @@ Rectangle {
             border.width: 1
             border.color: ThemeManager.colors.outline
             
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 4
-                radius: 12
-                color: DesignSystem.colors.shadow
-                spread: 0
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -12
+                color: "#40000000"
+                radius: parent.radius
+                opacity: 0.3
+                z: -1
+                y: 4
             }
         }
         
@@ -350,13 +351,14 @@ Rectangle {
             border.width: 1
             border.color: ThemeManager.colors.outline
             
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: 4
-                radius: 12
-                color: DesignSystem.colors.shadow
-                spread: 0
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -12
+                color: "#40000000"
+                radius: parent.radius
+                opacity: 0.3
+                z: -1
+                y: 4
             }
         }
         

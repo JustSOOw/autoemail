@@ -36,11 +36,11 @@ QtObject {
         readonly property color backgroundVariant: "#F5F5F5"
         
         // 文本颜色
-        readonly property color onSurface: "#212121"
-        readonly property color onSurfaceVariant: "#757575"
-        readonly property color onBackground: "#212121"
-        readonly property color onPrimary: "#FFFFFF"
-        readonly property color onSecondary: "#FFFFFF"
+        readonly property color textOnSurface: "#212121"
+        readonly property color textOnSurfaceVariant: "#757575"
+        readonly property color textOnBackground: "#212121"
+        readonly property color textOnPrimary: "#FFFFFF"
+        readonly property color textOnSecondary: "#FFFFFF"
         
         // 状态颜色
         readonly property color success: "#4CAF50"
@@ -242,10 +242,10 @@ QtObject {
         readonly property string search: "🔍"
         readonly property string add: "➕"
         readonly property string edit: "✏️"
-        readonly property string delete: "🗑️"
+        readonly property string deleteIcon: "🗑️"
         readonly property string save: "💾"
-        readonly property string export: "📤"
-        readonly property string import: "📥"
+        readonly property string exportIcon: "📤"
+        readonly property string importIcon: "📥"
         readonly property string refresh: "🔄"
         readonly property string close: "✕"
         readonly property string check: "✓"

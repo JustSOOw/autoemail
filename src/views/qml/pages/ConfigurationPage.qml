@@ -29,10 +29,12 @@ Rectangle {
     ScrollView {
         anchors.fill: parent
         anchors.margins: 20
+        contentWidth: availableWidth
 
         ColumnLayout {
             width: parent.width
             spacing: 20
+            Layout.fillWidth: true
 
             // 页面标题
             Label {
@@ -47,6 +49,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 280
+                Layout.minimumHeight: 280
                 color: "white"
                 radius: 8
                 border.color: "#e0e0e0"
@@ -105,7 +108,7 @@ Rectangle {
                         Button {
                             text: "💾 保存"
                             Material.background: Material.Green
-                            enabled: domainField.isValidFormat && root.isConfigured
+                            enabled: domainField.isValidFormat
                             onClicked: {
                                 if (domainField.text.trim()) {
                                     root.saveDomain(domainField.text.trim())
@@ -169,6 +172,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 320
+                Layout.minimumHeight: 320
                 color: "white"
                 radius: 8
                 border.color: "#e0e0e0"
@@ -216,12 +220,19 @@ Rectangle {
                             color: autoLockCheckBox.checked ? "#666" : "#ccc"
                         }
 
-                        SpinBox {
-                            id: autoLockTimeSpinBox
-                            from: 5
-                            to: 120
-                            value: root.configData.auto_lock_timeout || 30
-                            suffix: " 分钟"
+                        RowLayout {
+                            SpinBox {
+                                id: autoLockTimeSpinBox
+                                from: 5
+                                to: 120
+                                value: root.configData.auto_lock_timeout || 30
+                            }
+
+                            Label {
+                                text: "分钟"
+                                font.pixelSize: 14
+                                color: "#666"
+                            }
                         }
                     }
 
@@ -285,6 +296,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 280
+                Layout.minimumHeight: 280
                 color: "white"
                 radius: 8
                 border.color: "#e0e0e0"
@@ -302,26 +314,6 @@ Rectangle {
                     }
 
                     CheckBox {
-                        id: autoStartCheckBox
-                        text: "开机自启动"
-                        checked: root.configData.auto_start || false
-                        font.pixelSize: 14
-
-                        ToolTip.text: "系统启动时自动运行应用程序"
-                        ToolTip.visible: hovered
-                    }
-
-                    CheckBox {
-                        id: rememberWindowCheckBox
-                        text: "记住窗口状态"
-                        checked: root.configData.remember_window_state || true
-                        font.pixelSize: 14
-
-                        ToolTip.text: "记住窗口大小和位置，下次启动时恢复"
-                        ToolTip.visible: hovered
-                    }
-
-                    CheckBox {
                         id: showNotificationsCheckBox
                         text: "显示通知"
                         checked: root.configData.show_notifications || true
@@ -329,60 +321,6 @@ Rectangle {
 
                         ToolTip.text: "显示系统通知消息"
                         ToolTip.visible: hovered
-                    }
-
-                    CheckBox {
-                        id: minimizeToTrayCheckBox
-                        text: "最小化到系统托盘"
-                        checked: root.configData.minimize_to_tray || false
-                        font.pixelSize: 14
-
-                        ToolTip.text: "关闭窗口时最小化到系统托盘而不是退出"
-                        ToolTip.visible: hovered
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 10
-
-                        Label {
-                            text: "界面主题:"
-                            font.pixelSize: 14
-                            color: "#666"
-                        }
-
-                        ComboBox {
-                            id: themeComboBox
-                            model: ["浅色", "深色", "跟随系统"]
-                            currentIndex: {
-                                var theme = root.configData.theme || "light"
-                                var themeMap = {"light": 0, "dark": 1, "auto": 2}
-                                return themeMap[theme] || 0
-                            }
-
-                            ToolTip.text: "选择应用程序的界面主题"
-                            ToolTip.visible: hovered
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 10
-
-                        Label {
-                            text: "界面语言:"
-                            font.pixelSize: 14
-                            color: "#666"
-                        }
-
-                        ComboBox {
-                            id: languageComboBox
-                            model: ["简体中文", "English"]
-                            currentIndex: 0
-
-                            ToolTip.text: "选择应用程序的界面语言"
-                            ToolTip.visible: hovered
-                        }
                     }
 
                     Item { Layout.fillHeight: true }
@@ -393,6 +331,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 120
+                Layout.minimumHeight: 120
                 color: "white"
                 radius: 8
                 border.color: "#e0e0e0"
@@ -548,7 +487,6 @@ Rectangle {
             return
         }
 
-        var themeMap = ["light", "dark", "auto"]
         var config = {
             // 域名配置
             domain: domainField.text.trim(),
@@ -562,12 +500,7 @@ Rectangle {
             backup_interval: backupIntervalCombo.currentText,
 
             // 系统配置
-            auto_start: autoStartCheckBox.checked,
-            remember_window_state: rememberWindowCheckBox.checked,
-            show_notifications: showNotificationsCheckBox.checked,
-            minimize_to_tray: minimizeToTrayCheckBox.checked,
-            theme: themeMap[themeComboBox.currentIndex] || "light",
-            language: languageComboBox.currentIndex === 0 ? "zh_CN" : "en_US"
+            show_notifications: showNotificationsCheckBox.checked
         }
 
         root.saveConfig(config)
@@ -619,21 +552,7 @@ Rectangle {
         }
 
         // 系统配置
-        autoStartCheckBox.checked = config.auto_start || false
-        rememberWindowCheckBox.checked = config.remember_window_state !== undefined ? config.remember_window_state : true
         showNotificationsCheckBox.checked = config.show_notifications !== undefined ? config.show_notifications : true
-        minimizeToTrayCheckBox.checked = config.minimize_to_tray || false
-
-        // 主题配置
-        var themeMap = {"light": 0, "dark": 1, "auto": 2}
-        var themeIndex = themeMap[config.theme || "light"]
-        if (themeIndex !== undefined) {
-            themeComboBox.currentIndex = themeIndex
-        }
-
-        // 语言配置
-        var languageIndex = config.language === "en_US" ? 1 : 0
-        languageComboBox.currentIndex = languageIndex
     }
 
     function resetToDefaults() {
@@ -645,11 +564,6 @@ Rectangle {
         autoBackupCheckBox.checked = false
         logLevelComboBox.currentIndex = 1 // INFO
         backupIntervalCombo.currentIndex = 1 // 每周
-        autoStartCheckBox.checked = false
-        rememberWindowCheckBox.checked = true
         showNotificationsCheckBox.checked = true
-        minimizeToTrayCheckBox.checked = false
-        themeComboBox.currentIndex = 0 // 浅色
-        languageComboBox.currentIndex = 0 // 简体中文
     }
 }

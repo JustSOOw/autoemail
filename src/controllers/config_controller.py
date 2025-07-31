@@ -161,12 +161,27 @@ class ConfigController(QObject):
     def getCurrentDomain(self):
         """获取当前域名 - QML调用的方法"""
         try:
+            # 优先从数据库读取
+            if hasattr(self, 'config_service') and self.config_service:
+                domain_from_db = self.config_service.get_config_value("domain_config.domain", "")
+                if domain_from_db:
+                    return domain_from_db
+
+            # 从内存配置读取
             if self._current_config:
-                return self._current_config.get_domain() or ""
-            
+                domain = self._current_config.get_domain()
+                if domain:
+                    return domain
+
+            # 从文件配置读取
             config = self.config_manager.get_config()
-            return config.get_domain() or "" if config else ""
-            
+            if config:
+                domain = config.get_domain()
+                if domain:
+                    return domain
+
+            return ""
+
         except Exception as e:
             self.logger.error(f"获取当前域名失败: {e}")
             return ""
@@ -175,41 +190,78 @@ class ConfigController(QObject):
     def setDomain(self, domain: str):
         """
         设置域名 - QML调用的方法
-        
+
         Args:
             domain: 域名
         """
         try:
-            # 获取当前配置
+            domain = domain.strip()
+            self.statusChanged.emit(f"正在保存域名: {domain}")
+
+            # 方法1：使用ConfigService保存到数据库
+            if hasattr(self, 'config_service') and self.config_service:
+                success_db = self.config_service.update_domain_config(domain)
+                if success_db:
+                    self.logger.info(f"域名已保存到数据库: {domain}")
+                else:
+                    self.logger.warning(f"域名保存到数据库失败: {domain}")
+
+            # 方法2：使用ConfigManager保存到文件
             if not self._current_config:
                 self._current_config = self.config_manager.get_config()
-            
+
             # 设置域名
-            self._current_config.domain_config.domain = domain.strip()
-            
-            # 保存配置
-            success = self.config_manager.save_config(self._current_config)
-            
-            if success:
+            self._current_config.domain_config.domain = domain
+
+            # 更新内部配置对象
+            self.config_manager._config = self._current_config
+
+            # 保存到文件
+            success_file = self.config_manager.save_config()
+
+            # 方法3：直接设置配置值（确保持久化）
+            if hasattr(self, 'config_service') and self.config_service:
+                self.config_service.set_config_value("domain_config.domain", domain)
+
+            if success_file:
+                self.configSaved.emit(True, f"域名设置成功: {domain}")
                 self.statusChanged.emit(f"域名设置成功: {domain}")
                 self.logger.info(f"域名设置成功: {domain}")
             else:
+                self.configSaved.emit(False, "域名设置失败")
                 self.errorOccurred.emit("设置失败", "域名设置失败")
-                
+
         except Exception as e:
             self.logger.error(f"域名设置失败: {e}")
+            self.configSaved.emit(False, f"域名设置失败: {e}")
             self.errorOccurred.emit("设置失败", str(e))
 
     @pyqtSlot(result=bool)
     def isConfigured(self):
         """检查是否已配置 - QML调用的方法"""
         try:
+            # 直接检查是否有域名配置
+            domain = self.getCurrentDomain()
+            if domain and domain.strip():
+                self.logger.info(f"检测到已配置域名: {domain}")
+                return True
+
+            # 备用方法：检查配置对象
             if self._current_config:
-                return self._current_config.is_configured()
-            
+                is_configured = self._current_config.is_configured()
+                if is_configured:
+                    self.logger.info("通过配置对象检测到已配置")
+                    return True
+
+            # 再次从文件检查
             config = self.config_manager.get_config()
-            return config.is_configured() if config else False
-            
+            if config and config.is_configured():
+                self.logger.info("通过配置文件检测到已配置")
+                return True
+
+            self.logger.info("未检测到有效配置")
+            return False
+
         except Exception as e:
             self.logger.error(f"检查配置状态失败: {e}")
             return False
@@ -219,24 +271,30 @@ class ConfigController(QObject):
         """重置配置 - QML调用的方法"""
         try:
             self.statusChanged.emit("正在重置配置...")
-            
+
             # 创建默认配置
             default_config = ConfigModel()
-            
+
+            # 更新内部配置对象
+            self.config_manager._config = default_config
+
             # 保存默认配置
-            success = self.config_manager.save_config(default_config)
-            
+            success = self.config_manager.save_config()
+
             if success:
                 self._current_config = default_config
                 config_data = self._config_to_qml_format(default_config)
                 self.configLoaded.emit(config_data)
+                self.configSaved.emit(True, "配置重置成功")
                 self.statusChanged.emit("配置重置成功")
                 self.logger.info("配置重置成功")
             else:
+                self.configSaved.emit(False, "配置重置失败")
                 self.errorOccurred.emit("重置失败", "配置重置失败")
-                
+
         except Exception as e:
             self.logger.error(f"配置重置失败: {e}")
+            self.configSaved.emit(False, f"配置重置失败: {e}")
             self.errorOccurred.emit("重置失败", str(e))
 
     def _config_to_qml_format(self, config: ConfigModel) -> Dict[str, Any]:
