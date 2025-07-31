@@ -725,7 +725,10 @@ Rectangle {
                             implicitHeight: 50
                             font.pixelSize: 16
                             font.weight: Font.Medium
-                            onClicked: newCreateTagDialog.open()
+                            onClicked: {
+                                unifiedTagDialog.setCreateMode()
+                                unifiedTagDialog.open()
+                            }
 
                             // 添加阴影效果
                             Rectangle {
@@ -882,206 +885,19 @@ Rectangle {
     }
 
 
-    // ==================== 编辑标签对话框 ====================
+    // ==================== 统一的标签对话框 ====================
 
-    Dialog {
-        id: editTagDialog
-        title: "编辑标签"
-        modal: true
-        anchors.centerIn: parent
-        width: 450
-        height: 400
-
-        property var tagData: ({})
-
-        ColumnLayout {
-            spacing: 20
-            width: parent.width
-
-            // 标签预览
-            Rectangle {
-                Layout.fillWidth: true
-                height: 80
-                color: "#f8f9fa"
-                radius: 8
-                border.color: "#e0e0e0"
-
-                RowLayout {
-                    anchors.centerIn: parent
-                    spacing: 15
-
-                    Rectangle {
-                        width: 50
-                        height: 50
-                        color: editColorField.text || "#2196F3"
-                        radius: 25
-
-                        Label {
-                            anchors.centerIn: parent
-                            text: editIconField.text || "🏷️"
-                            font.pixelSize: 20
-                        }
-                    }
-
-                    ColumnLayout {
-                        spacing: 5
-
-                        Label {
-                            text: editNameField.text || "标签名称"
-                            font.pixelSize: 16
-                            font.weight: Font.DemiBold
-                            color: "#333"
-                        }
-
-                        Label {
-                            text: editDescField.text || "标签描述"
-                            font.pixelSize: 12
-                            color: "#666"
-                        }
-                    }
-                }
-            }
-
-            // 表单字段
-            GridLayout {
-                columns: 2
-                columnSpacing: 15
-                rowSpacing: 15
-                Layout.fillWidth: true
-
-                Label {
-                    text: "标签名称:"
-                    font.pixelSize: 14
-                    color: "#333"
-                }
-
-                TextField {
-                    id: editNameField
-                    Layout.fillWidth: true
-                    placeholderText: "输入标签名称..."
-                    text: editTagDialog.tagData.name || ""
-                    selectByMouse: true
-                }
-
-                Label {
-                    text: "标签描述:"
-                    font.pixelSize: 14
-                    color: "#333"
-                }
-
-                TextField {
-                    id: editDescField
-                    Layout.fillWidth: true
-                    placeholderText: "输入标签描述..."
-                    text: editTagDialog.tagData.description || ""
-                    selectByMouse: true
-                }
-
-                Label {
-                    text: "标签图标:"
-                    font.pixelSize: 14
-                    color: "#333"
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
-
-                    TextField {
-                        id: editIconField
-                        Layout.fillWidth: true
-                        placeholderText: "选择图标..."
-                        text: editTagDialog.tagData.icon || "🏷️"
-                        selectByMouse: true
-                    }
-
-                    Button {
-                        text: "📝"
-                        ToolTip.text: "常用图标"
-                        onClicked: editIconPickerMenu.open()
-
-                        Menu {
-                            id: editIconPickerMenu
-                            Repeater {
-                                model: ["🏷️", "📌", "⭐", "🔥", "💼", "🎯", "📊", "🔧", "💡", "🎨"]
-                                MenuItem {
-                                    text: modelData
-                                    onTriggered: editIconField.text = modelData
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Label {
-                    text: "标签颜色:"
-                    font.pixelSize: 14
-                    color: "#333"
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
-
-                    TextField {
-                        id: editColorField
-                        Layout.fillWidth: true
-                        placeholderText: "#2196F3"
-                        text: editTagDialog.tagData.color || "#2196F3"
-                        selectByMouse: true
-                    }
-
-                    Button {
-                        text: "🎨"
-                        ToolTip.text: "预设颜色"
-                        onClicked: editColorPickerMenu.open()
-
-                        Menu {
-                            id: editColorPickerMenu
-                            Repeater {
-                                model: ["#2196F3", "#4CAF50", "#FF9800", "#F44336", "#9C27B0", "#00BCD4", "#795548", "#607D8B"]
-                                MenuItem {
-                                    Rectangle {
-                                        width: 20
-                                        height: 20
-                                        color: modelData
-                                        radius: 10
-                                    }
-                                    onTriggered: editColorField.text = modelData
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 按钮
-            RowLayout {
-                Layout.alignment: Qt.AlignRight
-                spacing: 10
-
-                Button {
-                    text: "取消"
-                    onClicked: editTagDialog.close()
-                }
-
-                Button {
-                    text: "保存"
-                    Material.background: Material.Blue
-                    enabled: editNameField.text.trim().length > 0
-                    onClicked: {
-                        var updatedData = {
-                            id: editTagDialog.tagData.id,
-                            name: editNameField.text.trim(),
-                            description: editDescField.text.trim(),
-                            icon: editIconField.text.trim() || "🏷️",
-                            color: editColorField.text.trim() || "#2196F3"
-                        }
-                        root.updateTag(editTagDialog.tagData.id, updatedData)
-                        editTagDialog.close()
-                    }
-                }
-            }
+    CreateTagDialog {
+        id: unifiedTagDialog
+        
+        onTagCreated: function(tagData) {
+            console.log("创建标签:", JSON.stringify(tagData))
+            root.createTag(tagData)
+        }
+        
+        onTagUpdated: function(tagId, tagData) {
+            console.log("更新标签:", tagId, JSON.stringify(tagData))
+            root.updateTag(tagId, tagData)
         }
     }
 
