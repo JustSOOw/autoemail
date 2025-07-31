@@ -31,13 +31,36 @@ Dialog {
 
     // 重置表单
     function resetForm() {
-        nameField.text = ""
-        descField.text = ""
-        iconField.text = "🏷️"
-        colorField.text = "#2196F3"
+        if (isEditMode && editTagData) {
+            // 编辑模式：填充现有数据
+            nameField.text = editTagData.name || ""
+            descField.text = editTagData.description || ""
+            iconField.text = editTagData.icon || "🏷️"
+            colorField.text = editTagData.color || "#2196F3"
+        } else {
+            // 创建模式：重置为默认值
+            nameField.text = ""
+            descField.text = ""
+            iconField.text = "🏷️"
+            colorField.text = "#2196F3"
+        }
         selectedIconPath = ""
         iconPreview.source = ""
         isCreating = false
+    }
+
+    // 新增：设置编辑模式的函数
+    function setEditMode(tagData) {
+        isEditMode = true
+        editTagData = tagData
+        resetForm()
+    }
+
+    // 新增：设置创建模式的函数
+    function setCreateMode() {
+        isEditMode = false
+        editTagData = {}
+        resetForm()
     }
 
     // 验证表单
@@ -533,7 +556,7 @@ Dialog {
             }
 
             Button {
-                text: isCreating ? "创建中..." : "创建标签"
+                text: isCreating ? (isEditMode ? "保存中..." : "创建中...") : (isEditMode ? "保存标签" : "创建标签")
                 Material.background: Material.Blue
                 enabled: nameField.text.trim().length > 0 && !isCreating
                 onClicked: {
@@ -549,7 +572,14 @@ Dialog {
                         icon_type: selectedIconPath.length > 0 ? "custom" : "emoji"
                     }
 
-                    root.tagCreated(tagData)
+                    if (isEditMode) {
+                        // 编辑模式：发送更新信号
+                        tagData.id = editTagData.id
+                        root.tagUpdated(editTagData.id, tagData)
+                    } else {
+                        // 创建模式：发送创建信号
+                        root.tagCreated(tagData)
+                    }
 
                     Qt.callLater(function() {
                         isCreating = false

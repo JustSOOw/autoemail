@@ -570,8 +570,9 @@ Rectangle {
                                     flat: false
                                     ToolTip.text: "编辑标签信息"
                                     onClicked: {
-                                        editTagDialog.tagData = modelData
-                                        editTagDialog.open()
+                                        // 使用统一的对话框，设置为编辑模式
+                                        unifiedTagDialog.setEditMode(modelData)
+                                        unifiedTagDialog.open()
                                     }
 
                                     background: Rectangle {

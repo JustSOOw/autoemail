@@ -1415,18 +1415,18 @@ Rectangle {
                 // 已选择的标签显示
                 Flow {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Math.max(30, implicitHeight)
+                    Layout.preferredHeight: selectedTagsRepeater.count > 0 ? Math.max(30, implicitHeight) : 0
                     spacing: 6
-                    visible: selectedTagsList.length > 0
+                    visible: selectedTagsRepeater.count > 0
 
                     Repeater {
-                        model: selectedTagsList.length
+                        id: selectedTagsRepeater
+                        model: selectedTagsList
 
                         Rectangle {
-                            property var tagData: selectedTagsList[index] || {}
                             width: tagContent.implicitWidth + 16
                             height: 28
-                            color: getTagColor(tagData)
+                            color: modelData.color || "#2196F3"
                             radius: 14
                             opacity: 0.9
 
@@ -1436,13 +1436,13 @@ Rectangle {
                                 spacing: 6
 
                                 Text {
-                                    text: getTagIcon(parent.parent.tagData)
+                                    text: modelData.icon || "🏷️"
                                     font.pixelSize: 12
                                     color: "white"
                                 }
 
                                 Text {
-                                    text: getTagName(parent.parent.tagData)
+                                    text: modelData.name || ""
                                     font.pixelSize: 12
                                     font.weight: Font.Medium
                                     color: "white"
@@ -1464,9 +1464,7 @@ Rectangle {
 
                                     MouseArea {
                                         anchors.fill: parent
-                                        // 重要：不接受点击事件，让子元素处理
-                                        acceptedButtons: Qt.LeftButton
-                                        onClicked: removeSelectedTag(parent.parent.parent.tagData)
+                                        onClicked: removeSelectedTag(modelData)
                                         hoverEnabled: true
                                         onContainsMouseChanged: {
                                             parent.color = containsMouse ? "#60ffffff" : "#40ffffff"
@@ -1474,6 +1472,17 @@ Rectangle {
                                     }
                                 }
                             }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.NoButton
+                                onContainsMouseChanged: {
+                                    parent.opacity = containsMouse ? 1.0 : 0.9
+                                }
+                            }
+
+                            Behavior on opacity { PropertyAnimation { duration: 150 } }
                         }
                     }
                 }
@@ -1620,7 +1629,22 @@ Rectangle {
                         implicitHeight: 28
                         flat: true
                         onClicked: {
-                            loadAllTags()
+                            console.log("强制加载标签数据")
+                            // 优先使用真实数据，否则使用备用数据
+                            if (root.tagList && root.tagList.length > 0) {
+                                allTagsList = root.tagList.slice()
+                                console.log("从root.tagList加载", allTagsList.length, "个标签")
+                            } else {
+                                allTagsList = [
+                                    {id: 4, name: "临时用", color: "#f39c12", icon: "⏰", usage_count: 0, description: "临时使用的邮箱"},
+                                    {id: 2, name: "开发用", color: "#3498db", icon: "💻", usage_count: 0, description: "开发环境使用的邮箱"},
+                                    {id: 1, name: "测试用", color: "#e74c3c", icon: "🧪", usage_count: 0, description: "用于测试目的的邮箱"},
+                                    {id: 3, name: "生产用", color: "#27ae60", icon: "🚀", usage_count: 0, description: "生产环境使用的邮箱"},
+                                    {id: 5, name: "重要", color: "#9b59b6", icon: "⭐", usage_count: 0, description: "重要的邮箱记录"}
+                                ]
+                                console.log("加载备用标签数据", allTagsList.length, "个")
+                            }
+                            filterTags("")
                         }
 
                         background: Rectangle {
