@@ -1,0 +1,48 @@
+{
+  "export_info": {
+    "timestamp": "2024-01-15T14:30:00",
+    "format": "json",
+    "version": "1.0",
+    "source": "email-domain-manager"
+  },
+  "statistics": {
+    "total_emails": 3,
+    "active_emails": 2,
+    "inactive_emails": 1
+  },
+  "emails": [
+    {
+      "email_address": "wrapped1@example.com",
+      "tags": ["包装", "测试"],
+      "notes": "包装格式测试邮箱1",
+      "status": "active",
+      "created_at": "2024-01-15T10:00:00",
+      "metadata": {
+        "source": "import",
+        "priority": "normal"
+      }
+    },
+    {
+      "email_address": "wrapped2@example.com",
+      "tags": ["包装", "导入", "重要"],
+      "notes": "包装格式测试邮箱2",
+      "status": "active",
+      "created_at": "2024-01-15T11:00:00",
+      "metadata": {
+        "source": "manual",
+        "priority": "high"
+      }
+    },
+    {
+      "email_address": "wrapped3@example.com",
+      "tags": ["包装"],
+      "notes": "包装格式测试邮箱3",
+      "status": "inactive",
+      "created_at": "2024-01-15T12:00:00",
+      "metadata": {
+        "source": "import",
+        "priority": "low"
+      }
+    }
+  ]
+}
