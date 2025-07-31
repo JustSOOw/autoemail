@@ -3,6 +3,9 @@
 # GUI Framework
 PyQt6==6.6.1
 
+# Image processing
+Pillow==10.4.0
+
 # Database (SQLite is built-in)
 
 # Network requests
