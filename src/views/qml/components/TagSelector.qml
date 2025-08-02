@@ -223,10 +223,46 @@ Rectangle {
                         anchors.centerIn: parent
                         spacing: 6
                         
-                        Text {
-                            text: modelData.icon || "🏷️"
-                            font.pixelSize: 12
-                            color: "white"
+                        // 智能图标显示
+                        Item {
+                            id: selectedIconContainer
+                            width: 16
+                            height: 16
+
+                            property bool isImagePath: {
+                                var icon = modelData.icon || "🏷️"
+                                return icon.includes("/") || icon.includes("\\") || icon.includes(".png") || icon.includes(".jpg") || icon.includes(".jpeg")
+                            }
+
+                            Image {
+                                anchors.fill: parent
+                                source: {
+                                    if (!selectedIconContainer.isImagePath) return ""
+                                    var icon = modelData.icon || ""
+                                    if (icon.startsWith("file://")) return icon
+                                    return "file:///" + icon.replace(/\\/g, "/")
+                                }
+                                visible: selectedIconContainer.isImagePath
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                cache: true
+
+                                onStatusChanged: {
+                                    if (status === Image.Error) {
+                                        visible = false
+                                        fallbackIcon.visible = true
+                                    }
+                                }
+                            }
+
+                            Text {
+                                id: fallbackIcon
+                                anchors.centerIn: parent
+                                text: selectedIconContainer.isImagePath ? "🏷️" : (modelData.icon || "🏷️")
+                                font.pixelSize: 12
+                                visible: !selectedIconContainer.isImagePath
+                                color: "white"
+                            }
                         }
                         
                         Text {
@@ -312,11 +348,47 @@ Rectangle {
                                 radius: 10
                                 color: modelData.color || "#2196F3"
                                 
-                                Text {
+                                // 智能图标显示
+                                Item {
+                                    id: listIconContainer
                                     anchors.centerIn: parent
-                                    text: modelData.icon || "🏷️"
-                                    font.pixelSize: 10
-                                    color: "white"
+                                    width: 16
+                                    height: 16
+
+                                    property bool isImagePath: {
+                                        var icon = modelData.icon || "🏷️"
+                                        return icon.includes("/") || icon.includes("\\") || icon.includes(".png") || icon.includes(".jpg") || icon.includes(".jpeg")
+                                    }
+
+                                    Image {
+                                        anchors.fill: parent
+                                        source: {
+                                            if (!listIconContainer.isImagePath) return ""
+                                            var icon = modelData.icon || ""
+                                            if (icon.startsWith("file://")) return icon
+                                            return "file:///" + icon.replace(/\\/g, "/")
+                                        }
+                                        visible: listIconContainer.isImagePath
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        cache: true
+
+                                        onStatusChanged: {
+                                            if (status === Image.Error) {
+                                                visible = false
+                                                fallbackIcon.visible = true
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        id: fallbackIcon
+                                        anchors.centerIn: parent
+                                        text: listIconContainer.isImagePath ? "🏷️" : (modelData.icon || "🏷️")
+                                        font.pixelSize: 10
+                                        visible: !listIconContainer.isImagePath
+                                        color: "white"
+                                    }
                                 }
                             }
                             

@@ -309,9 +309,51 @@ Dialog {
                                         anchors.centerIn: parent
                                         spacing: 3
 
-                                        Text {
-                                            text: modelData.icon || "🏷️"
-                                            font.pixelSize: 10
+                                        // 智能图标显示
+                                        Item {
+                                            id: selectedTagIconContainer
+                                            width: 12
+                                            height: 12
+
+                                            property bool isImagePath: {
+                                                var icon = modelData.icon || "🏷️"
+                                                return icon.includes("/") || icon.includes("\\") || icon.includes(".png") || icon.includes(".jpg") || icon.includes(".jpeg")
+                                            }
+
+                                            Image {
+                                                anchors.fill: parent
+                                                source: {
+                                                    if (!selectedTagIconContainer.isImagePath) return ""
+                                                    var icon = modelData.icon || ""
+                                                    // 如果已经是file://格式，直接使用
+                                                    if (icon.startsWith("file://")) {
+                                                        return icon
+                                                    }
+                                                    // 否则添加file://前缀
+                                                    return "file:///" + icon.replace(/\\/g, "/")
+                                                }
+                                                visible: selectedTagIconContainer.isImagePath
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                cache: true
+
+                                                onStatusChanged: {
+                                                    if (status === Image.Error) {
+                                                        console.log("已选择标签图片加载失败:", source)
+                                                        visible = false
+                                                        fallbackIcon.visible = true
+                                                    }
+                                                }
+                                            }
+
+                                            Text {
+                                                id: fallbackIcon
+                                                anchors.centerIn: parent
+                                                text: selectedTagIconContainer.isImagePath ? "🏷️" : (modelData.icon || "🏷️")
+                                                font.pixelSize: 10
+                                                visible: !selectedTagIconContainer.isImagePath
+                                                color: "white"
+                                            }
                                         }
 
                                         Text {
@@ -321,27 +363,27 @@ Dialog {
                                             font.weight: Font.Medium
                                         }
 
-                                        Button {
-                                            text: "✕"
-                                            implicitWidth: 14
-                                            implicitHeight: 14
-                                            font.pixelSize: 9
-                                            flat: true
+                                        Rectangle {
+                                            width: 14
+                                            height: 14
+                                            color: closeMouseArea.containsMouse ? "#ffffff40" : "transparent"
+                                            radius: 7
 
-                                            background: Rectangle {
-                                                color: parent.hovered ? "#ffffff40" : "transparent"
-                                                radius: 7
-                                            }
-
-                                            contentItem: Text {
-                                                text: parent.text
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "✕"
                                                 color: "white"
-                                                font: parent.font
-                                                horizontalAlignment: Text.AlignHCenter
-                                                verticalAlignment: Text.AlignVCenter
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
                                             }
 
-                                            onClicked: removeTag(modelData)
+                                            MouseArea {
+                                                id: closeMouseArea
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: removeTag(modelData)
+                                            }
                                         }
                                     }
                                 }
@@ -494,10 +536,52 @@ Dialog {
                                 color: modelData.color || "#2196F3"
                                 radius: 9
 
-                                Text {
+                                // 智能图标显示
+                                Item {
+                                    id: tagListIconContainer
                                     anchors.centerIn: parent
-                                    text: modelData.icon || "🏷️"
-                                    font.pixelSize: 9
+                                    width: 14
+                                    height: 14
+
+                                    property bool isImagePath: {
+                                        var icon = modelData.icon || "🏷️"
+                                        return icon.includes("/") || icon.includes("\\") || icon.includes(".png") || icon.includes(".jpg") || icon.includes(".jpeg")
+                                    }
+
+                                    Image {
+                                        anchors.fill: parent
+                                        source: {
+                                            if (!tagListIconContainer.isImagePath) return ""
+                                            var icon = modelData.icon || ""
+                                            // 如果已经是file://格式，直接使用
+                                            if (icon.startsWith("file://")) {
+                                                return icon
+                                            }
+                                            // 否则添加file://前缀
+                                            return "file:///" + icon.replace(/\\/g, "/")
+                                        }
+                                        visible: tagListIconContainer.isImagePath
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        cache: true
+
+                                        onStatusChanged: {
+                                            if (status === Image.Error) {
+                                                console.log("标签列表图片加载失败:", source)
+                                                visible = false
+                                                fallbackIcon.visible = true
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        id: fallbackIcon
+                                        anchors.centerIn: parent
+                                        text: tagListIconContainer.isImagePath ? "🏷️" : (modelData.icon || "🏷️")
+                                        font.pixelSize: 9
+                                        visible: !tagListIconContainer.isImagePath
+                                        color: "white"
+                                    }
                                 }
                             }
 

@@ -485,10 +485,76 @@ Rectangle {
                                 radius: 24
                                 Layout.alignment: Qt.AlignVCenter
 
-                                Label {
+                                // 智能图标显示组件
+                                Item {
+                                    id: iconContainer
                                     anchors.centerIn: parent
-                                    text: modelData.icon || "🏷️"
-                                    font.pixelSize: 18
+                                    width: 32
+                                    height: 32
+
+                                    // 判断是否为图片路径
+                                    property bool isImagePath: {
+                                        var icon = modelData.icon || "🏷️"
+                                        return icon.includes("/") || icon.includes("\\") || icon.includes(".png") || icon.includes(".jpg") || icon.includes(".jpeg")
+                                    }
+
+                                    // 处理图片路径
+                                    property string imageSource: {
+                                        if (!iconContainer.isImagePath) return ""
+
+                                        var icon = modelData.icon || ""
+                                        console.log("标签图标路径:", icon)
+
+                                        // 如果已经是file://格式，直接使用
+                                        if (icon.startsWith("file://")) {
+                                            console.log("使用file://路径:", icon)
+                                            return icon
+                                        }
+
+                                        // 如果是绝对路径，添加file://前缀
+                                        if (icon.startsWith("/") || /^[A-Za-z]:/.test(icon)) {
+                                            var processed = "file:///" + icon.replace(/\\/g, "/")
+                                            console.log("处理绝对路径:", processed)
+                                            return processed
+                                        }
+
+                                        // 相对路径，添加file://前缀
+                                        var processed = "file:///" + icon.replace(/\\/g, "/")
+                                        console.log("处理相对路径:", processed)
+                                        return processed
+                                    }
+
+                                    // 图片显示
+                                    Image {
+                                        anchors.fill: parent
+                                        source: iconContainer.imageSource
+                                        visible: iconContainer.isImagePath
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        cache: true
+
+                                        // 图片加载失败时的处理
+                                        onStatusChanged: {
+                                            if (status === Image.Error) {
+                                                console.log("图片加载失败:", source)
+                                                console.log("原始路径:", modelData.icon)
+                                                visible = false
+                                                fallbackText.visible = true
+                                            } else if (status === Image.Ready) {
+                                                console.log("图片加载成功:", source)
+                                            }
+                                        }
+                                    }
+
+                                    // Emoji/文本显示
+                                    Label {
+                                        id: fallbackText
+                                        anchors.centerIn: parent
+                                        text: iconContainer.isImagePath ? "🏷️" : (modelData.icon || "🏷️")
+                                        font.pixelSize: 18
+                                        visible: !iconContainer.isImagePath
+                                        color: "white"
+                                    }
                                 }
 
                                 // 优化的阴影效果

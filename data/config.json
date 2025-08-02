@@ -1,0 +1,50 @@
+{
+  "domain_config": {
+    "domain": "",
+    "dns_verified": false,
+    "mx_record_verified": false,
+    "cloudflare_verified": false,
+    "last_verified": null
+  },
+  "imap_config": {
+    "server": "",
+    "port": 993,
+    "username": "",
+    "password": "",
+    "protocol": "IMAP",
+    "inbox_dir": "inbox",
+    "use_ssl": true,
+    "connection_timeout": 30
+  },
+  "tempmail_config": {
+    "username": "",
+    "epin": "",
+    "extension": "@mailto.plus",
+    "api_timeout": 30
+  },
+  "security_config": {
+    "master_password_hash": "",
+    "encrypt_sensitive_data": true,
+    "auto_lock_enabled": true,
+    "auto_lock_minutes": 30,
+    "log_level": "INFO",
+    "remember_password": false
+  },
+  "system_config": {
+    "app_version": "1.0.0",
+    "database_version": "1.0.0",
+    "auto_cleanup_days": 30,
+    "max_verification_attempts": 5,
+    "default_timeout": 300,
+    "ui_theme": "default",
+    "language": "zh_CN",
+    "window_geometry": "",
+    "window_state": ""
+  },
+  "verification_method": "auto",
+  "custom_config": {},
+  "_metadata": {
+    "saved_at": "2025-08-02T17:25:51.607438",
+    "version": "1.0.0"
+  }
+}

@@ -986,11 +986,47 @@ Rectangle {
                                                             radius: 10
                                                             color: modelData.color || "#2196F3"
                                                             
-                                                            Text {
+                                                            // 智能图标显示
+                                                            Item {
+                                                                id: genPageIconContainer
                                                                 anchors.centerIn: parent
-                                                                text: modelData.icon || "🏷️"
-                                                                font.pixelSize: 10
-                                                                color: "white"
+                                                                width: 16
+                                                                height: 16
+
+                                                                property bool isImagePath: {
+                                                                    var icon = modelData.icon || "🏷️"
+                                                                    return icon.includes("/") || icon.includes("\\") || icon.includes(".png") || icon.includes(".jpg") || icon.includes(".jpeg")
+                                                                }
+
+                                                                Image {
+                                                                    anchors.fill: parent
+                                                                    source: {
+                                                                        if (!genPageIconContainer.isImagePath) return ""
+                                                                        var icon = modelData.icon || ""
+                                                                        if (icon.startsWith("file://")) return icon
+                                                                        return "file:///" + icon.replace(/\\/g, "/")
+                                                                    }
+                                                                    visible: genPageIconContainer.isImagePath
+                                                                    fillMode: Image.PreserveAspectFit
+                                                                    smooth: true
+                                                                    cache: true
+
+                                                                    onStatusChanged: {
+                                                                        if (status === Image.Error) {
+                                                                            visible = false
+                                                                            fallbackIcon.visible = true
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                Text {
+                                                                    id: fallbackIcon
+                                                                    anchors.centerIn: parent
+                                                                    text: genPageIconContainer.isImagePath ? "🏷️" : (modelData.icon || "🏷️")
+                                                                    font.pixelSize: 10
+                                                                    visible: !genPageIconContainer.isImagePath
+                                                                    color: "white"
+                                                                }
                                                             }
                                                         }
                                                         
