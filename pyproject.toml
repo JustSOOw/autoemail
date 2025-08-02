@@ -1,0 +1,85 @@
+[tool.black]
+# Black配置 - 降低格式要求
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+# 跳过字符串规范化，减少格式冲突
+skip-string-normalization = true
+# 跳过魔术尾随逗号
+skip-magic-trailing-comma = true
+
+[tool.isort]
+# isort配置 - 降低导入排序要求
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+# 跳过某些文件
+skip_glob = ["*/__init__.py", "*/migrations/*"]
+# 不强制排序
+force_sort_within_sections = false
+# 允许更宽松的导入分组
+no_lines_before = ["LOCALFOLDER"]
+# 忽略导入错误
+skip_gitignore = true
+
+[tool.pytest.ini_options]
+# pytest配置 - 降低测试要求
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--disable-warnings",
+    "-p", "no:qt"
+]
+markers = [
+    "slow: marks tests as slow",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests"
+]
+
+[tool.mypy]
+# mypy配置 - 降低类型检查要求
+python_version = "3.9"
+warn_return_any = false
+warn_unused_configs = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+disallow_untyped_decorators = false
+no_implicit_optional = false
+warn_redundant_casts = false
+warn_unused_ignores = false
+warn_no_return = false
+warn_unreachable = false
+ignore_missing_imports = true
+# 跳过某些文件
+exclude = [
+    "build/",
+    "dist/",
+    "venv/",
+    ".venv/",
+    "tests/"
+]

@@ -1,0 +1,43 @@
+# QML模块定义文件
+# 注册单例和组件
+
+# 单例组件（全局可用）
+singleton ThemeManager 1.0 ThemeManager.qml
+singleton DesignSystem 1.0 DesignSystem.qml
+singleton PerformanceOptimizer 1.0 PerformanceOptimizer.qml
+
+# 基础组件（无依赖）
+AppToolBar 1.0 AppToolBar.qml
+LoadingIndicator 1.0 LoadingIndicator.qml
+StatusMessage 1.0 StatusMessage.qml
+ConfirmDialog 1.0 ConfirmDialog.qml
+Pagination 1.0 Pagination.qml
+CustomIconUpload 1.0 CustomIconUpload.qml
+CreateTagDialog 1.0 CreateTagDialog.qml
+
+# 高级组件
+AnimatedButton 1.0 AnimatedButton.qml
+AnimatedListItem 1.0 AnimatedListItem.qml
+AnimatedListView 1.0 AnimatedListView.qml
+AnimationLibrary 1.0 AnimationLibrary.qml
+AdvancedExportDialog 1.0 AdvancedExportDialog.qml
+AdvancedSearchBar 1.0 AdvancedSearchBar.qml
+BatchOperationPanel 1.0 BatchOperationPanel.qml
+DebugPanel 1.0 DebugPanel.qml
+DraggableTagItem 1.0 DraggableTagItem.qml
+EnhancedButton 1.0 EnhancedButton.qml
+EnhancedTextField 1.0 EnhancedTextField.qml
+ExportTaskItem 1.0 ExportTaskItem.qml
+ExportTaskManager 1.0 ExportTaskManager.qml
+HighlightedText 1.0 HighlightedText.qml
+MicroInteractions 1.0 MicroInteractions.qml
+PageTransition 1.0 PageTransition.qml
+PerformanceMonitor 1.0 PerformanceMonitor.qml
+ResponsiveLayout 1.0 ResponsiveLayout.qml
+SearchResultStats 1.0 SearchResultStats.qml
+TagStatisticsChart 1.0 TagStatisticsChart.qml
+TouchOptimizedScrollView 1.0 TouchOptimizedScrollView.qml
+UXTestSuite 1.0 UXTestSuite.qml
+UndoManager 1.0 UndoManager.qml
+AdaptiveGrid 1.0 AdaptiveGrid.qml
+EmailImportDialog 1.0 EmailImportDialog.qml

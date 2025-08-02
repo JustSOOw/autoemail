@@ -1,0 +1,249 @@
+# Main分支发布流程
+# 当代码合并到main分支时触发发布流程
+name: Main分支发布
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号 (例如: v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  # 发布前检查
+  pre-release-check:
+    name: 发布前检查
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: 运行完整测试
+      run: |
+        echo "🧪 运行发布前测试..."
+        python scripts/run_tests.py
+        pytest tests/ -v --cov=src
+        
+    - name: 检查版本信息
+      run: |
+        echo "📋 检查版本信息..."
+        # 这里可以添加版本检查逻辑
+        echo "当前提交: ${{ github.sha }}"
+        echo "分支: ${{ github.ref }}"
+
+  # 构建发布版本
+  build-release:
+    name: 构建发布版本
+    needs: pre-release-check
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: 构建可执行文件
+      run: |
+        echo "🔨 构建 ${{ matrix.os }} 版本..."
+        python scripts/build.py
+        
+    - name: 打包发布文件
+      run: |
+        echo "📦 打包发布文件..."
+        # 根据操作系统创建不同的打包命令
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          7z a EmailDomainManager-${{ matrix.os }}.zip dist/
+        else
+          tar -czf EmailDomainManager-${{ matrix.os }}.tar.gz dist/
+        fi
+      shell: bash
+        
+    - name: 上传构建产物
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-${{ matrix.os }}
+        path: |
+          EmailDomainManager-${{ matrix.os }}.*
+          dist/
+
+  # 创建GitHub Release
+  create-release:
+    name: 创建GitHub Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 下载所有构建产物
+      uses: actions/download-artifact@v3
+      
+    - name: 生成发布说明
+      run: |
+        echo "📝 生成发布说明..."
+        
+        # 获取最新的提交信息作为发布说明
+        RELEASE_NOTES=$(git log --pretty=format:"- %s" -10)
+        
+        cat > release-notes.md << EOF
+        # 域名邮箱管理器 发布版本
+        
+        ## 🎉 新功能和改进
+        
+        $RELEASE_NOTES
+        
+        ## 📦 下载说明
+        
+        - **Windows用户**: 下载 \`EmailDomainManager-windows-latest.zip\`
+        - **Linux用户**: 下载 \`EmailDomainManager-ubuntu-latest.tar.gz\`
+        - **macOS用户**: 下载 \`EmailDomainManager-macos-latest.tar.gz\`
+        
+        ## 🚀 安装说明
+        
+        1. 下载对应平台的压缩包
+        2. 解压到任意目录
+        3. 运行可执行文件即可使用
+        
+        ## 📋 系统要求
+        
+        - Windows 10+ / Linux / macOS 10.14+
+        - 4GB+ RAM
+        - 100MB+ 磁盘空间
+        
+        ## 🐛 已知问题
+        
+        如有问题请在 Issues 中反馈。
+        EOF
+        
+    - name: 确定版本号
+      id: version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          # 自动生成版本号：v年.月.日-构建号
+          VERSION="v$(date +'%Y.%m.%d')-${{ github.run_number }}"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "发布版本: $VERSION"
+        
+    - name: 创建Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: 域名邮箱管理器 ${{ steps.version.outputs.version }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: false
+        files: |
+          build-windows-latest/EmailDomainManager-windows-latest.zip
+          build-ubuntu-latest/EmailDomainManager-ubuntu-latest.tar.gz
+          build-macos-latest/EmailDomainManager-macos-latest.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 部署文档
+  deploy-docs:
+    name: 部署文档
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装文档工具
+      run: |
+        python -m pip install --upgrade pip
+        pip install mkdocs mkdocs-material
+        
+    - name: 构建文档
+      run: |
+        echo "📚 构建项目文档..."
+        
+        # 创建mkdocs配置
+        cat > mkdocs.yml << EOF
+        site_name: 域名邮箱管理器
+        site_description: 基于PyQt6的域名邮箱管理工具
+        
+        nav:
+          - 首页: README.md
+          - 架构设计: docs/architecture-design.md
+          - 开发计划: docs/development-plan.md
+          - API规范: docs/api-specification.md
+          - 数据库设计: docs/database-schema.md
+          - UI设计: docs/ui-mockups.md
+        
+        theme:
+          name: material
+          language: zh
+          palette:
+            primary: blue
+            accent: blue
+        EOF
+        
+        mkdocs build
+        
+    - name: 部署到GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site
+
+  # 发布通知
+  release-notification:
+    name: 发布通知
+    needs: [create-release, deploy-docs]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: 发布结果通知
+      run: |
+        echo "🎉 Main分支发布流程完成"
+        echo "========================"
+        
+        if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+          echo "❌ 发布过程中出现问题"
+          echo "失败的任务:"
+          [[ "${{ needs.create-release.result }}" == "failure" ]] && echo "  - 创建Release"
+          [[ "${{ needs.deploy-docs.result }}" == "failure" ]] && echo "  - 部署文档"
+        else
+          echo "🎉 发布成功完成！"
+          echo "📦 新版本已发布到GitHub Releases"
+          echo "📚 文档已更新到GitHub Pages"
+        fi

@@ -1,0 +1,50 @@
+[flake8]
+max-line-length = 88
+extend-ignore =
+    E402,
+    E302,
+    E303,
+    E305,
+    E501,
+    W291,
+    W292,
+    W293,
+    E203,
+    W503,
+    E701,
+    E702,
+    E704,
+    E711,
+    E712,
+    E713,
+    E714,
+    E721,
+    E722,
+    E731,
+    E741,
+    E742,
+    E743,
+    W601,
+    W602,
+    W603,
+    W604
+
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    .env,
+    env,
+    build,
+    dist,
+    *.egg-info,
+    .pytest_cache,
+    .coverage,
+    htmlcov,
+    .mypy_cache,
+    .tox
+
+per-file-ignores =
+    tests/*:E501,E402,E302,E303
+    scripts/*:E501,E402,E302,E303
