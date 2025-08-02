@@ -1,116 +1,26 @@
 # -*- coding: utf-8 -*-
 """
 域名邮箱管理器 - 现代化主窗口 (QML版本)
-使用QML创建现代化的用户界面
+使用QML创建现代化的用户界面，集成新的控制器架构
 """
 
-import sys
 from pathlib import Path
 
-from PyQt6.QtCore import QObject, QUrl, pyqtSignal, pyqtSlot
-from PyQt6.QtQml import QQmlApplicationEngine, qmlRegisterType
-from PyQt6.QtQuick import QQuickView
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QUrl
+from PyQt6.QtQml import QQmlApplicationEngine
 
+from controllers.email_controller import EmailController
+from controllers.config_controller import ConfigController
+from controllers.tag_controller import TagController
+from services.database_service import DatabaseService
 from utils.config_manager import ConfigManager
 from utils.logger import get_logger
-
-
-class EmailController(QObject):
-    """邮箱控制器 - 连接QML和Python后端"""
-
-    # 信号定义 - QML可以监听这些信号
-    emailGenerated = pyqtSignal(str, str)  # email_address, status
-    verificationCodeReceived = pyqtSignal(str)  # verification_code
-    statusChanged = pyqtSignal(str)  # status_message
-    progressChanged = pyqtSignal(int)  # progress_value
-
-    def __init__(self, config_manager: ConfigManager, database_service):
-        super().__init__()
-        self.config_manager = config_manager
-        self.database_service = database_service
-        self.logger = get_logger(__name__)
-
-    @pyqtSlot()
-    def generateEmail(self):
-        """生成新邮箱 - QML调用的方法"""
-        try:
-            self.statusChanged.emit("正在生成邮箱...")
-            self.progressChanged.emit(25)
-
-            # TODO: 实现邮箱生成逻辑
-            # 这里是示例代码
-            import random
-            import time
-
-            # 模拟生成过程
-            time.sleep(1)
-            self.progressChanged.emit(50)
-
-            # 生成示例邮箱
-            config = self.config_manager.get_config()
-            domain = config.get_domain() or "example.com"
-            timestamp = str(int(time.time()))[-4:]
-            email_address = f"test{timestamp}@{domain}"
-
-            self.progressChanged.emit(75)
-            time.sleep(0.5)
-
-            # 发送成功信号
-            self.emailGenerated.emit(email_address, "success")
-            self.statusChanged.emit(f"邮箱生成成功: {email_address}")
-            self.progressChanged.emit(100)
-
-            self.logger.info(f"邮箱生成成功: {email_address}")
-
-        except Exception as e:
-            self.logger.error(f"邮箱生成失败: {e}")
-            self.emailGenerated.emit("", "error")
-            self.statusChanged.emit(f"邮箱生成失败: {e}")
-            self.progressChanged.emit(0)
-
-    @pyqtSlot(str)
-    def getVerificationCode(self, email_address: str):
-        """获取验证码 - QML调用的方法"""
-        try:
-            self.statusChanged.emit(f"正在获取 {email_address} 的验证码...")
-
-            # TODO: 实现验证码获取逻辑
-            import random
-            import time
-
-            # 模拟获取过程
-            time.sleep(2)
-
-            # 生成示例验证码（仅用于演示）
-            verification_code = f"{random.randint(100000, 999999)}"  # nosec B311
-
-            self.verificationCodeReceived.emit(verification_code)
-            self.statusChanged.emit(f"验证码获取成功: {verification_code}")
-
-            self.logger.info(f"验证码获取成功: {email_address} -> {verification_code}")
-
-        except Exception as e:
-            self.logger.error(f"验证码获取失败: {e}")
-            self.statusChanged.emit(f"验证码获取失败: {e}")
-
-    @pyqtSlot(result=str)
-    def getCurrentDomain(self):
-        """获取当前域名 - QML调用的方法"""
-        config = self.config_manager.get_config()
-        return config.get_domain() or "未配置"
-
-    @pyqtSlot(result=bool)
-    def isConfigured(self):
-        """检查是否已配置 - QML调用的方法"""
-        config = self.config_manager.get_config()
-        return config.is_configured()
 
 
 class ModernMainWindow:
     """现代化QML主窗口类"""
 
-    def __init__(self, config_manager: ConfigManager, database_service):
+    def __init__(self, config_manager: ConfigManager, database_service: DatabaseService):
         self.config_manager = config_manager
         self.database_service = database_service
         self.logger = get_logger(__name__)
@@ -120,6 +30,8 @@ class ModernMainWindow:
 
         # 控制器
         self.email_controller = EmailController(config_manager, database_service)
+        self.config_controller = ConfigController(config_manager, database_service)
+        self.tag_controller = TagController(database_service)
 
         # 注册QML类型
         self.register_qml_types()
@@ -134,15 +46,20 @@ class ModernMainWindow:
 
     def register_qml_types(self):
         """注册QML类型"""
-        # 注册EmailController到QML
-        qmlRegisterType(EmailController, "EmailManager", 1, 0, "EmailController")
+        # 注册控制器到QML
+        EmailController.register_qml_type()
+        ConfigController.register_qml_type()
+        TagController.register_qml_type()
 
     def setup_qml_context(self):
         """设置QML上下文"""
         # 将Python对象暴露给QML
         context = self.engine.rootContext()
         context.setContextProperty("emailController", self.email_controller)
+        context.setContextProperty("configController", self.config_controller)
+        context.setContextProperty("tagController", self.tag_controller)
         context.setContextProperty("appVersion", "1.0.0")
+        context.setContextProperty("appName", "域名邮箱管理器")
 
     def load_qml(self):
         """加载QML文件"""

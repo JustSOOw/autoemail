@@ -1,0 +1,6 @@
+email_address,tags,notes,status,created_at
+csv1@example.com,"测试,CSV","CSV格式测试邮箱1",active,2024-01-01T10:00:00
+csv2@example.com,"测试,导入","CSV格式测试邮箱2",active,2024-01-01T11:00:00
+csv3@example.com,样本,"CSV格式测试邮箱3",inactive,2024-01-01T12:00:00
+csv-admin@example.com,"管理,重要","CSV管理员邮箱",active,2024-01-01T09:00:00
+csv-support@example.com,"支持,客服","CSV客服支持邮箱",active,2024-01-01T08:00:00

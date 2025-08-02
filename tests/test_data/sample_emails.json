@@ -1,0 +1,37 @@
+[
+  {
+    "email_address": "test1@example.com",
+    "tags": ["测试", "样本"],
+    "notes": "这是一个测试邮箱",
+    "status": "active",
+    "created_at": "2024-01-01T10:00:00"
+  },
+  {
+    "email_address": "test2@example.com",
+    "tags": ["测试", "导入"],
+    "notes": "第二个测试邮箱",
+    "status": "active",
+    "created_at": "2024-01-01T11:00:00"
+  },
+  {
+    "email_address": "test3@example.com",
+    "tags": ["样本"],
+    "notes": "第三个测试邮箱",
+    "status": "inactive",
+    "created_at": "2024-01-01T12:00:00"
+  },
+  {
+    "email_address": "admin@example.com",
+    "tags": ["管理", "重要"],
+    "notes": "管理员邮箱",
+    "status": "active",
+    "created_at": "2024-01-01T09:00:00"
+  },
+  {
+    "email_address": "support@example.com",
+    "tags": ["支持", "客服"],
+    "notes": "客服支持邮箱",
+    "status": "active",
+    "created_at": "2024-01-01T08:00:00"
+  }
+]

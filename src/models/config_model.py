@@ -141,9 +141,8 @@ class ConfigModel:
 
     def is_configured(self) -> bool:
         """是否已完成基本配置"""
-        return self.is_domain_configured() and (
-            self.is_imap_configured() or self.is_tempmail_configured()
-        )
+        # 简化配置要求：只需要域名配置即可
+        return self.is_domain_configured()
 
     def get_missing_config(self) -> list:
         """获取缺失的配置项"""
