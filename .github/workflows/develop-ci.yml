@@ -18,9 +18,9 @@ jobs:
       uses: actions/checkout@v4
       
     - name: 设置Python环境
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
         
     - name: 缓存依赖
       uses: actions/cache@v3
@@ -61,7 +61,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]  # 移除macOS减少复杂度
-        python-version: ['3.9']  # 只测试主要Python版本
+        python-version: ['3.11']  # 只测试主要Python版本
 
     runs-on: ${{ matrix.os }}
     continue-on-error: true  # 允许失败
@@ -71,11 +71,27 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 设置Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: 安装依赖
+    - name: 安装系统依赖 (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgl1-mesa-glx \
+          libglib2.0-0 \
+          libxkbcommon-x11-0 \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-xinerama0 \
+          libxcb-xfixes0
+
+    - name: 安装Python依赖
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -95,9 +111,9 @@ jobs:
       uses: actions/checkout@v4
       
     - name: 设置Python环境
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
         
     - name: 安装依赖
       run: |
@@ -143,9 +159,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 设置Python环境
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
 
     - name: 基础代码检查
       run: |
@@ -185,9 +201,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: 设置Python环境
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
 
     - name: 运行本地安全检查
       run: |
