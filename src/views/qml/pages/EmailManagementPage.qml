@@ -94,6 +94,7 @@ Rectangle {
     // 对外暴露的信号
     signal searchEmails(string keyword, string status, var tags, int page)
     signal deleteEmail(int emailId)
+    signal batchDeleteEmails(var emailIds)  // 新增：批量删除邮箱信号
     signal editEmail(int emailId, var emailData)
     signal importEmails(string filePath, string format, string conflictStrategy)  // 新增：导入邮箱信号
     signal requestFileSelection()  // 新增：请求文件选择信号
@@ -500,7 +501,7 @@ Rectangle {
                     delegate: Rectangle {
                         id: emailItem
                         width: emailListView.width
-                        height: 90
+                        height: 110  // 增加高度以容纳备注信息
                         
                         // 修复UI更新问题：使用对象映射和触发器
                         property bool isSelected: {
@@ -630,6 +631,17 @@ Rectangle {
                                         color: "#666"
                                     }
                                 }
+
+                                // 备注信息显示
+                                Text {
+                                    text: "💭 " + (modelData.notes || "无备注")
+                                    font.pixelSize: 11
+                                    color: modelData.notes ? "#495057" : "#adb5bd"
+                                    visible: true
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    font.italic: !modelData.notes
+                                }
                             }
 
                             // 标签显示
@@ -705,22 +717,16 @@ Rectangle {
                                     flat: false
                                     ToolTip.text: "编辑邮箱信息（备注和标签）"
                                     onClicked: {
-                                        console.log("点击编辑邮箱，当前标签数量:", root.tagList.length)
-                                        
-                                        // 确保有标签数据再打开对话框
-                                        if (!root.tagList || root.tagList.length === 0) {
-                                            console.log("标签列表为空，先加载标签数据")
-                                            root.requestTagRefresh()
-                                            
-                                            // 延迟打开对话框，等待标签数据加载
-                                            Qt.callLater(function() {
-                                                editEmailDialog.emailData = modelData
-                                                editEmailDialog.open()
-                                            })
-                                        } else {
-                                            editEmailDialog.emailData = modelData
-                                            editEmailDialog.open()
-                                        }
+                                        console.log("编辑邮箱:", JSON.stringify(modelData))
+                                        console.log("邮箱标签数据:", JSON.stringify(modelData.tags))
+                                        console.log("可用标签列表:", JSON.stringify(root.tagList))
+                                        emailEditDialog.openDialog(
+                                            modelData.id,
+                                            modelData.email_address,
+                                            modelData.notes || "",
+                                            modelData.tags || [],
+                                            root.tagList || []
+                                        )
                                     }
 
                                     background: Rectangle {
@@ -751,9 +757,17 @@ Rectangle {
                                     flat: false
                                     ToolTip.text: "删除此邮箱"
                                     onClicked: {
-                                        deleteConfirmDialog.emailId = modelData.id
-                                        deleteConfirmDialog.emailAddress = modelData.email_address
-                                        deleteConfirmDialog.open()
+                                        console.log("删除按钮点击 - 邮箱数据:", JSON.stringify(modelData))
+                                        console.log("邮箱ID:", modelData.id, "邮箱地址:", modelData.email_address)
+                                        
+                                        // 确保ID存在
+                                        if (modelData.id) {
+                                            deleteConfirmDialog.emailId = modelData.id
+                                            deleteConfirmDialog.emailAddress = modelData.email_address || "未知邮箱"
+                                            deleteConfirmDialog.open()
+                                        } else {
+                                            console.error("无法删除邮箱：邮箱ID不存在")
+                                        }
                                     }
 
                                     background: Rectangle {
@@ -1131,746 +1145,23 @@ Rectangle {
                     text: "删除"
                     Material.background: Material.Red
                     onClicked: {
-                        root.deleteEmail(deleteConfirmDialog.emailId)
-                        deleteConfirmDialog.close()
+                        console.log("确认删除邮箱 - ID:", deleteConfirmDialog.emailId, "地址:", deleteConfirmDialog.emailAddress)
+                        
+                        if (deleteConfirmDialog.emailId && emailController) {
+                            console.log("调用emailController删除方法:", deleteConfirmDialog.emailId)
+                            // 直接调用控制器的删除方法
+                            emailController.deleteEmail(deleteConfirmDialog.emailId)
+                            deleteConfirmDialog.close()
+                        } else {
+                            console.error("删除失败：邮箱ID无效或emailController不可用")
+                        }
                     }
                 }
             }
         }
     }
 
-    // 编辑邮箱对话框 - 重新设计的紧凑版本
-    Dialog {
-        id: editEmailDialog
-        title: "编辑邮箱"
-        modal: true
-        anchors.centerIn: parent
-        width: 520
-        height: 600
 
-        property var emailData: ({})
-        property var selectedTagsList: []
-        property var allTagsList: []
-        property var filteredTagsList: []
-
-        onOpened: {
-            console.log("编辑邮箱对话框打开，邮箱数据:", JSON.stringify(emailData))
-            
-            // 初始化备注信息
-            editNotesField.text = emailData.notes || ""
-            
-            // 清空搜索框
-            tagSearchField.text = ""
-            
-            // 初始化标签数据
-            console.log("当前root.tagList:", JSON.stringify(root.tagList))
-            if (root.tagList && root.tagList.length > 0) {
-                allTagsList = root.tagList.slice()
-                console.log("从root.tagList加载标签，数量:", allTagsList.length)
-            } else {
-                console.log("root.tagList为空，加载备用数据并请求刷新")
-                loadFallbackTags()
-                root.requestTagRefresh()
-            }
-            
-            // 处理已选择的标签
-            selectedTagsList = []
-            if (emailData.tags) {
-                console.log("处理邮箱标签数据:", JSON.stringify(emailData.tags))
-                var tagIds = []
-                
-                if (Array.isArray(emailData.tags)) {
-                    tagIds = emailData.tags
-                } else if (typeof emailData.tags === 'string') {
-                    try {
-                        tagIds = JSON.parse(emailData.tags)
-                    } catch (e) {
-                        tagIds = [emailData.tags] // 如果解析失败，当作单个标签处理
-                    }
-                }
-                
-                console.log("提取的标签ID:", JSON.stringify(tagIds))
-                
-                // 根据ID在allTagsList中查找对应的标签对象
-                for (var i = 0; i < tagIds.length; i++) {
-                    var tagId = tagIds[i]
-                    console.log("查找标签ID:", tagId, "类型:", typeof tagId)
-                    
-                    for (var j = 0; j < allTagsList.length; j++) {
-                        var tag = allTagsList[j]
-                        // 支持字符串和数字类型的ID比较
-                        if (tag.id == tagId || tag.id.toString() === tagId.toString()) {
-                            selectedTagsList.push(tag)
-                            console.log("找到匹配标签:", tag.name, "ID:", tag.id)
-                            break
-                        }
-                    }
-                }
-                
-                console.log("最终选中的标签数量:", selectedTagsList.length)
-                if (selectedTagsList.length > 0) {
-                    console.log("选中的标签名称:", selectedTagsList.map(function(t) { return t.name }).join(", "))
-                }
-            }
-            
-            // 更新过滤列表
-            filterTags("")
-            
-            console.log("编辑对话框初始化完成:")
-            console.log("- 已选择标签数量:", selectedTagsList.length)
-            console.log("- 可用标签数量:", allTagsList.length) 
-            console.log("- 过滤后标签数量:", filteredTagsList.length)
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 20
-            spacing: 20
-
-            // 邮箱信息展示
-            Rectangle {
-                Layout.fillWidth: true
-                height: 60
-                color: "#f8f9fa"
-                radius: 8
-                border.color: "#e0e0e0"
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 15
-                    spacing: 12
-
-                    Rectangle {
-                        width: 36
-                        height: 36
-                        radius: 18
-                        color: "#2196F3"
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "📧"
-                            font.pixelSize: 18
-                            color: "white"
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        Text {
-                            text: emailData.email_address || ""
-                            font.pixelSize: 14
-                            font.weight: Font.DemiBold
-                            color: "#333"
-                        }
-
-                        Text {
-                            text: "域名: " + (emailData.domain || "") + " | 状态: " + (emailData.status || "")
-                            font.pixelSize: 11
-                            color: "#666"
-                        }
-                    }
-                }
-            }
-
-            // 备注信息
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                Label {
-                    text: "备注信息"
-                    font.pixelSize: 14
-                    font.weight: Font.Medium
-                    color: "#333"
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 80
-                    color: "white"
-                    radius: 6
-                    border.color: editNotesField.activeFocus ? "#2196F3" : "#e0e0e0"
-                    border.width: editNotesField.activeFocus ? 2 : 1
-
-                    ScrollView {
-                        anchors.fill: parent
-                        anchors.margins: 12
-                        clip: true
-
-                        TextArea {
-                            id: editNotesField
-                            placeholderText: ""
-                            font.pixelSize: 13
-                            color: "#333"
-                            background: Item {}
-                            selectByMouse: true
-                            wrapMode: TextArea.WordWrap
-                        }
-                    }
-                }
-            }
-
-            // 标签设置
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 12
-
-                Label {
-                    text: "标签设置"
-                    font.pixelSize: 14
-                    font.weight: Font.Medium
-                    color: "#333"
-                }
-
-                Label {
-                    text: "为邮箱添加标签，便于分类管理（可选择多个）"
-                    font.pixelSize: 12
-                    color: "#666"
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-
-                // 标签搜索框 - 浮动标签效果
-                Item {
-                    Layout.fillWidth: true
-                    height: 50  // 增加高度以容纳浮动标签
-
-                    Rectangle {
-                        id: editSearchInputContainer
-                        anchors.fill: parent
-                        anchors.topMargin: 8  // 为浮动标签留出空间
-                        color: "white"
-                        radius: 6
-                        border.color: tagSearchField.activeFocus ? "#2196F3" : "#ddd"
-                        border.width: tagSearchField.activeFocus ? 2 : 1
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 8
-                            spacing: 8
-
-                            Text {
-                                text: "🔍"
-                                font.pixelSize: 14
-                                color: "#666"
-                            }
-
-                            TextField {
-                                id: tagSearchField
-                                Layout.fillWidth: true
-                                font.pixelSize: 13
-                                color: "#333"
-                                background: Item {}
-                                selectByMouse: true
-
-                                onTextChanged: {
-                                    filterTags(text)
-                                }
-                            }
-
-                            Button {
-                                visible: tagSearchField.text.length > 0
-                                text: "✕"
-                                width: 20
-                                height: 20
-                                background: Rectangle {
-                                    color: parent.hovered ? "#f0f0f0" : "transparent"
-                                    radius: 10
-                                }
-                                onClicked: {
-                                    tagSearchField.text = ""
-                                    filterTags("")
-                                }
-                            }
-                        }
-                    }
-
-                    // 浮动标签
-                    Rectangle {
-                        id: editFloatingLabel
-                        x: 42  // 右移以避免覆盖搜索图标
-                        y: tagSearchField.activeFocus || tagSearchField.text.length > 0 ? 0 : 20
-                        width: editFloatingLabelText.implicitWidth + 8
-                        height: 16
-                        color: "white"
-                        visible: true
-
-                        Text {
-                            id: editFloatingLabelText
-                            anchors.centerIn: parent
-                            text: "搜索标签"
-                            font.pixelSize: tagSearchField.activeFocus || tagSearchField.text.length > 0 ? 11 : 13
-                            color: tagSearchField.activeFocus ? "#2196F3" : "#666"
-                        }
-
-                        Behavior on y { PropertyAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                        Behavior on color { PropertyAnimation { duration: 200 } }
-                    }
-                }
-
-                // 已选择的标签显示
-                Flow {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: selectedTagsRepeater.count > 0 ? Math.max(30, implicitHeight) : 0
-                    spacing: 6
-                    visible: selectedTagsRepeater.count > 0
-
-                    Repeater {
-                        id: selectedTagsRepeater
-                        model: selectedTagsList
-
-                        Rectangle {
-                            width: tagContent.implicitWidth + 16
-                            height: 28
-                            color: modelData.color || "#2196F3"
-                            radius: 14
-                            opacity: 0.9
-
-                            RowLayout {
-                                id: tagContent
-                                anchors.centerIn: parent
-                                spacing: 6
-
-                                Text {
-                                    text: modelData.icon || "🏷️"
-                                    font.pixelSize: 12
-                                    color: "white"
-                                }
-
-                                Text {
-                                    text: modelData.name || ""
-                                    font.pixelSize: 12
-                                    font.weight: Font.Medium
-                                    color: "white"
-                                }
-
-                                Rectangle {
-                                    width: 16
-                                    height: 16
-                                    radius: 8
-                                    color: "#40ffffff"
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "×"
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        color: "white"
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        onClicked: removeSelectedTag(modelData)
-                                        hoverEnabled: true
-                                        onContainsMouseChanged: {
-                                            parent.color = containsMouse ? "#60ffffff" : "#40ffffff"
-                                        }
-                                    }
-                                }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.NoButton
-                                onContainsMouseChanged: {
-                                    parent.opacity = containsMouse ? 1.0 : 0.9
-                                }
-                            }
-
-                            Behavior on opacity { PropertyAnimation { duration: 150 } }
-                        }
-                    }
-                }
-
-                // 可选标签列表
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredHeight: Math.min(availableTagsColumn.implicitHeight, 180)
-                    visible: true  // 强制显示用于调试
-                    clip: true
-
-                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
-
-                    // 添加背景色用于调试
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "#ffebcd"  // 浅黄色背景，用于调试定位
-                        opacity: 0.3
-                    }
-
-                    Column {
-                        id: availableTagsColumn
-                        width: parent.width
-                        spacing: 2
-
-                        // 调试信息 - 如果没有标签则显示提示
-                        Text {
-                            width: parent.width
-                            height: 40
-                            text: "标签列表调试: filteredTagsList.length = " + filteredTagsList.length
-                            font.pixelSize: 12
-                            color: "#333"
-                            verticalAlignment: Text.AlignVCenter
-                            visible: true
-                        }
-
-                        Repeater {
-                            model: filteredTagsList
-
-                            Rectangle {
-                                width: parent.width
-                                height: 32
-                                color: tagMouseArea.containsMouse ? "#f0f0f0" : "#e8e8e8"  // 改为浅灰色，更容易看到
-                                radius: 4
-                                border.width: 1
-                                border.color: "#ccc"  // 添加边框，更容易看到
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 8
-                                    anchors.rightMargin: 8
-                                    spacing: 8
-
-                                    Rectangle {
-                                        width: 20
-                                        height: 20
-                                        radius: 10
-                                        color: modelData.color || "#2196F3"
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: modelData.icon || "🏷️"
-                                            font.pixelSize: 10
-                                            color: "white"
-                                        }
-                                    }
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: modelData.name || ""
-                                        font.pixelSize: 13
-                                        color: "#333"
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Text {
-                                        text: (modelData.usage_count || 0) + " 次使用"
-                                        font.pixelSize: 11
-                                        color: "#999"
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: tagMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: addSelectedTag(modelData)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 创建新标签区域
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 36
-                    color: "#fff3e0"
-                    radius: 6
-                    border.color: "#ffcc02"
-                    border.width: 1
-                    visible: tagSearchField.text.length > 2 && filteredTagsList.length === 0
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 8
-
-                        Text {
-                            text: "✨"
-                            font.pixelSize: 14
-                            color: "#f57c00"
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: "没有找到匹配的标签，点击创建新标签："
-                            font.pixelSize: 12
-                            color: "#f57c00"
-                        }
-
-                        Button {
-                            text: "创建 \"" + tagSearchField.text + "\""
-                            font.pixelSize: 11
-                            implicitHeight: 24
-                            Material.background: Material.Orange
-                            onClicked: {
-                                createNewTag(tagSearchField.text)
-                            }
-                        }
-                    }
-                }
-
-                // 底部操作区域
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-
-                    Button {
-                        text: "🔄 刷新标签"
-                        font.pixelSize: 11
-                        implicitHeight: 28
-                        flat: true
-                        onClicked: {
-                            console.log("强制加载标签数据")
-                            // 优先使用真实数据，否则使用备用数据
-                            if (root.tagList && root.tagList.length > 0) {
-                                allTagsList = root.tagList.slice()
-                                console.log("从root.tagList加载", allTagsList.length, "个标签")
-                            } else {
-                                allTagsList = [
-                                    {id: 4, name: "临时用", color: "#f39c12", icon: "⏰", usage_count: 0, description: "临时使用的邮箱"},
-                                    {id: 2, name: "开发用", color: "#3498db", icon: "💻", usage_count: 0, description: "开发环境使用的邮箱"},
-                                    {id: 1, name: "测试用", color: "#e74c3c", icon: "🧪", usage_count: 0, description: "用于测试目的的邮箱"},
-                                    {id: 3, name: "生产用", color: "#27ae60", icon: "🚀", usage_count: 0, description: "生产环境使用的邮箱"},
-                                    {id: 5, name: "重要", color: "#9b59b6", icon: "⭐", usage_count: 0, description: "重要的邮箱记录"}
-                                ]
-                                console.log("加载备用标签数据", allTagsList.length, "个")
-                            }
-                            filterTags("")
-                        }
-
-                        background: Rectangle {
-                            color: parent.hovered ? "#f0f0f0" : "transparent"
-                            radius: 4
-                        }
-                    }
-
-                    Button {
-                        text: "➕ 新建标签"
-                        font.pixelSize: 11
-                        implicitHeight: 28
-                        flat: true
-                        onClicked: {
-                            newCreateTagDialog.open()
-                        }
-
-                        background: Rectangle {
-                            color: parent.hovered ? "#f0f0f0" : "transparent"
-                            radius: 4
-                        }
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    Label {
-                        text: "已选择 " + selectedTagsList.length + " 个标签"
-                        font.pixelSize: 11
-                        color: "#666"
-                    }
-                }
-            }
-
-            // 操作按钮
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignRight
-                spacing: 10
-
-                Button {
-                    text: "取消"
-                    onClicked: editEmailDialog.close()
-                }
-
-                Button {
-                    text: "保存"
-                    Material.background: Material.Blue
-                    onClicked: {
-                        var updatedData = {
-                            id: editEmailDialog.emailData.id,
-                            notes: editNotesField.text,
-                            tags: selectedTagsList
-                        }
-                        root.editEmail(editEmailDialog.emailData.id, updatedData)
-                        editEmailDialog.close()
-                    }
-                }
-            }
-        }
-
-        // 标签管理函数
-        function loadAllTags() {
-            // 从数据库加载所有标签
-            if (root.tagList && root.tagList.length > 0) {
-                allTagsList = root.tagList.slice()
-                filteredTagsList = allTagsList.slice()
-                console.log("从root.tagList加载标签，数量:", allTagsList.length)
-            } else {
-                console.log("root.tagList为空，请求刷新")
-                root.requestTagRefresh()
-            }
-        }
-
-        function loadFallbackTags() {
-            // 备用测试标签数据
-            allTagsList = [
-                {id: 1, name: "工作", color: "#2196F3", icon: "💼", usage_count: 15, description: "工作相关邮箱"},
-                {id: 2, name: "个人", color: "#4CAF50", icon: "👤", usage_count: 8, description: "个人使用邮箱"},
-                {id: 3, name: "购物", color: "#FF9800", icon: "🛒", usage_count: 12, description: "购物网站注册"},
-                {id: 4, name: "社交", color: "#9C27B0", icon: "💬", usage_count: 6, description: "社交媒体账号"},
-                {id: 5, name: "学习", color: "#F44336", icon: "📚", usage_count: 10, description: "学习平台注册"},
-                {id: 6, name: "测试用", color: "#e74c3c", icon: "🧪", usage_count: 3, description: "用于测试目的的邮箱"},
-                {id: 7, name: "开发用", color: "#3498db", icon: "💻", usage_count: 5, description: "开发环境使用的邮箱"}
-            ]
-            filteredTagsList = allTagsList.slice()
-            console.log("已加载", allTagsList.length, "个备用标签")
-        }
-
-        function filterTags(searchText) {
-            if (!searchText || searchText.length === 0) {
-                filteredTagsList = allTagsList.slice()
-                return
-            }
-
-            var query = searchText.toLowerCase()
-            var filtered = []
-
-            for (var i = 0; i < allTagsList.length; i++) {
-                var tag = allTagsList[i]
-                if (tag.name && tag.name.toLowerCase().includes(query)) {
-                    // 排除已选择的标签
-                    var isSelected = false
-                    for (var j = 0; j < selectedTagsList.length; j++) {
-                        if (getTagName(selectedTagsList[j]) === tag.name) {
-                            isSelected = true
-                            break
-                        }
-                    }
-                    if (!isSelected) {
-                        filtered.push(tag)
-                    }
-                }
-            }
-
-            filteredTagsList = filtered
-        }
-
-        function addSelectedTag(tag) {
-            console.log("添加标签被调用:", (tag.name || tag))
-            
-            // 检查是否已存在
-            for (var i = 0; i < selectedTagsList.length; i++) {
-                if (getTagName(selectedTagsList[i]) === tag.name) {
-                    console.log("标签已存在，跳过")
-                    return
-                }
-            }
-
-            // 确保触发UI更新
-            var newSelectedTags = selectedTagsList.slice()
-            newSelectedTags.push(tag)
-            selectedTagsList = []
-            selectedTagsList = newSelectedTags
-
-            // 重新过滤可选标签
-            filterTags(tagSearchField.text)
-            console.log("标签添加成功，当前标签数量:", selectedTagsList.length)
-        }
-
-        function removeSelectedTag(tag) {
-            console.log("移除标签被调用:", getTagName(tag))
-            
-            var newSelectedTags = []
-            var found = false
-
-            for (var i = 0; i < selectedTagsList.length; i++) {
-                if (getTagName(selectedTagsList[i]) !== getTagName(tag)) {
-                    newSelectedTags.push(selectedTagsList[i])
-                } else {
-                    found = true
-                }
-            }
-
-            if (found) {
-                // 先清空数组，然后重新赋值，确保触发UI更新
-                selectedTagsList = []
-                selectedTagsList = newSelectedTags
-
-                // 重新过滤可选标签
-                filterTags(tagSearchField.text)
-                console.log("标签移除成功，剩余标签数量:", selectedTagsList.length)
-            }
-        }
-
-        function createNewTag(tagName) {
-            if (!tagName || tagName.trim().length === 0) {
-                return
-            }
-
-            console.log("创建新标签:", tagName)
-            
-            // 创建标签数据
-            var newTagData = {
-                name: tagName.trim(),
-                description: "通过编辑邮箱窗口创建",
-                color: "#2196F3",
-                icon: "🏷️"
-            }
-
-            // 发送创建标签信号到后端
-            if (typeof root.createTag === 'function') {
-                root.createTag(newTagData)
-            } else {
-                // 如果没有创建函数，直接添加到本地列表
-                var newTag = {
-                    id: Date.now(), // 临时ID
-                    name: newTagData.name,
-                    description: newTagData.description,
-                    color: newTagData.color,
-                    icon: newTagData.icon,
-                    usage_count: 0
-                }
-                
-                allTagsList.push(newTag)
-                addSelectedTag(newTag)
-                console.log("本地创建标签成功")
-            }
-
-            // 清空搜索框
-            tagSearchField.text = ""
-        }
-
-        function getTagName(tag) {
-            if (typeof tag === 'string') return tag
-            return tag.name || ""
-        }
-
-        function getTagColor(tag) {
-            if (typeof tag === 'string') return "#2196F3"
-            return tag.color || "#2196F3"
-        }
-
-        function getTagIcon(tag) {
-            if (typeof tag === 'string') return "🏷️"
-            return tag.icon || "🏷️"
-        }
-
-        function updateTagDisplay() {
-            // 更新标签显示（当外部标签数据更新时调用）
-            if (root.tagList && root.tagList.length > 0) {
-                allTagsList = root.tagList.slice()
-                filterTags(tagSearchField.text)
-                console.log("编辑对话框标签显示已更新，可用标签数量:", allTagsList.length)
-            }
-        }
-    }
 
     // 创建标签对话框
     Dialog {
@@ -2184,9 +1475,16 @@ Rectangle {
                     Material.background: Material.Red
                     onClicked: {
                         console.log("批量删除邮箱:", root.selectedEmails)
-                        // 这里应该调用实际的批量删除API
-                        root.clearSelection()
-                        batchDeleteDialog.close()
+                        
+                        if (root.selectedEmails.length > 0 && emailController) {
+                            console.log("调用emailController批量删除方法:", root.selectedEmails)
+                            // 直接调用控制器的批量删除方法
+                            emailController.batchDeleteEmails(root.selectedEmails)
+                            root.clearSelection()
+                            batchDeleteDialog.close()
+                        } else {
+                            console.error("没有选中的邮箱可以删除或emailController不可用")
+                        }
                     }
                 }
             }
@@ -2296,10 +1594,7 @@ Rectangle {
         root.tagList = tags || []
         console.log("邮箱管理页面：当前tagList内容:", JSON.stringify(root.tagList))
         
-        // 更新编辑对话框中的标签显示
-        if (editEmailDialog.opened) {
-            editEmailDialog.updateTagDisplay()
-        }
+        // 编辑对话框已删除，无需更新
     }
     
     // 刷新标签列表
@@ -2335,16 +1630,8 @@ Rectangle {
     
     // 加载备用标签数据
     function loadBackupTagData() {
-        root.tagList = [
-            {id: 1, name: "工作", color: "#2196F3", icon: "💼", usage_count: 15, description: "工作相关邮箱"},
-            {id: 2, name: "个人", color: "#4CAF50", icon: "👤", usage_count: 8, description: "个人使用邮箱"},
-            {id: 3, name: "购物", color: "#FF9800", icon: "🛒", usage_count: 12, description: "购物网站注册"},
-            {id: 4, name: "社交", color: "#9C27B0", icon: "💬", usage_count: 6, description: "社交媒体账号"},
-            {id: 5, name: "学习", color: "#F44336", icon: "📚", usage_count: 10, description: "学习平台注册"},
-            {id: 6, name: "测试用", color: "#e74c3c", icon: "🧪", usage_count: 3, description: "用于测试目的的邮箱"},
-            {id: 7, name: "开发用", color: "#3498db", icon: "💻", usage_count: 5, description: "开发环境使用的邮箱"}
-        ]
-        console.log("邮箱管理页面：已加载", root.tagList.length, "个备用标签")
+        console.log("邮箱管理页面：清空标签数据，等待真实数据加载")
+        root.tagList = []
     }
     
     // 处理标签创建成功
@@ -2352,5 +1639,52 @@ Rectangle {
         console.log("邮箱管理页面：新标签已创建:", tag.name)
         // 重新加载标签列表
         refreshTagList()
+    }
+
+    // ==================== 邮箱编辑对话框 ====================
+    
+    EmailEditDialog {
+        id: emailEditDialog
+        
+        onEditCompleted: function(emailId, notes, tagIds) {
+            console.log("编辑完成 - 邮箱ID:", emailId, "备注:", notes, "标签IDs:", tagIds)
+            
+            if (emailController) {
+                try {
+                    var result = emailController.updateEmail(emailId, notes, tagIds)
+                    var resultData = JSON.parse(result)
+                    
+                    if (resultData.success) {
+                        console.log("邮箱更新成功:", resultData.message)
+                        emailEditDialog.close()
+                        // 刷新邮箱列表以显示更新后的数据
+                        root.refreshRequested()
+                    } else {
+                        console.error("邮箱更新失败:", resultData.error)
+                        // 可以在这里显示错误消息
+                    }
+                } catch (e) {
+                    console.error("解析更新结果失败:", e)
+                }
+            } else {
+                console.error("emailController不可用")
+            }
+            
+            // 重置加载状态
+            emailEditDialog.isLoading = false
+        }
+        
+        onTagRefreshRequested: {
+            console.log("编辑对话框请求刷新标签")
+            refreshTagList()
+            // 更新对话框中的可用标签
+            emailEditDialog.availableTags = root.tagList || []
+        }
+        
+        onTagCreationRequested: function(tagData) {
+            console.log("编辑对话框请求创建标签:", JSON.stringify(tagData))
+            // 发送创建标签的信号
+            root.createTag(tagData)
+        }
     }
 }

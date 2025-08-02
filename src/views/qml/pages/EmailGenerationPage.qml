@@ -12,6 +12,7 @@ import "../components"
 
 Rectangle {
     id: root
+    anchors.fill: parent
     color: "#f5f5f5"
 
     // 对外暴露的属性
@@ -285,7 +286,7 @@ Rectangle {
                     clip: true
 
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                    ScrollBar.vertical.policy: ScrollBar.AlwaysOff
 
                     TextArea {
                         id: logArea
@@ -344,7 +345,7 @@ Rectangle {
                 clip: true
 
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.vertical.policy: ScrollBar.AlwaysOff
                 contentWidth: availableWidth  // 确保内容宽度不超过可用宽度
 
                 ColumnLayout {
@@ -957,7 +958,7 @@ Rectangle {
                                         clip: true
                                         
                                         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                                        ScrollBar.vertical.policy: ScrollBar.AlwaysOff
                                         
                                         Column {
                                             id: availableTagsColumn

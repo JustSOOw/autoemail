@@ -526,32 +526,49 @@ class EmailService:
             raise
 
     def _update_email_in_db(self, email_model: EmailModel) -> bool:
-        """更新数据库中的邮箱信息"""
+        """更新数据库中的邮箱信息，包括标签关联"""
         try:
-            query = """
-                UPDATE emails SET
-                    last_used = ?,
-                    updated_at = ?,
-                    status = ?,
-                    notes = ?,
-                    metadata = ?
-                WHERE id = ?
-            """
+            self.logger.info(f"开始更新邮箱到数据库 - ID: {email_model.id}, 备注: '{email_model.notes}', 标签: {email_model.tags}")
 
-            params = (
-                email_model.last_used.isoformat() if email_model.last_used else None,
-                email_model.updated_at.isoformat() if email_model.updated_at else None,
-                email_model.status.value,
-                email_model.notes,
-                json.dumps(email_model.metadata) if email_model.metadata else None,
-                email_model.id
-            )
+            # 使用事务确保数据一致性
+            with self.db_service.get_cursor() as cursor:
+                # 更新邮箱基本信息
+                query = """
+                    UPDATE emails SET
+                        last_used = ?,
+                        updated_at = ?,
+                        status = ?,
+                        notes = ?,
+                        metadata = ?
+                    WHERE id = ?
+                """
 
-            affected_rows = self.db_service.execute_update(query, params)
-            return affected_rows > 0
+                params = (
+                    email_model.last_used.isoformat() if email_model.last_used else None,
+                    email_model.updated_at.isoformat() if email_model.updated_at else None,
+                    email_model.status.value,
+                    email_model.notes,
+                    json.dumps(email_model.metadata) if email_model.metadata else None,
+                    email_model.id
+                )
+
+                cursor.execute(query, params)
+                affected_rows = cursor.rowcount
+                self.logger.info(f"邮箱基本信息更新完成，影响行数: {affected_rows}")
+
+                if affected_rows > 0:
+                    # 更新标签关联
+                    self._update_email_tags(cursor, email_model.id, email_model.tags)
+                    self.logger.info(f"邮箱 {email_model.id} 更新完成")
+                    return True
+                else:
+                    self.logger.warning(f"邮箱基本信息更新失败，影响行数为0")
+                    return False
 
         except Exception as e:
             self.logger.error(f"更新邮箱信息失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误信息: {traceback.format_exc()}")
             return False
 
     def _save_email_tags(self, cursor, email_id: int, tags: List[str]):
@@ -576,6 +593,55 @@ class EmailService:
                 "INSERT OR IGNORE INTO email_tags (email_id, tag_id) VALUES (?, ?)",
                 (email_id, tag_id)
             )
+
+    def _update_email_tags(self, cursor, email_id: int, tags: List[str]):
+        """更新邮箱标签关联"""
+        try:
+            self.logger.info(f"开始更新邮箱 {email_id} 的标签关联，新标签: {tags}")
+
+            # 1. 删除现有的标签关联
+            cursor.execute("DELETE FROM email_tags WHERE email_id = ?", (email_id,))
+            deleted_count = cursor.rowcount
+            self.logger.info(f"删除了 {deleted_count} 个旧的标签关联")
+
+            # 2. 添加新的标签关联
+            if tags:
+                for tag_name in tags:
+                    self.logger.info(f"处理标签: {tag_name}")
+
+                    # 确保标签存在
+                    cursor.execute("SELECT id FROM tags WHERE name = ? AND is_active = 1", (tag_name,))
+                    tag_result = cursor.fetchone()
+
+                    if tag_result:
+                        tag_id = tag_result["id"] if isinstance(tag_result, dict) else tag_result[0]
+                        self.logger.info(f"找到现有标签: {tag_name} (ID: {tag_id})")
+                    else:
+                        # 创建新标签
+                        self.logger.info(f"创建新标签: {tag_name}")
+                        cursor.execute(
+                            "INSERT INTO tags (name, description, is_active, created_at) VALUES (?, ?, 1, ?)",
+                            (tag_name, f"自动创建的标签: {tag_name}", datetime.now().isoformat())
+                        )
+                        tag_id = cursor.lastrowid
+                        self.logger.info(f"新标签创建成功，ID: {tag_id}")
+
+                    # 创建关联
+                    cursor.execute(
+                        "INSERT INTO email_tags (email_id, tag_id, created_at) VALUES (?, ?, ?)",
+                        (email_id, tag_id, datetime.now().isoformat())
+                    )
+                    self.logger.info(f"标签关联创建成功: 邮箱{email_id} <-> 标签{tag_id}({tag_name})")
+            else:
+                self.logger.info("没有新标签需要关联")
+
+            self.logger.info(f"邮箱 {email_id} 标签关联更新完成")
+
+        except Exception as e:
+            self.logger.error(f"更新邮箱标签关联失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误信息: {traceback.format_exc()}")
+            raise
 
     def _row_to_email_model(self, row) -> EmailModel:
         """将数据库行转换为邮箱模型"""

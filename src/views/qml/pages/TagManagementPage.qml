@@ -251,26 +251,14 @@ Rectangle {
                             }
 
                             Button {
-                                text: root.isMobile ? "⚡" : "批量"
+                                text: root.isMobile ? "🗑️" : "全部删除"
                                 width: root.isMobile ? 40 : 80
                                 height: 36
-                                Material.background: Material.Purple
-                                enabled: selectedTags.length > 0
-                                onClicked: batchOperationMenu.open()
-                                ToolTip.text: root.isMobile ? "批量操作" : ""
+                                Material.background: Material.Red
+                                enabled: root.tagList.length > 0  // 有标签时才能删除
+                                onClicked: deleteAllConfirmDialog.open()
+                                ToolTip.text: root.isMobile ? "删除所有标签" : ""
                                 ToolTip.visible: root.isMobile && hovered
-
-                                Menu {
-                                    id: batchOperationMenu
-                                    MenuItem {
-                                        text: "批量删除"
-                                        onTriggered: batchDeleteDialog.open()
-                                    }
-                                    MenuItem {
-                                        text: "批量导出"
-                                        onTriggered: exportTagsDialog.open()
-                                    }
-                                }
                             }
 
                             Button {
@@ -336,14 +324,19 @@ Rectangle {
                         text: "全选"
                         font.pixelSize: 14
                         checked: root.selectAllMode
-                        onCheckedChanged: {
-                            root.selectAllMode = checked
+                        onClicked: {  // 改为 onClicked 避免循环触发
                             if (checked) {
-                                root.selectedTags = root.tagList.map(function(tag) {
-                                    return tag.id
-                                })
+                                // 全选所有标签
+                                var allTagIds = []
+                                for (var i = 0; i < root.tagList.length; i++) {
+                                    allTagIds.push(root.tagList[i].id)
+                                }
+                                root.selectedTags = allTagIds
+                                root.selectAllMode = true
                             } else {
+                                // 取消全选
                                 root.selectedTags = []
+                                root.selectAllMode = false
                             }
                         }
                     }
@@ -762,8 +755,8 @@ Rectangle {
         // 触发属性更新
         root.selectedTags = root.selectedTags.slice()
 
-        // 更新全选状态
-        root.selectAllMode = root.selectedTags.length === root.tagList.length
+        // 更新全选状态（不会触发onClicked）
+        root.selectAllMode = (root.selectedTags.length === root.tagList.length) && (root.tagList.length > 0)
     }
 
     function clearSelection() {
@@ -944,11 +937,11 @@ Rectangle {
         }
     }
 
-    // ==================== 批量删除对话框 ====================
+    // ==================== 全部删除确认对话框 ====================
 
     Dialog {
-        id: batchDeleteDialog
-        title: "批量删除确认"
+        id: deleteAllConfirmDialog
+        title: "全部删除确认"
         modal: true
         anchors.centerIn: parent
         width: 450
@@ -957,7 +950,7 @@ Rectangle {
             spacing: 20
 
             Label {
-                text: "确定要删除选中的 " + root.selectedTags.length + " 个标签吗？\n\n删除后，使用这些标签的邮箱将失去相应的标签分类。\n此操作不可撤销。"
+                text: "确定要删除所有 " + root.tagList.length + " 个标签吗？\n\n删除后，使用这些标签的邮箱将失去相应的标签分类。\n此操作不可撤销。"
                 wrapMode: Text.WordWrap
                 Layout.preferredWidth: 400
                 font.pixelSize: 14
@@ -969,16 +962,21 @@ Rectangle {
 
                 Button {
                     text: "取消"
-                    onClicked: batchDeleteDialog.close()
+                    onClicked: deleteAllConfirmDialog.close()
                 }
 
                 Button {
-                    text: "确认删除"
+                    text: "确认删除所有标签"
                     Material.background: Material.Red
                     onClicked: {
-                        root.batchDeleteTags(root.selectedTags)
+                        // 获取所有标签ID进行批量删除
+                        var allTagIds = []
+                        for (var i = 0; i < root.tagList.length; i++) {
+                            allTagIds.push(root.tagList[i].id)
+                        }
+                        root.batchDeleteTags(allTagIds)
                         root.clearSelection()
-                        batchDeleteDialog.close()
+                        deleteAllConfirmDialog.close()
                     }
                 }
             }

@@ -143,15 +143,15 @@ class EmailController(QObject):
             self._is_generating = False
             self.progressChanged.emit(0)
 
-    @pyqtSlot(str, str, str, str)
-    def generateCustomEmail(self, prefix_type: str, custom_prefix: str = "", tags: str = "", notes: str = ""):
+    @pyqtSlot(str, str, 'QVariantList', str)
+    def generateCustomEmail(self, prefix_type: str, custom_prefix: str = "", tag_ids=None, notes: str = ""):
         """
         生成自定义邮箱 - QML调用的方法
 
         Args:
             prefix_type: 前缀类型 (random_name, random_string, custom)
             custom_prefix: 自定义前缀
-            tags: 标签字符串，用逗号分隔
+            tag_ids: 标签ID列表 (QVariantList)
             notes: 备注信息
         """
         if self._is_generating:
@@ -163,8 +163,16 @@ class EmailController(QObject):
             self.statusChanged.emit("正在生成自定义邮箱...")
             self.progressChanged.emit(10)
 
-            # 解析标签
-            tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()] if tags else []
+            # 处理标签ID列表
+            tag_list = []
+            if tag_ids:
+                # 转换QVariantList为Python列表
+                tag_id_list = [int(tag_id) for tag_id in tag_ids if tag_id]
+                self.logger.info(f"生成邮箱 - 标签ID列表: {tag_id_list}")
+                
+                # 将标签ID转换为标签名称
+                tag_list = self._get_tag_names_by_ids(tag_id_list)
+                self.logger.info(f"生成邮箱 - 标签名称列表: {tag_list}")
 
             self.progressChanged.emit(30)
 
@@ -172,7 +180,7 @@ class EmailController(QObject):
             email_model = self.email_service.create_email(
                 prefix_type=prefix_type,
                 custom_prefix=custom_prefix if custom_prefix else None,
-                tags=tag_list,
+                tags=tag_list,  # 现在传递标签名称列表
                 notes=notes or "通过界面自定义生成"
             )
 
@@ -204,7 +212,7 @@ class EmailController(QObject):
             self.progressChanged.emit(0)
 
     @pyqtSlot(int, str, str, 'QVariantList', str)
-    def batchGenerateEmails(self, count: int, prefix_type: str, custom_prefix: str = "", tags: list = None, notes: str = ""):
+    def batchGenerateEmails(self, count: int, prefix_type: str, custom_prefix: str = "", tag_ids=None, notes: str = ""):
         """
         批量生成邮箱 - QML调用的方法
 
@@ -212,7 +220,7 @@ class EmailController(QObject):
             count: 生成数量
             prefix_type: 前缀类型 (random_name, random_string, custom)
             custom_prefix: 自定义前缀
-            tags: 标签列表
+            tag_ids: 标签ID列表 (QVariantList)
             notes: 备注信息
         """
         if self._is_generating:
@@ -228,8 +236,16 @@ class EmailController(QObject):
             self.statusChanged.emit(f"正在批量生成 {count} 个邮箱...")
             self.progressChanged.emit(5)
 
-            # 转换标签列表
-            tag_list = tags if tags else []
+            # 处理标签ID列表
+            tag_list = []
+            if tag_ids:
+                # 转换QVariantList为Python列表
+                tag_id_list = [int(tag_id) for tag_id in tag_ids if tag_id]
+                self.logger.info(f"批量生成邮箱 - 标签ID列表: {tag_id_list}")
+                
+                # 将标签ID转换为标签名称
+                tag_list = self._get_tag_names_by_ids(tag_id_list)
+                self.logger.info(f"批量生成邮箱 - 标签名称列表: {tag_list}")
 
             success_count = 0
             failed_count = 0
@@ -599,6 +615,287 @@ class EmailController(QObject):
         except Exception as e:
             self.logger.error(f"文件选择失败: {e}")
             self.errorOccurred.emit("文件选择失败", str(e))
+
+    @pyqtSlot(int)
+    def deleteEmail(self, email_id: int):
+        """
+        删除邮箱 - QML调用的方法
+        
+        Args:
+            email_id: 邮箱ID
+        """
+        try:
+            self.logger.info(f"开始删除邮箱: {email_id}")
+            
+            # 调用服务层删除邮箱
+            success = self.email_service.delete_email(email_id)
+            
+            if success:
+                self.logger.info(f"邮箱删除成功: {email_id}")
+                self.statusChanged.emit(f"邮箱删除成功")
+                
+                # 刷新邮箱列表
+                self.refreshEmailList()
+                
+                # 更新统计信息
+                self._update_statistics()
+                
+            else:
+                self.logger.error(f"邮箱删除失败: {email_id}")
+                self.errorOccurred.emit("删除失败", f"无法删除邮箱 ID: {email_id}")
+                
+        except Exception as e:
+            self.logger.error(f"删除邮箱异常: {e}")
+            self.errorOccurred.emit("删除异常", f"删除邮箱时发生错误: {str(e)}")
+
+    @pyqtSlot('QVariantList')
+    def batchDeleteEmails(self, email_ids):
+        """
+        批量删除邮箱 - QML调用的方法
+        
+        Args:
+            email_ids: 邮箱ID列表
+        """
+        try:
+            # 转换为Python列表
+            id_list = [int(id_val) for id_val in email_ids]
+            self.logger.info(f"开始批量删除邮箱: {id_list}")
+            
+            # 调用服务层批量删除
+            result = self.email_service.batch_delete_emails(id_list)
+            
+            success_count = result.get("success", 0)
+            failed_count = result.get("failed", 0)
+            
+            if success_count > 0:
+                self.logger.info(f"批量删除完成: 成功 {success_count} 个, 失败 {failed_count} 个")
+                self.statusChanged.emit(f"批量删除完成: 成功删除 {success_count} 个邮箱")
+                
+                # 刷新邮箱列表
+                self.refreshEmailList()
+                
+                # 更新统计信息
+                self._update_statistics()
+                
+            else:
+                self.logger.error(f"批量删除失败: {result}")
+                self.errorOccurred.emit("批量删除失败", "没有邮箱被成功删除")
+                
+        except Exception as e:
+            self.logger.error(f"批量删除邮箱异常: {e}")
+            self.errorOccurred.emit("批量删除异常", f"批量删除邮箱时发生错误: {str(e)}")
+
+    def _get_tag_names_by_ids(self, tag_ids: List[int]) -> List[str]:
+        """
+        根据标签ID获取标签名称列表
+
+        Args:
+            tag_ids: 标签ID列表
+
+        Returns:
+            标签名称列表
+        """
+        try:
+            self.logger.info(f"开始根据标签ID获取名称，输入IDs: {tag_ids}")
+
+            if not tag_ids:
+                self.logger.info("标签ID列表为空，返回空列表")
+                return []
+
+            # 构建查询语句
+            placeholders = ','.join(['?' for _ in tag_ids])
+            query = f"SELECT id, name FROM tags WHERE id IN ({placeholders}) AND is_active = 1"
+            self.logger.info(f"执行查询: {query}, 参数: {tag_ids}")
+
+            # 执行查询
+            results = self.database_service.execute_query(query, tag_ids)
+            self.logger.info(f"查询结果: {results}")
+
+            # 提取标签名称
+            if results:
+                tag_names = []
+                for row in results:
+                    if isinstance(row, dict):
+                        tag_names.append(row['name'])
+                        self.logger.info(f"找到标签: ID={row['id']}, Name={row['name']}")
+                    else:
+                        tag_names.append(row[1])  # name字段
+                        self.logger.info(f"找到标签: ID={row[0]}, Name={row[1]}")
+            else:
+                tag_names = []
+                self.logger.warning("查询结果为空")
+
+            self.logger.info(f"标签ID {tag_ids} 对应的名称: {tag_names}")
+            return tag_names
+
+        except Exception as e:
+            self.logger.error(f"获取标签名称失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误信息: {traceback.format_exc()}")
+            return []
+
+    @pyqtSlot(int, str, 'QVariantList', result=str)
+    def updateEmail(self, email_id: int, notes: str = "", tag_ids=None) -> str:
+        """
+        更新邮箱信息（备注和标签）- QML调用的方法
+        
+        Args:
+            email_id: 邮箱ID
+            notes: 备注信息
+            tag_ids: 标签ID列表
+            
+        Returns:
+            JSON格式的结果字符串
+        """
+        try:
+            self.logger.info(f"开始更新邮箱 ID: {email_id}, 备注: {notes}, 标签IDs: {tag_ids}")
+
+            # 获取现有邮箱
+            email_model = None
+            for email in self._current_emails:
+                if email.id == email_id:
+                    email_model = email
+                    break
+
+            if not email_model:
+                # 从数据库重新获取
+                self.logger.info(f"从缓存中未找到邮箱 {email_id}，从数据库重新获取")
+                query = "SELECT * FROM emails WHERE id = ? AND is_active = 1"
+                results = self.database_service.execute_query(query, (email_id,))
+                if not results:
+                    self.logger.error(f"数据库中未找到邮箱 {email_id}")
+                    return json.dumps({
+                        "success": False,
+                        "error": "邮箱不存在或已被删除"
+                    })
+                email_model = self.email_service._row_to_email_model(results[0])
+                self.logger.info(f"从数据库获取到邮箱: {email_model.email_address}")
+            else:
+                self.logger.info(f"从缓存获取到邮箱: {email_model.email_address}")
+
+            # 记录更新前的状态
+            self.logger.info(f"更新前 - 邮箱ID: {email_model.id}, 备注: '{email_model.notes}', 标签: {email_model.tags}")
+
+            # 更新备注
+            if notes is not None:
+                old_notes = email_model.notes
+                email_model.notes = notes
+                self.logger.info(f"备注更新: '{old_notes}' -> '{notes}'")
+
+            # 更新标签
+            if tag_ids is not None:
+                self.logger.info(f"开始处理标签更新，标签IDs: {tag_ids}")
+                # 获取标签名称
+                tag_names = self._get_tag_names_by_ids(tag_ids) if tag_ids else []
+                old_tags = email_model.tags.copy() if email_model.tags else []
+                email_model.tags = tag_names
+                self.logger.info(f"标签更新: {old_tags} -> {tag_names}")
+            else:
+                self.logger.info("未提供标签IDs，跳过标签更新")
+
+            # 保存到数据库
+            self.logger.info(f"调用EmailService更新邮箱，最终状态 - 备注: '{email_model.notes}', 标签: {email_model.tags}")
+            success = self.email_service.update_email(email_model)
+
+            if success:
+                self.logger.info(f"邮箱 {email_id} 数据库更新成功")
+
+                # 验证更新结果 - 从数据库重新查询
+                verification_query = """
+                    SELECT e.*, GROUP_CONCAT(t.name) as tag_names
+                    FROM emails e
+                    LEFT JOIN email_tags et ON e.id = et.email_id
+                    LEFT JOIN tags t ON et.tag_id = t.id AND t.is_active = 1
+                    WHERE e.id = ? AND e.is_active = 1
+                    GROUP BY e.id
+                """
+                verification_result = self.database_service.execute_query(verification_query, (email_id,))
+                if verification_result:
+                    row = verification_result[0]
+                    actual_notes = row.get('notes', '') if isinstance(row, dict) else row[8]  # notes字段位置
+                    actual_tags = row.get('tag_names', '') if isinstance(row, dict) else row[-1]  # 最后一个字段
+                    actual_tags_list = actual_tags.split(',') if actual_tags else []
+                    self.logger.info(f"数据库验证结果 - 备注: '{actual_notes}', 标签: {actual_tags_list}")
+
+                # 刷新邮箱列表
+                self._refresh_email_list()
+
+                return json.dumps({
+                    "success": True,
+                    "message": "邮箱信息更新成功",
+                    "email_id": email_id,
+                    "notes": notes,
+                    "tags": email_model.tags
+                })
+            else:
+                self.logger.error(f"邮箱 {email_id} 数据库更新失败")
+                return json.dumps({
+                    "success": False,
+                    "error": "数据库更新失败"
+                })
+                
+        except Exception as e:
+            self.logger.error(f"更新邮箱失败: {e}")
+            return json.dumps({
+                "success": False,
+                "error": f"更新邮箱失败: {str(e)}"
+            })
+
+    @pyqtSlot(int, result=str)
+    def getEmailById(self, email_id: int) -> str:
+        """
+        根据ID获取邮箱详细信息 - QML调用的方法
+        
+        Args:
+            email_id: 邮箱ID
+            
+        Returns:
+            JSON格式的邮箱信息
+        """
+        try:
+            # 先从内存中查找
+            email_model = None
+            for email in self._current_emails:
+                if email.id == email_id:
+                    email_model = email
+                    break
+                    
+            # 如果内存中没有，从数据库查询
+            if not email_model:
+                query = "SELECT * FROM emails WHERE id = ? AND is_active = 1"
+                results = self.database_service.execute_query(query, (email_id,))
+                if not results:
+                    return json.dumps({
+                        "success": False,
+                        "error": "邮箱不存在"
+                    })
+                email_model = self.email_service._row_to_email_model(results[0])
+            
+            # 转换为字典格式
+            email_dict = {
+                "id": email_model.id,
+                "email_address": email_model.email_address,
+                "domain": email_model.domain,
+                "prefix": email_model.prefix,
+                "status": email_model.status.value if hasattr(email_model.status, 'value') else str(email_model.status),
+                "created_at": email_model.created_at.isoformat() if email_model.created_at else "",
+                "updated_at": email_model.updated_at.isoformat() if email_model.updated_at else "",
+                "tags": email_model.tags or [],
+                "notes": email_model.notes or "",
+                "is_active": email_model.is_active
+            }
+            
+            return json.dumps({
+                "success": True,
+                "email": email_dict
+            })
+            
+        except Exception as e:
+            self.logger.error(f"获取邮箱信息失败: {e}")
+            return json.dumps({
+                "success": False,
+                "error": f"获取邮箱信息失败: {str(e)}"
+            })
 
     @staticmethod
     def register_qml_type():
