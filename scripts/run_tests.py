@@ -263,9 +263,13 @@ def main():
     """主函数"""
     # 设置UTF-8编码输出，避免Windows下的编码问题
     import sys
+    import io
     if sys.platform.startswith('win'):
         import os
         os.environ['PYTHONIOENCODING'] = 'utf-8'
+        # 重新配置stdout为UTF-8编码
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
     print("=" * 60)
     try:
