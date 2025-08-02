@@ -198,14 +198,16 @@ jobs:
         echo "源分支: $SOURCE_BRANCH"
         echo "目标分支: $TARGET_BRANCH"
         
-        # 检查合并规则
+        # 检查合并规则 - 允许feature分支直接向main提PR进行发布
         if [[ "$SOURCE_BRANCH" =~ ^feature- ]] && [[ "$TARGET_BRANCH" == "develop" ]]; then
           echo "✅ 功能分支正确合并到develop分支"
+        elif [[ "$SOURCE_BRANCH" =~ ^feature- ]] && [[ "$TARGET_BRANCH" == "main" ]]; then
+          echo "✅ 功能分支向main分支提PR进行发布"
         elif [[ "$SOURCE_BRANCH" == "develop" ]] && [[ "$TARGET_BRANCH" == "main" ]]; then
           echo "✅ develop分支正确合并到main分支"
         else
           echo "❌ 不符合分支合并规则"
-          echo "规则: feature-* → develop → main"
+          echo "规则: feature-* → develop → main 或 feature-* → main (发布)"
           exit 1
         fi
 
