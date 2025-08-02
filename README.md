@@ -261,13 +261,17 @@ python run.py
 - 🛡️ 深度安全扫描
 - 📚 文档完整性检查
 
-##### 3. Main分支发布 (`main-release.yml`)
+##### 3. 自动打包发布 (`main-release.yml`)
 **触发条件**: 代码合并到main分支时
 **执行内容**:
-- 🔍 发布前完整检查
-- 📦 多平台构建发布版本
+- 🔍 发布前完整检查和图标验证
+- 📦 多平台多架构构建发布版本
+  - **Windows x86_64**: 使用app.ico和app16x16.ico图标
+  - **Linux x86_64**: 使用app.png图标
+  - **未来支持**: Windows ARM64, Linux ARM64 (预留配置)
 - 🎉 自动创建GitHub Release
 - 📚 部署项目文档到GitHub Pages
+- 🏗️  架构特定的构建产物命名
 
 #### 分支保护规则
 
