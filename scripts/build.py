@@ -207,28 +207,72 @@ def create_spec_file(platform_name: str) -> Path:
 
     platform_config = get_platform_config(platform_name)
 
-    # 图标文件路径
-    icon_ext = platform_config["icon_ext"]
-    icon_path = RESOURCES_DIR / "icons" / f"app{icon_ext}"
+    # 根据平台选择合适的图标文件
+    icon_path = None
+    if platform_name == "windows":
+        # Windows平台优先使用.ico文件
+        primary_icon = RESOURCES_DIR / "icons" / "app.ico"
+        secondary_icon = RESOURCES_DIR / "icons" / "app16x16.ico"  # 小图标
 
-    # 如果指定平台的图标不存在，尝试其他格式
-    if not icon_path.exists():
+        if primary_icon.exists():
+            icon_path = primary_icon
+            print(f"✅ Windows主图标: {primary_icon}")
+
+        if secondary_icon.exists():
+            print(f"✅ Windows小图标: {secondary_icon}")
+        else:
+            print(f"⚠️  Windows小图标未找到: {secondary_icon}")
+
+    elif platform_name == "linux":
+        # Linux平台使用.png文件
+        linux_icon = RESOURCES_DIR / "icons" / "app.png"
+
+        if linux_icon.exists():
+            icon_path = linux_icon
+            print(f"✅ Linux图标: {linux_icon}")
+        else:
+            print(f"⚠️  Linux图标未找到: {linux_icon}")
+
+    # 如果指定平台的图标不存在，尝试其他格式作为备选
+    if not icon_path or not icon_path.exists():
+        print(f"⚠️  平台特定图标不存在，尝试备选图标...")
         for ext in [".ico", ".png", ".icns"]:
             alt_icon = RESOURCES_DIR / "icons" / f"app{ext}"
             if alt_icon.exists():
                 icon_path = alt_icon
+                print(f"✅ 使用备选图标: {icon_path}")
                 break
         else:
             icon_path = None
+            print(f"❌ 未找到任何可用图标文件")
+
+    # 获取架构信息
+    import platform as platform_module
+    current_arch = platform_module.machine().lower()
+    if current_arch in ['amd64', 'x86_64']:
+        arch = 'x86_64'
+    elif current_arch in ['arm64', 'aarch64']:
+        arch = 'arm64'
+    else:
+        arch = current_arch
 
     # 平台特定的配置
     executable_name = f"{PROJECT_NAME}{platform_config['executable_ext']}"
 
+    print(f"🏗️  构建配置:")
+    print(f"   平台: {platform_config['name']}")
+    print(f"   架构: {arch}")
+    print(f"   可执行文件: {executable_name}")
+    print(f"   图标文件: {icon_path or '无'}")
+
     # 创建spec文件内容
     spec_content = f'''# -*- mode: python ; coding: utf-8 -*-
 """
-{PROJECT_NAME} PyInstaller配置文件 - {platform_config['name']}平台
-自动生成，请勿手动编辑
+{PROJECT_NAME} PyInstaller配置文件
+平台: {platform_config['name']}
+架构: {arch}
+自动生成于: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+请勿手动编辑
 """
 
 import sys
@@ -260,6 +304,11 @@ if qml_path.exists():
 config_path = project_root / "config"
 if config_path.exists():
     datas.append((str(config_path), "config"))
+
+# 添加图标文件到数据中 (确保图标被包含)
+icons_path = resources_path / "icons"
+if icons_path.exists():
+    datas.append((str(icons_path), "icons"))
 
 a = Analysis(
     [str(src_path / "main.py")],
@@ -316,6 +365,27 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# 平台特定的EXE配置
+exe_kwargs = {{
+    "name": "{executable_name}",
+    "debug": False,
+    "bootloader_ignore_signals": False,
+    "strip": False,
+    "upx": True,
+    "upx_exclude": [],
+    "runtime_tmpdir": None,
+    "console": False,  # 隐藏控制台窗口
+    "disable_windowed_traceback": False,
+    "argv_emulation": False,
+    "target_arch": "{arch}",  # 指定目标架构
+    "codesign_identity": None,
+    "entitlements_file": None,
+}}
+
+# 添加图标配置
+if r"{icon_path}":
+    exe_kwargs["icon"] = r"{icon_path}"
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -323,21 +393,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="{executable_name}",
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=False,  # 隐藏控制台窗口
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    icon={f"r'{icon_path}'" if icon_path else "None"},
-    version_file=None,
+    **exe_kwargs
 )
 '''
 
@@ -403,7 +459,18 @@ def build_executable(spec_file_path: Path, platform_name: str) -> bool:
 def create_release_package(platform_name: str) -> bool:
     """创建发布包"""
     platform_config = get_platform_config(platform_name)
-    print_step(f"创建{platform_config['name']}平台发布包")
+
+    # 获取架构信息
+    import platform as platform_module
+    current_arch = platform_module.machine().lower()
+    if current_arch in ['amd64', 'x86_64']:
+        arch = 'x86_64'
+    elif current_arch in ['arm64', 'aarch64']:
+        arch = 'arm64'
+    else:
+        arch = current_arch
+
+    print_step(f"创建{platform_config['name']}-{arch}平台发布包")
 
     executable_name = f"{PROJECT_NAME}{platform_config['executable_ext']}"
     exe_path = DIST_DIR / platform_name / executable_name
@@ -420,52 +487,77 @@ def create_release_package(platform_name: str) -> bool:
     release_dir = DIST_DIR / platform_name / "release"
     release_dir.mkdir(exist_ok=True)
 
-    # 复制可执行文件
-    release_exe_name = f"{PROJECT_NAME}_v{VERSION}_{platform_name}{platform_config['executable_ext']}"
+    # 复制可执行文件 (包含架构信息)
+    release_exe_name = f"{PROJECT_NAME}_v{VERSION}_{platform_name}_{arch}{platform_config['executable_ext']}"
     release_exe = release_dir / release_exe_name
     shutil.copy2(exe_path, release_exe)
 
+    # 同时创建不带版本号的简化名称
+    simple_exe_name = f"{PROJECT_NAME}{platform_config['executable_ext']}"
+    simple_exe = release_dir / simple_exe_name
+    shutil.copy2(exe_path, simple_exe)
+
     # 创建平台特定的README文件
     system_requirements = {
-        "windows": "- Windows 10 或更高版本\n- 4GB RAM (推荐)\n- 100MB 磁盘空间",
-        "linux": "- Linux发行版 (Ubuntu 18.04+, CentOS 7+等)\n- 4GB RAM (推荐)\n- 100MB 磁盘空间\n- X11或Wayland显示服务器"
+        "windows": f"- Windows 10 或更高版本 ({arch})\n- 4GB RAM (推荐)\n- 100MB 磁盘空间\n- 支持的架构: {arch}",
+        "linux": f"- Linux发行版 (Ubuntu 18.04+, CentOS 7+等) ({arch})\n- 4GB RAM (推荐)\n- 100MB 磁盘空间\n- X11或Wayland显示服务器\n- 支持的架构: {arch}"
     }
 
     install_instructions = {
-        "windows": f"1. 双击 {release_exe_name} 运行程序",
-        "linux": f"1. 给文件添加执行权限: chmod +x {release_exe_name}\n2. 运行程序: ./{release_exe_name}"
+        "windows": f"1. 双击 {simple_exe_name} 运行程序\n   (或使用完整名称: {release_exe_name})",
+        "linux": f"1. 给文件添加执行权限: chmod +x {simple_exe_name}\n2. 运行程序: ./{simple_exe_name}\n   (或使用完整名称: ./{release_exe_name})"
     }
 
-    readme_content = f"""# {PROJECT_NAME} v{VERSION} - {platform_config['name']}版本
+    readme_content = f"""# {PROJECT_NAME} v{VERSION} - {platform_config['name']} {arch}版本
 
-## 安装说明
+## 📦 包含文件
+
+- {simple_exe_name} - 主程序 (推荐使用)
+- {release_exe_name} - 带版本信息的程序文件
+
+## 🚀 安装说明
 
 {install_instructions[platform_name]}
 2. 首次运行需要配置域名和邮箱设置
 3. 详细使用说明请参考项目文档
 
-## 系统要求
+## 📋 系统要求
 
 {system_requirements[platform_name]}
 
-## 技术支持
+## 🎨 应用特性
+
+- 基于PyQt6的现代化界面
+- Material Design设计风格
+- 平台优化图标 ({platform_config['icon_ext']} 格式)
+- 完整的邮箱管理功能
+
+## 🔧 技术支持
 
 - 项目主页: https://github.com/your-username/email-domain-manager
 - 问题反馈: https://github.com/your-username/email-domain-manager/issues
+- 文档: https://your-username.github.io/email-domain-manager
 
-构建时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-构建版本: {VERSION}
-构建平台: {platform_config['name']}
+## 📊 构建信息
+
+- 构建时间: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+- 构建版本: {VERSION}
+- 构建平台: {platform_config['name']}
+- 目标架构: {arch}
+- 文件大小: {file_size:.1f} MB
 """
 
     readme_path = release_dir / "README.txt"
     with open(readme_path, "w", encoding="utf-8") as f:
         f.write(readme_content)
 
-    print(f"✅ {platform_config['name']}平台发布文件创建完成:")
+    print(f"✅ {platform_config['name']}-{arch}平台发布文件创建完成:")
     print(f"   📁 发布目录: {release_dir}")
-    print(f"   📦 可执行文件: {release_exe}")
+    print(f"   📦 主程序: {simple_exe}")
+    print(f"   📦 完整版本: {release_exe}")
     print(f"   📄 说明文件: {readme_path}")
+    print(f"   🎨 图标格式: {platform_config['icon_ext']}")
+    print(f"   🏗️  目标架构: {arch}")
 
     return True
 
