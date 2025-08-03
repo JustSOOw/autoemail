@@ -76,7 +76,7 @@ jobs:
           libxss1 \
           libxcursor1 \
           libxcomposite1 \
-          libasound2t64 \
+          libasound2 \
           libxi6 \
           libxtst6
 
