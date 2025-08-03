@@ -11,19 +11,19 @@ jobs:
   # 完整测试套件
   full-test-suite:
     name: 完整测试套件
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04以避免Ubuntu 24.04兼容性问题
+
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
-      
+
     - name: 设置Python环境
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        
+
     - name: 缓存依赖
-      uses: actions/cache@v3
+      uses: actions/cache@v4  # 升级到v4版本
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -60,7 +60,7 @@ jobs:
     name: 多平台构建测试
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]  # 移除macOS减少复杂度
+        os: [ubuntu-22.04, windows-latest]  # 明确指定Ubuntu 22.04
         python-version: ['3.11']  # 只测试主要Python版本
 
     runs-on: ${{ matrix.os }}
@@ -76,7 +76,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: 安装系统依赖 (Linux)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-22.04'
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -104,12 +104,12 @@ jobs:
   # 性能测试
   performance-test:
     name: 性能测试
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
+
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
-      
+
     - name: 设置Python环境
       uses: actions/setup-python@v5
       with:
@@ -151,7 +151,7 @@ jobs:
   # 简化代码质量分析
   code-analysis:
     name: 代码质量分析
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
     continue-on-error: true  # 允许失败
 
     steps:
@@ -193,7 +193,7 @@ jobs:
   # 简化安全扫描 - 只运行本地脚本
   security-scan:
     name: 安全扫描
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
     continue-on-error: true  # 允许失败
 
     steps:
@@ -213,8 +213,8 @@ jobs:
   # 文档检查
   documentation-check:
     name: 文档检查
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
+
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
@@ -248,7 +248,7 @@ jobs:
   # 通知 - 宽松模式
   notification:
     name: 构建通知
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
     needs: [full-test-suite, multi-platform-build, performance-test, code-analysis, security-scan, documentation-check]
     if: always()
 

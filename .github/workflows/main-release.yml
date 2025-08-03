@@ -1,10 +1,13 @@
 # Main分支自动打包发布流程
-# 当代码合并到main分支时触发多平台多架构的自动打包和发布
+# 当向main分支提交PR时触发多平台多架构的自动打包和发布
 name: 自动打包发布
 
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       version:
@@ -21,7 +24,7 @@ jobs:
   # 发布前检查
   pre-release-check:
     name: 发布前检查
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04以避免Ubuntu 24.04兼容性问题
 
     steps:
     - name: 检出代码
@@ -43,11 +46,13 @@ jobs:
         python scripts/run_tests.py
         pytest tests/ -v --cov=src
 
-    - name: 检查版本信息和构建配置
+    - name: 检查PR构建配置
       run: |
-        echo "📋 检查版本信息..."
+        echo "📋 检查PR构建信息..."
+        echo "PR编号: ${{ github.event.number }}"
+        echo "源分支: ${{ github.head_ref }}"
+        echo "目标分支: ${{ github.base_ref }}"
         echo "当前提交: ${{ github.sha }}"
-        echo "分支: ${{ github.ref }}"
         echo "包含ARM64: ${{ github.event.inputs.include_arm64 || 'false' }}"
 
         # 检查图标文件
@@ -73,7 +78,7 @@ jobs:
             runner_arch: X64
 
           # Linux x86_64 (主要支持)
-          - os: ubuntu-latest
+          - os: ubuntu-22.04  # 明确指定Ubuntu 22.04
             platform: linux
             arch: x86_64
             runner_arch: X64
@@ -85,7 +90,7 @@ jobs:
           #   runner_arch: ARM64
           #   experimental: true
           #
-          # - os: ubuntu-latest
+          # - os: ubuntu-22.04  # 明确指定Ubuntu 22.04
           #   platform: linux
           #   arch: arm64
           #   runner_arch: ARM64
@@ -97,16 +102,53 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: 设置Python环境
+    - name: 设置Python环境 (Windows/macOS)
+      if: matrix.platform != 'linux'
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         architecture: ${{ matrix.runner_arch }}
 
+    - name: 设置Python环境 (Linux - 系统包管理器)
+      if: matrix.platform == 'linux'
+      run: |
+        echo "🐍 使用系统包管理器安装Python 3.11 (Linux平台)..."
+
+        # 关键修复：禁用command-not-found的APT hook，解决cnf-update-db脚本问题
+        echo "🔧 禁用command-not-found的APT hook，解决cnf-update-db脚本问题..."
+        sudo mv /etc/apt/apt.conf.d/50command-not-found /etc/apt/apt.conf.d/50command-not-found.disabled 2>/dev/null || echo "⚠️ command-not-found配置文件不存在，跳过"
+
+        # 现在可以正常使用apt-get update
+        echo "📦 更新包缓存..."
+        sudo apt-get update
+
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa -y
+        sudo apt-get update
+
+        # 安装Python 3.11和相关包
+        sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3.11-distutils
+
+        # 安装pip (deadsnakes PPA中没有python3.11-pip，需要手动安装)
+        curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+
+        # 设置python3.11为默认python3
+        sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+        # 验证安装
+        echo "✅ Python安装完成，版本信息："
+        python3 --version
+        python3 -m pip --version
+
+
+
     - name: 安装系统依赖 (Linux)
       if: matrix.platform == 'linux'
       run: |
+        echo "📦 安装系统依赖包..."
+        # command-not-found hook已禁用，可以正常使用apt-get update
         sudo apt-get update
+
         sudo apt-get install -y \
           libgl1-mesa-glx \
           libglib2.0-0 \
@@ -224,11 +266,12 @@ jobs:
           ${{ env.RELEASE_DIR }}/
         retention-days: 30
 
-  # 创建GitHub Release
+  # 创建GitHub Release (合并到main时自动创建)
   create-release:
     name: 创建GitHub Release
     needs: build-release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: 检出代码
@@ -334,11 +377,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 部署文档
+  # 部署文档 (合并到main时自动部署)
   deploy-docs:
     name: 部署文档
     needs: create-release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: 检出代码
@@ -440,45 +484,66 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./site
 
-  # 发布通知和总结
-  release-notification:
-    name: 发布通知
-    needs: [create-release, deploy-docs]
-    runs-on: ubuntu-latest
+  # 构建通知和总结
+  build-notification:
+    name: 构建通知
+    needs: [build-release, create-release, deploy-docs]
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
     if: always()
 
     steps:
-    - name: 发布结果通知
+    - name: 构建结果通知
       run: |
-        echo "🎉 多平台自动打包发布流程完成"
-        echo "================================"
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          echo "🔍 PR构建测试完成"
+          echo "========================"
+          echo "PR信息:"
+          echo "  - PR编号: #${{ github.event.number }}"
+          echo "  - 源分支: ${{ github.head_ref }}"
+          echo "  - 目标分支: ${{ github.base_ref }}"
+        else
+          echo "🎉 自动发布流程完成"
+          echo "========================"
+        fi
 
-        # 检查各个任务的执行结果
+        # 检查构建任务结果
         echo "📋 任务执行结果:"
-        echo "  - 创建Release: ${{ needs.create-release.result }}"
-        echo "  - 部署文档: ${{ needs.deploy-docs.result }}"
+        echo "  - 构建测试: ${{ needs.build-release.result }}"
+
+        if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "  - 创建Release: ${{ needs.create-release.result }}"
+          echo "  - 部署文档: ${{ needs.deploy-docs.result }}"
+        fi
 
         if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
           echo ""
-          echo "❌ 发布过程中出现问题"
+          echo "❌ 流程中出现问题"
           echo "失败的任务:"
+          [[ "${{ needs.build-release.result }}" == "failure" ]] && echo "  - 构建测试失败"
           [[ "${{ needs.create-release.result }}" == "failure" ]] && echo "  - 创建Release失败"
           [[ "${{ needs.deploy-docs.result }}" == "failure" ]] && echo "  - 部署文档失败"
           echo ""
           echo "请检查上述失败任务的日志以获取详细错误信息。"
         else
           echo ""
-          echo "🎉 发布成功完成！"
-          echo "📦 新版本已发布到GitHub Releases"
-          echo "📚 文档已更新到GitHub Pages"
-          echo ""
-          echo "🔗 相关链接:"
-          echo "  - Releases: https://github.com/${{ github.repository }}/releases"
-          echo "  - 文档: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "✅ PR构建测试通过！"
+            echo "📦 所有平台构建成功，可以安全合并"
+          else
+            echo "🎉 自动发布成功完成！"
+            echo "📦 新版本已发布到GitHub Releases"
+            echo "📚 文档已更新到GitHub Pages"
+            echo ""
+            echo "🔗 相关链接:"
+            echo "  - Releases: https://github.com/${{ github.repository }}/releases"
+            echo "  - 文档: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          fi
         fi
 
         echo ""
         echo "📊 构建统计:"
         echo "  - 支持平台: Windows x86_64, Linux x86_64"
         echo "  - 构建时间: $(date)"
+        echo "  - PR编号: #${{ github.event.number }}"
+        echo "  - 源分支: ${{ github.head_ref }}"
         echo "  - 提交SHA: ${{ github.sha }}"
