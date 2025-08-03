@@ -151,7 +151,8 @@ jobs:
     - name: 测试构建
       run: |
         echo "🔨 测试构建过程..."
-        python scripts/build.py --test-only
+        # 测试Windows平台构建配置
+        python scripts/build.py --test-only --platform windows --arch x86_64
         
   # 简化安全检查 - 只运行本地脚本
   security-check:
