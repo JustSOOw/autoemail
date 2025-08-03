@@ -14,11 +14,7 @@ on:
         description: '发布版本号 (例如: v1.0.0)'
         required: true
         default: 'v1.0.0'
-      include_arm64:
-        description: '是否包含ARM64架构 (实验性功能)'
-        required: false
-        default: false
-        type: boolean
+
 
 # 设置GitHub Actions权限
 permissions:
@@ -59,7 +55,7 @@ jobs:
         echo "源分支: ${{ github.head_ref }}"
         echo "目标分支: ${{ github.base_ref }}"
         echo "当前提交: ${{ github.sha }}"
-        echo "包含ARM64: ${{ github.event.inputs.include_arm64 || 'false' }}"
+
 
         # 检查图标文件
         echo "🎨 检查应用图标文件..."
@@ -89,19 +85,7 @@ jobs:
             arch: x86_64
             runner_arch: X64
 
-          # Linux ARM64 (新增支持 - 2025年1月16日已发布)
-          - os: ubuntu-24.04-arm
-            platform: linux
-            arch: arm64
-            runner_arch: ARM64
-            experimental: false
 
-          # Windows ARM64 (2025年1月启用测试)
-          - os: windows-latest
-            platform: windows
-            arch: arm64
-            runner_arch: ARM64
-            experimental: true
 
     runs-on: ${{ matrix.os }}
 
@@ -354,28 +338,24 @@ EOF
         ### 支持的平台和架构
 
         - **Windows x86_64**: 下载 \`EmailDomainManager-windows-x86_64.exe\`
-        - **Windows ARM64**: 下载 \`EmailDomainManager-windows-arm64.exe\` (实验性支持)
         - **Linux x86_64**: 下载 \`EmailDomainManager-linux-x86_64.tar.gz\`
-        - **Linux ARM64**: 下载 \`EmailDomainManager-linux-arm64.tar.gz\`
 
         ## 🚀 安装说明
 
         ### Windows用户
-        1. **x86_64设备**: 下载 \`EmailDomainManager-windows-x86_64.exe\`
-        2. **ARM64设备**: 下载 \`EmailDomainManager-windows-arm64.exe\` (Surface Pro X等ARM设备)
-        3. 双击exe文件直接运行，无需安装
+        1. 下载 \`EmailDomainManager-windows-x86_64.exe\`
+        2. 双击exe文件直接运行，无需安装
 
         ### Linux用户
-        1. **x86_64设备**: 下载 \`EmailDomainManager-linux-x86_64.tar.gz\`
-        2. **ARM64设备**: 下载 \`EmailDomainManager-linux-arm64.tar.gz\` (树莓派、ARM服务器等)
-        3. 解压: \`tar -xzf EmailDomainManager-linux-架构.tar.gz\`
-        4. 添加执行权限: \`chmod +x EmailDomainManager\`
-        5. 运行: \`./EmailDomainManager\`
+        1. 下载 \`EmailDomainManager-linux-x86_64.tar.gz\`
+        2. 解压: \`tar -xzf EmailDomainManager-linux-x86_64.tar.gz\`
+        3. 添加执行权限: \`chmod +x EmailDomainManager\`
+        4. 运行: \`./EmailDomainManager\`
 
         ## 📋 系统要求
 
-        - **Windows**: Windows 10+ (x86_64/ARM64)
-        - **Linux**: 现代Linux发行版 (x86_64/ARM64)，支持X11或Wayland
+        - **Windows**: Windows 10+ (x86_64)
+        - **Linux**: 现代Linux发行版 (x86_64)，支持X11或Wayland
         - **内存**: 4GB+ RAM (推荐)
         - **存储**: 100MB+ 磁盘空间
 
@@ -416,9 +396,7 @@ EOF
         prerelease: ${{ github.event_name == 'pull_request' }}
         files: |
           EmailDomainManager-windows-x86_64.exe
-          EmailDomainManager-windows-arm64.exe
           EmailDomainManager-linux-x86_64.tar.gz
-          EmailDomainManager-linux-arm64.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -590,7 +568,7 @@ EOF
 
         echo ""
         echo "📊 构建统计:"
-        echo "  - 支持平台: Windows x86_64/ARM64, Linux x86_64/ARM64"
+        echo "  - 支持平台: Windows x86_64, Linux x86_64"
         echo "  - 构建时间: $(date)"
         echo "  - PR编号: #${{ github.event.number }}"
         echo "  - 源分支: ${{ github.head_ref }}"
