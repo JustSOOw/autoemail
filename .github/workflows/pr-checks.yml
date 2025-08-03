@@ -65,27 +65,16 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: 修复APT Python模块问题
-      run: |
-        echo "🔧 检查并修复APT Python模块问题..."
-        # 检查apt_pkg模块是否可用
-        python3 -c "import apt_pkg" 2>/dev/null || {
-          echo "⚠️ apt_pkg模块缺失，尝试修复..."
-          # 重新安装python3-apt包
-          sudo apt-get install --reinstall python3-apt -y || true
-          # 如果还是失败，禁用command-not-found更新
-          sudo rm -f /usr/lib/cnf-update-db || true
-        }
-
     - name: 安装系统依赖
       run: |
-        echo "📦 更新包缓存..."
-        # 使用更安全的apt-get update，忽略Post-Invoke脚本错误
+        echo "� 更新包缓存（绕过APT Post-Invoke脚本问题）..."
+        # 方案1：禁用Post-Invoke脚本直接更新
         sudo apt-get update -o APT::Update::Post-Invoke-Success::= || {
-          echo "⚠️ apt-get update遇到Post-Invoke错误，尝试替代方案..."
-          # 禁用command-not-found更新后重试
-          sudo mv /usr/lib/cnf-update-db /usr/lib/cnf-update-db.bak 2>/dev/null || true
+          echo "⚠️ 方案1失败，使用方案2：临时禁用command-not-found脚本..."
+          # 方案2：临时禁用有问题的脚本
+          sudo chmod -x /usr/lib/cnf-update-db 2>/dev/null || true
           sudo apt-get update
+          sudo chmod +x /usr/lib/cnf-update-db 2>/dev/null || true
         }
 
         echo "📦 安装系统依赖包..."
