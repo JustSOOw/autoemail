@@ -1,0 +1,1684 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="基于PyQt6的域名邮箱管理工具 - 多平台自动打包发布">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>域名邮箱管理器 - 前端API使用指南 - 域名邮箱管理器</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#-api" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="域名邮箱管理器" class="md-header__button md-logo" aria-label="域名邮箱管理器" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            域名邮箱管理器
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              域名邮箱管理器 - 前端API使用指南
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/installation.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  下载安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/user-guide.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  使用指南
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/development.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  开发文档
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/api-specification.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API规范
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/changelog.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="域名邮箱管理器" class="md-nav__button md-logo" aria-label="域名邮箱管理器" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    域名邮箱管理器
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    首页
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/installation.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    下载安装
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/user-guide.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    使用指南
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/development.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    开发文档
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/api-specification.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API规范
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/changelog.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    更新日志
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      📋 概述
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 快速开始
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 快速开始">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 服务初始化
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 基础数据结构
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      📧 邮箱管理API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📧 邮箱管理API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 创建邮箱
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 高级搜索（推荐使用）
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 多标签搜索
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 日期范围搜索
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. 统计分析
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. 邮箱更新和删除
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      🏷️ 标签管理API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🏷️ 标签管理API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 标签基础操作
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 标签分页查询
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 标签与邮箱关联
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 标签统计和分析
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. 标签导出
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚡ 批量操作API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="⚡ 批量操作API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 批量创建邮箱
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 批量更新邮箱
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 批量标签操作
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 批量数据导入
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      📤 数据导出API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📤 数据导出API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 全量数据导出
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 模板导出
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 高级邮箱导出
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔒 安全功能API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔒 安全功能API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 数据加密
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 日志脱敏
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      ❌ 错误处理
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="❌ 错误处理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 异常类型
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 错误处理示例
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 批量操作错误处理
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 前端集成最佳实践
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 前端集成最佳实践">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. API调用封装
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 状态管理
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 组件设计建议
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 性能优化建议
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 数据格式参考
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📊 数据格式参考">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 搜索筛选参数
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 批量操作参数
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="-api">域名邮箱管理器 - 前端API使用指南</h1>
+<h2 id="_1">📋 概述</h2>
+<p>本文档为前端开发者提供详细的后端API使用指南，包含所有可用的接口、数据格式、错误处理和最佳实践。</p>
+<p><strong>后端版本</strong>: Phase 3A<br />
+<strong>API状态</strong>: ✅ 已完成并测试通过<br />
+<strong>更新时间</strong>: 2025年1月23日</p>
+<h2 id="_2">🚀 快速开始</h2>
+<h3 id="1">1. 服务初始化</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 后端服务初始化示例</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">services.email_service</span><span class="w"> </span><span class="kn">import</span> <span class="n">EmailService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">services.tag_service</span><span class="w"> </span><span class="kn">import</span> <span class="n">TagService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">services.batch_service</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">services.export_service</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportService</span>
+
+<span class="c1"># 初始化数据库和配置</span>
+<span class="n">db_service</span> <span class="o">=</span> <span class="n">DatabaseService</span><span class="p">(</span><span class="s2">&quot;path/to/database.db&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">ConfigModel</span><span class="p">()</span>
+
+<span class="c1"># 初始化各个服务</span>
+<span class="n">email_service</span> <span class="o">=</span> <span class="n">EmailService</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">db_service</span><span class="p">)</span>
+<span class="n">tag_service</span> <span class="o">=</span> <span class="n">TagService</span><span class="p">(</span><span class="n">db_service</span><span class="p">)</span>
+<span class="n">batch_service</span> <span class="o">=</span> <span class="n">BatchService</span><span class="p">(</span><span class="n">db_service</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">export_service</span> <span class="o">=</span> <span class="n">ExportService</span><span class="p">(</span><span class="n">db_service</span><span class="p">)</span>
+<span class="n">export_service</span><span class="o">.</span><span class="n">set_services</span><span class="p">(</span><span class="n">email_service</span><span class="p">,</span> <span class="n">tag_service</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="2">2. 基础数据结构</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// TypeScript 接口定义（前端参考）</span>
+<span class="kd">interface</span><span class="w"> </span><span class="nx">EmailModel</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">id?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">email_address</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">prefix</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">timestamp_suffix</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">created_at?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">last_used?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">updated_at?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;active&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;inactive&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;archived&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">notes</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">metadata</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">any</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">is_active</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">created_by</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">TagModel</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">id?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">created_at?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">updated_at?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">is_system</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">is_active</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">usage_count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">PaginationInfo</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">current_page</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">page_size</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">total_items</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">total_pages</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">has_next</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">has_prev</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">SearchResponse</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">emails</span><span class="o">:</span><span class="w"> </span><span class="kt">EmailModel</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">pagination</span><span class="o">:</span><span class="w"> </span><span class="kt">PaginationInfo</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">filters</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">any</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="api">📧 邮箱管理API</h2>
+<h3 id="1_1">1. 创建邮箱</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 创建单个邮箱</span>
+<span class="n">email</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">create_email</span><span class="p">(</span>
+    <span class="n">prefix_type</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span>           <span class="c1"># &quot;random_name&quot;, &quot;timestamp&quot;, &quot;custom&quot;</span>
+    <span class="n">custom_prefix</span><span class="o">=</span><span class="s2">&quot;test_user&quot;</span><span class="p">,</span>      <span class="c1"># 自定义前缀</span>
+    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;开发&quot;</span><span class="p">,</span> <span class="s2">&quot;测试&quot;</span><span class="p">],</span>           <span class="c1"># 标签列表</span>
+    <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;测试邮箱&quot;</span>                <span class="c1"># 备注</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: EmailModel 对象</span>
+</code></pre></div>
+<h3 id="2_1">2. 高级搜索（推荐使用）</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 高级搜索 - 支持分页和多条件筛选</span>
+<span class="n">search_result</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">advanced_search_emails</span><span class="p">(</span>
+    <span class="n">keyword</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>                 <span class="c1"># 搜索关键词</span>
+    <span class="n">domain</span><span class="o">=</span><span class="s2">&quot;example.com&quot;</span><span class="p">,</span>           <span class="c1"># 域名筛选</span>
+    <span class="n">status</span><span class="o">=</span><span class="s2">&quot;active&quot;</span><span class="p">,</span>                <span class="c1"># 状态筛选</span>
+    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;开发&quot;</span><span class="p">,</span> <span class="s2">&quot;测试&quot;</span><span class="p">],</span>           <span class="c1"># 标签筛选</span>
+    <span class="n">date_from</span><span class="o">=</span><span class="s2">&quot;2025-01-01&quot;</span><span class="p">,</span>         <span class="c1"># 开始日期</span>
+    <span class="n">date_to</span><span class="o">=</span><span class="s2">&quot;2025-01-31&quot;</span><span class="p">,</span>           <span class="c1"># 结束日期</span>
+    <span class="n">created_by</span><span class="o">=</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span>             <span class="c1"># 创建者筛选</span>
+    <span class="n">has_notes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>                 <span class="c1"># 是否有备注</span>
+    <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                         <span class="c1"># 页码</span>
+    <span class="n">page_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>                   <span class="c1"># 每页大小</span>
+    <span class="n">sort_by</span><span class="o">=</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span>           <span class="c1"># 排序字段</span>
+    <span class="n">sort_order</span><span class="o">=</span><span class="s2">&quot;desc&quot;</span>               <span class="c1"># 排序方向</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: SearchResponse 对象</span>
+<span class="c1"># {</span>
+<span class="c1">#   &quot;emails&quot;: [EmailModel, ...],</span>
+<span class="c1">#   &quot;pagination&quot;: PaginationInfo,</span>
+<span class="c1">#   &quot;filters&quot;: {...}</span>
+<span class="c1"># }</span>
+</code></pre></div>
+<h3 id="3">3. 多标签搜索</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 搜索包含任一标签的邮箱</span>
+<span class="n">emails</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">get_emails_by_multiple_tags</span><span class="p">(</span>
+    <span class="n">tag_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;开发&quot;</span><span class="p">,</span> <span class="s2">&quot;测试&quot;</span><span class="p">],</span>
+    <span class="n">match_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>                <span class="c1"># False=任一标签, True=所有标签</span>
+    <span class="n">limit</span><span class="o">=</span><span class="mi">100</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: List[EmailModel]</span>
+</code></pre></div>
+<h3 id="4">4. 日期范围搜索</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 按日期范围搜索</span>
+<span class="n">emails</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">get_emails_by_date_range</span><span class="p">(</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2025-01-01&quot;</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2025-01-31&quot;</span><span class="p">,</span>
+    <span class="n">date_field</span><span class="o">=</span><span class="s2">&quot;created_at&quot;</span><span class="p">,</span>        <span class="c1"># &quot;created_at&quot;, &quot;last_used&quot;, &quot;updated_at&quot;</span>
+    <span class="n">limit</span><span class="o">=</span><span class="mi">100</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: List[EmailModel]</span>
+</code></pre></div>
+<h3 id="5">5. 统计分析</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 获取时间段统计</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">get_email_statistics_by_period</span><span class="p">(</span>
+    <span class="n">period</span><span class="o">=</span><span class="s2">&quot;month&quot;</span><span class="p">,</span>                 <span class="c1"># &quot;day&quot;, &quot;week&quot;, &quot;month&quot;, &quot;year&quot;</span>
+    <span class="n">limit</span><span class="o">=</span><span class="mi">12</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: List[Dict] - 统计数据</span>
+<span class="c1"># [</span>
+<span class="c1">#   {</span>
+<span class="c1">#     &quot;period&quot;: &quot;2025-01&quot;,</span>
+<span class="c1">#     &quot;total_count&quot;: 150,</span>
+<span class="c1">#     &quot;active_count&quot;: 120,</span>
+<span class="c1">#     &quot;inactive_count&quot;: 20,</span>
+<span class="c1">#     &quot;archived_count&quot;: 10</span>
+<span class="c1">#   },</span>
+<span class="c1">#   ...</span>
+<span class="c1"># ]</span>
+</code></pre></div>
+<h3 id="6">6. 邮箱更新和删除</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 更新邮箱</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">update_email</span><span class="p">(</span><span class="n">email_model</span><span class="p">)</span>
+
+<span class="c1"># 删除邮箱（软删除）</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">delete_email</span><span class="p">(</span><span class="n">email_id</span><span class="p">)</span>
+
+<span class="c1"># 获取单个邮箱</span>
+<span class="n">email</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">get_email_by_id</span><span class="p">(</span><span class="n">email_id</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="api_1">🏷️ 标签管理API</h2>
+<h3 id="1_2">1. 标签基础操作</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 创建标签</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">create_tag</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;开发环境&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;开发环境相关邮箱&quot;</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#3498db&quot;</span><span class="p">,</span>
+    <span class="n">icon</span><span class="o">=</span><span class="s2">&quot;💻&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># 获取所有标签</span>
+<span class="n">tags</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">get_all_tags</span><span class="p">()</span>
+
+<span class="c1"># 更新标签</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">update_tag</span><span class="p">(</span><span class="n">tag_model</span><span class="p">)</span>
+
+<span class="c1"># 删除标签</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="2_2">2. 标签分页查询</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 分页获取标签</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">get_tags_with_pagination</span><span class="p">(</span>
+    <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">page_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">keyword</span><span class="o">=</span><span class="s2">&quot;开发&quot;</span><span class="p">,</span>                 <span class="c1"># 搜索关键词</span>
+    <span class="n">sort_by</span><span class="o">=</span><span class="s2">&quot;usage_count&quot;</span><span class="p">,</span>          <span class="c1"># &quot;name&quot;, &quot;created_at&quot;, &quot;usage_count&quot;</span>
+    <span class="n">sort_order</span><span class="o">=</span><span class="s2">&quot;desc&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: </span>
+<span class="c1"># {</span>
+<span class="c1">#   &quot;tags&quot;: [TagModel, ...],</span>
+<span class="c1">#   &quot;pagination&quot;: PaginationInfo,</span>
+<span class="c1">#   &quot;filters&quot;: {...}</span>
+<span class="c1"># }</span>
+</code></pre></div>
+<h3 id="3_1">3. 标签与邮箱关联</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 为邮箱添加单个标签</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">add_tag_to_email</span><span class="p">(</span><span class="n">email_id</span><span class="p">,</span> <span class="n">tag_id</span><span class="p">)</span>
+
+<span class="c1"># 批量为邮箱添加标签</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">batch_add_tags_to_email</span><span class="p">(</span><span class="n">email_id</span><span class="p">,</span> <span class="p">[</span><span class="n">tag_id1</span><span class="p">,</span> <span class="n">tag_id2</span><span class="p">])</span>
+
+<span class="c1"># 从邮箱移除标签</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">remove_tag_from_email</span><span class="p">(</span><span class="n">email_id</span><span class="p">,</span> <span class="n">tag_id</span><span class="p">)</span>
+
+<span class="c1"># 替换邮箱的所有标签</span>
+<span class="n">success</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">replace_email_tags</span><span class="p">(</span><span class="n">email_id</span><span class="p">,</span> <span class="p">[</span><span class="n">new_tag_id1</span><span class="p">,</span> <span class="n">new_tag_id2</span><span class="p">])</span>
+</code></pre></div>
+<h3 id="4_1">4. 标签统计和分析</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 获取标签使用详情</span>
+<span class="n">details</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">get_tag_usage_details</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
+
+<span class="c1"># 返回:</span>
+<span class="c1"># {</span>
+<span class="c1">#   &quot;tag&quot;: TagModel,</span>
+<span class="c1">#   &quot;usage&quot;: {</span>
+<span class="c1">#     &quot;total_emails&quot;: 50,</span>
+<span class="c1">#     &quot;active_emails&quot;: 40,</span>
+<span class="c1">#     &quot;archived_emails&quot;: 10,</span>
+<span class="c1">#     &quot;recent_usage&quot;: [...]</span>
+<span class="c1">#   }</span>
+<span class="c1"># }</span>
+
+<span class="c1"># 获取未使用的标签</span>
+<span class="n">unused_tags</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">get_unused_tags</span><span class="p">()</span>
+
+<span class="c1"># 获取标签统计</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">get_tag_statistics</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="5_1">5. 标签导出</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># JSON格式导出</span>
+<span class="n">json_data</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">export_tags</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">include_usage</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># CSV格式导出</span>
+<span class="n">csv_data</span> <span class="o">=</span> <span class="n">tag_service</span><span class="o">.</span><span class="n">export_tags</span><span class="p">(</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="n">include_usage</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="api_2">⚡ 批量操作API</h2>
+<h3 id="1_3">1. 批量创建邮箱</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 批量创建邮箱</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">batch_service</span><span class="o">.</span><span class="n">batch_create_emails</span><span class="p">(</span>
+    <span class="n">count</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>                       <span class="c1"># 创建数量</span>
+    <span class="n">prefix_type</span><span class="o">=</span><span class="s2">&quot;sequence&quot;</span><span class="p">,</span>         <span class="c1"># 前缀类型</span>
+    <span class="n">base_prefix</span><span class="o">=</span><span class="s2">&quot;batch_test&quot;</span><span class="p">,</span>       <span class="c1"># 基础前缀</span>
+    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;批量测试&quot;</span><span class="p">],</span>              <span class="c1"># 标签</span>
+    <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;批量创建的邮箱&quot;</span><span class="p">,</span>         <span class="c1"># 备注</span>
+    <span class="n">created_by</span><span class="o">=</span><span class="s2">&quot;admin&quot;</span>              <span class="c1"># 创建者</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: BatchOperationResult</span>
+<span class="c1"># {</span>
+<span class="c1">#   &quot;total&quot;: 10,</span>
+<span class="c1">#   &quot;success&quot;: 10,</span>
+<span class="c1">#   &quot;failed&quot;: 0,</span>
+<span class="c1">#   &quot;emails&quot;: [EmailModel, ...],</span>
+<span class="c1">#   &quot;errors&quot;: []</span>
+<span class="c1"># }</span>
+</code></pre></div>
+<h3 id="2_3">2. 批量更新邮箱</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 批量更新邮箱</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">batch_service</span><span class="o">.</span><span class="n">batch_update_emails</span><span class="p">(</span>
+    <span class="n">email_ids</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+    <span class="n">updates</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;inactive&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="s2">&quot;批量更新测试&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: BatchOperationResult</span>
+</code></pre></div>
+<h3 id="3_2">3. 批量标签操作</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 批量应用标签</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">batch_service</span><span class="o">.</span><span class="n">batch_apply_tags</span><span class="p">(</span>
+    <span class="n">email_ids</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+    <span class="n">tag_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;生产环境&quot;</span><span class="p">,</span> <span class="s2">&quot;重要&quot;</span><span class="p">],</span>
+    <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;add&quot;</span>                 <span class="c1"># &quot;add&quot;, &quot;remove&quot;, &quot;replace&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: BatchOperationResult</span>
+</code></pre></div>
+<h3 id="4_2">4. 批量数据导入</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 从数据导入邮箱</span>
+<span class="n">import_data</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;email_address&quot;</span><span class="p">:</span> <span class="s2">&quot;test1@example.com&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;导入测试&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="s2">&quot;导入的邮箱1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;email_address&quot;</span><span class="p">:</span> <span class="s2">&quot;test2@example.com&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;导入测试&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="s2">&quot;导入的邮箱2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">batch_service</span><span class="o">.</span><span class="n">batch_import_emails_from_data</span><span class="p">(</span>
+    <span class="n">import_data</span><span class="p">,</span>
+    <span class="n">conflict_strategy</span><span class="o">=</span><span class="s2">&quot;skip&quot;</span>        <span class="c1"># &quot;skip&quot;, &quot;update&quot;, &quot;error&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: BatchOperationResult</span>
+</code></pre></div>
+<h2 id="api_3">📤 数据导出API</h2>
+<h3 id="1_4">1. 全量数据导出</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 导出所有数据</span>
+<span class="n">json_data</span> <span class="o">=</span> <span class="n">export_service</span><span class="o">.</span><span class="n">export_all_data</span><span class="p">(</span>
+    <span class="n">format_type</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span>             <span class="c1"># &quot;json&quot;, &quot;csv&quot;, &quot;xlsx&quot;</span>
+    <span class="n">output_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>               <span class="c1"># 可选：保存路径</span>
+    <span class="n">include_deleted</span><span class="o">=</span><span class="kc">False</span>           <span class="c1"># 是否包含已删除数据</span>
+<span class="p">)</span>
+
+<span class="c1"># 返回: str (JSON/CSV) 或 bytes (Excel)</span>
+</code></pre></div>
+<h3 id="2_4">2. 模板导出</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 简单模板导出</span>
+<span class="n">simple_data</span> <span class="o">=</span> <span class="n">export_service</span><span class="o">.</span><span class="n">export_emails_with_template</span><span class="p">(</span>
+    <span class="n">template_name</span><span class="o">=</span><span class="s2">&quot;simple&quot;</span><span class="p">,</span>         <span class="c1"># &quot;simple&quot;, &quot;detailed&quot;, &quot;report&quot;</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;生产环境&quot;</span><span class="p">]}</span>   <span class="c1"># 可选：过滤条件</span>
+<span class="p">)</span>
+
+<span class="c1"># 详细模板导出</span>
+<span class="n">detailed_data</span> <span class="o">=</span> <span class="n">export_service</span><span class="o">.</span><span class="n">export_emails_with_template</span><span class="p">(</span><span class="s2">&quot;detailed&quot;</span><span class="p">)</span>
+
+<span class="c1"># 报告模板导出</span>
+<span class="n">report_data</span> <span class="o">=</span> <span class="n">export_service</span><span class="o">.</span><span class="n">export_emails_with_template</span><span class="p">(</span><span class="s2">&quot;report&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="3_3">3. 高级邮箱导出</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 自定义字段导出</span>
+<span class="n">csv_data</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">export_emails_advanced</span><span class="p">(</span>
+    <span class="n">format_type</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span>
+    <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span><span class="p">},</span>
+    <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;email_address&quot;</span><span class="p">,</span> <span class="s2">&quot;domain&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">],</span>
+    <span class="n">include_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">include_metadata</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="c1"># Excel导出</span>
+<span class="n">excel_data</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">export_emails_advanced</span><span class="p">(</span>
+    <span class="n">format_type</span><span class="o">=</span><span class="s2">&quot;xlsx&quot;</span><span class="p">,</span>
+    <span class="n">include_tags</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="api_4">🔒 安全功能API</h2>
+<h3 id="1_5">1. 数据加密</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">utils.encryption</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncryptionManager</span>
+
+<span class="c1"># 初始化加密管理器</span>
+<span class="n">encryption_manager</span> <span class="o">=</span> <span class="n">EncryptionManager</span><span class="p">(</span><span class="s2">&quot;master_password&quot;</span><span class="p">)</span>
+
+<span class="c1"># 加密敏感数据</span>
+<span class="n">encrypted_data</span> <span class="o">=</span> <span class="n">encryption_manager</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="s2">&quot;sensitive_information&quot;</span><span class="p">)</span>
+
+<span class="c1"># 解密数据</span>
+<span class="n">decrypted_data</span> <span class="o">=</span> <span class="n">encryption_manager</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">encrypted_data</span><span class="p">)</span>
+
+<span class="c1"># 检查数据是否已加密</span>
+<span class="n">is_encrypted</span> <span class="o">=</span> <span class="n">encryption_manager</span><span class="o">.</span><span class="n">is_encrypted</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="2_5">2. 日志脱敏</h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">utils.encryption</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogSanitizer</span><span class="p">,</span> <span class="n">sanitize_for_log</span>
+
+<span class="c1"># 初始化脱敏器</span>
+<span class="n">sanitizer</span> <span class="o">=</span> <span class="n">LogSanitizer</span><span class="p">()</span>
+
+<span class="c1"># 脱敏日志消息</span>
+<span class="n">safe_message</span> <span class="o">=</span> <span class="n">sanitizer</span><span class="o">.</span><span class="n">sanitize_log_message</span><span class="p">(</span><span class="s2">&quot;password=secret123 token=abc123&quot;</span><span class="p">)</span>
+
+<span class="c1"># 脱敏字典数据</span>
+<span class="n">safe_dict</span> <span class="o">=</span> <span class="n">sanitizer</span><span class="o">.</span><span class="n">sanitize_dict</span><span class="p">({</span>
+    <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;admin&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;secret123&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;admin@example.com&quot;</span>
+<span class="p">})</span>
+
+<span class="c1"># 便捷脱敏函数</span>
+<span class="n">safe_log</span> <span class="o">=</span> <span class="n">sanitize_for_log</span><span class="p">({</span><span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;secret&quot;</span><span class="p">,</span> <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">})</span>
+</code></pre></div>
+<h2 id="_3">❌ 错误处理</h2>
+<h3 id="1_6">1. 异常类型</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 基础异常</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EmailManagerException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;应用程序的基础异常类&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+<span class="c1"># 数据库错误</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatabaseError</span><span class="p">(</span><span class="n">EmailManagerException</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;数据库操作相关的错误&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+<span class="c1"># 配置错误</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConfigurationError</span><span class="p">(</span><span class="n">EmailManagerException</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;配置加载或保存时发生的错误&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</code></pre></div>
+<h3 id="2_6">2. 错误处理示例</h3>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="p">:</span>
+    <span class="c1"># 创建邮箱</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">email_service</span><span class="o">.</span><span class="n">create_email</span><span class="p">(</span>
+        <span class="n">prefix_type</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+        <span class="n">custom_prefix</span><span class="o">=</span><span class="s2">&quot;test_user&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">email</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># 处理创建失败</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;邮箱创建失败&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;邮箱创建成功: </span><span class="si">{</span><span class="n">email</span><span class="o">.</span><span class="n">email_address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">except</span> <span class="n">DatabaseError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;数据库错误: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">ConfigurationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;配置错误: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;未知错误: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="3_4">3. 批量操作错误处理</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 批量操作总是返回详细的结果信息</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">batch_service</span><span class="o">.</span><span class="n">batch_create_emails</span><span class="p">(</span><span class="n">count</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;总计: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;total&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;成功: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;失败: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;failed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># 检查错误信息</span>
+<span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;错误详情:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="_4">🎯 前端集成最佳实践</h2>
+<h3 id="1-api">1. API调用封装</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// TypeScript API封装示例</span>
+<span class="kd">class</span><span class="w"> </span><span class="nx">EmailAPI</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">private</span><span class="w"> </span><span class="nx">baseService</span><span class="o">:</span><span class="w"> </span><span class="kt">any</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">baseService</span><span class="o">:</span><span class="w"> </span><span class="kt">any</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">baseService</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">baseService</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// 高级搜索</span>
+<span class="w">  </span><span class="k">async</span><span class="w"> </span><span class="nx">searchEmails</span><span class="p">(</span><span class="nx">params</span><span class="o">:</span><span class="w"> </span><span class="kt">SearchParams</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">SearchResponse</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">baseService</span><span class="p">.</span><span class="nx">advanced_search_emails</span><span class="p">(</span><span class="nx">params</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">result</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;搜索邮箱失败:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="nx">error</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// 创建邮箱</span>
+<span class="w">  </span><span class="k">async</span><span class="w"> </span><span class="nx">createEmail</span><span class="p">(</span><span class="nx">params</span><span class="o">:</span><span class="w"> </span><span class="kt">CreateEmailParams</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">EmailModel</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">baseService</span><span class="p">.</span><span class="nx">create_email</span><span class="p">(</span><span class="nx">params</span><span class="p">);</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">email</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;邮箱创建失败&#39;</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">email</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;创建邮箱失败:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="nx">error</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// 批量操作</span>
+<span class="w">  </span><span class="k">async</span><span class="w"> </span><span class="nx">batchCreateEmails</span><span class="p">(</span><span class="nx">params</span><span class="o">:</span><span class="w"> </span><span class="kt">BatchCreateParams</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">BatchResult</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">baseService</span><span class="p">.</span><span class="nx">batch_create_emails</span><span class="p">(</span><span class="nx">params</span><span class="p">);</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">result</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;批量创建失败:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="nx">error</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="2_7">2. 状态管理</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// Pinia/Vuex 状态管理示例</span>
+<span class="kd">interface</span><span class="w"> </span><span class="nx">EmailState</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">emails</span><span class="o">:</span><span class="w"> </span><span class="kt">EmailModel</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="kt">TagModel</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">pagination</span><span class="o">:</span><span class="w"> </span><span class="kt">PaginationInfo</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">loading</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">searchFilters</span><span class="o">:</span><span class="w"> </span><span class="kt">SearchFilters</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">useEmailStore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">defineStore</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">state</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nx">EmailState</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span>
+<span class="w">    </span><span class="nx">emails</span><span class="o">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">    </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">    </span><span class="nx">pagination</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">current_page</span><span class="o">:</span><span class="w"> </span><span class="kt">1</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">page_size</span><span class="o">:</span><span class="w"> </span><span class="kt">20</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">total_items</span><span class="o">:</span><span class="w"> </span><span class="kt">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">total_pages</span><span class="o">:</span><span class="w"> </span><span class="kt">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">has_next</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">has_prev</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">loading</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">searchFilters</span><span class="o">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="w">  </span><span class="p">}),</span>
+
+<span class="w">  </span><span class="nx">actions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="nx">searchEmails</span><span class="p">(</span><span class="nx">filters</span><span class="o">:</span><span class="w"> </span><span class="kt">SearchFilters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">this</span><span class="p">.</span><span class="nx">loading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">      </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">emailAPI</span><span class="p">.</span><span class="nx">searchEmails</span><span class="p">(</span><span class="nx">filters</span><span class="p">);</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">emails</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">emails</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">pagination</span><span class="p">;</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">searchFilters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">filters</span><span class="p">;</span>
+<span class="w">      </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;搜索失败:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">loading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">},</span>
+
+<span class="w">    </span><span class="k">async</span><span class="w"> </span><span class="nx">loadTags</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tagAPI</span><span class="p">.</span><span class="nx">getTagsWithPagination</span><span class="p">({</span>
+<span class="w">          </span><span class="nx">page</span><span class="o">:</span><span class="w"> </span><span class="kt">1</span><span class="p">,</span>
+<span class="w">          </span><span class="nx">page_size</span><span class="o">:</span><span class="w"> </span><span class="kt">100</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="nx">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">tags</span><span class="p">;</span>
+<span class="w">      </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;加载标签失败:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<h3 id="3_5">3. 组件设计建议</h3>
+<div class="highlight"><pre><span></span><code><span class="cm">&lt;!-- EmailList.vue - 邮箱列表组件 --&gt;</span>
+<span class="p">&lt;</span><span class="nt">template</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;email-list&quot;</span><span class="p">&gt;</span>
+    <span class="cm">&lt;!-- 搜索筛选区域 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">EmailSearch</span> <span class="p">@</span><span class="na">search</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">handleSearch</span><span class="s">&quot;</span> <span class="p">/&gt;</span>
+
+    <span class="cm">&lt;!-- 批量操作区域 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">BatchOperations</span>
+      <span class="p">:</span><span class="na">selected-emails</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">selectedEmails</span><span class="s">&quot;</span>
+      <span class="p">@</span><span class="na">batch-operation</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">handleBatchOperation</span><span class="s">&quot;</span>
+    <span class="p">/&gt;</span>
+
+    <span class="cm">&lt;!-- 邮箱列表 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;email-items&quot;</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">EmailItem</span>
+        <span class="na">v-for</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">email</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nx">emails</span><span class="s">&quot;</span>
+        <span class="p">:</span><span class="na">key</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">email</span><span class="p">.</span><span class="nx">id</span><span class="s">&quot;</span>
+        <span class="p">:</span><span class="na">email</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">email</span><span class="s">&quot;</span>
+        <span class="p">:</span><span class="na">selected</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">selectedEmails</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">email</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span><span class="s">&quot;</span>
+        <span class="p">@</span><span class="na">select</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">handleSelect</span><span class="s">&quot;</span>
+        <span class="p">@</span><span class="na">update</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">handleUpdate</span><span class="s">&quot;</span>
+      <span class="p">/&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+
+    <span class="cm">&lt;!-- 分页组件 --&gt;</span>
+    <span class="p">&lt;</span><span class="nt">Pagination</span>
+      <span class="p">:</span><span class="na">pagination</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">pagination</span><span class="s">&quot;</span>
+      <span class="p">@</span><span class="na">page-change</span><span class="o">=</span><span class="s">&quot;</span><span class="nx">handlePageChange</span><span class="s">&quot;</span>
+    <span class="p">/&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">template</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">setup</span> <span class="na">lang</span><span class="o">=</span><span class="s">&quot;ts&quot;</span><span class="p">&gt;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ref</span><span class="p">,</span><span class="w"> </span><span class="nx">onMounted</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;vue&#39;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useEmailStore</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@/stores/email&#39;</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">emailStore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useEmailStore</span><span class="p">();</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">selectedEmails</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ref</span><span class="o">&lt;</span><span class="nx">number</span><span class="p">[]</span><span class="o">&gt;</span><span class="p">([]);</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">handleSearch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">filters</span><span class="o">:</span><span class="w"> </span><span class="nx">SearchFilters</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">emailStore</span><span class="p">.</span><span class="nx">searchEmails</span><span class="p">(</span><span class="nx">filters</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">handleBatchOperation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">operation</span><span class="o">:</span><span class="w"> </span><span class="nx">BatchOperation</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// 处理批量操作</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">emailAPI</span><span class="p">.</span><span class="nx">batchOperation</span><span class="p">(</span><span class="nx">operation</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">success</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// 刷新列表</span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">emailStore</span><span class="p">.</span><span class="nx">searchEmails</span><span class="p">(</span><span class="nx">emailStore</span><span class="p">.</span><span class="nx">searchFilters</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">onMounted</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">emailStore</span><span class="p">.</span><span class="nx">searchEmails</span><span class="p">({});</span>
+<span class="w">  </span><span class="nx">emailStore</span><span class="p">.</span><span class="nx">loadTags</span><span class="p">();</span>
+<span class="p">});</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+<h3 id="4_3">4. 性能优化建议</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// 1. 搜索防抖</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">debounce</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;lodash-es&#39;</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">debouncedSearch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">debounce</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">keyword</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">emailStore</span><span class="p">.</span><span class="nx">searchEmails</span><span class="p">({</span><span class="w"> </span><span class="nx">keyword</span><span class="w"> </span><span class="p">});</span>
+<span class="p">},</span><span class="w"> </span><span class="mf">300</span><span class="p">);</span>
+
+<span class="c1">// 2. 虚拟滚动（大量数据）</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">VirtualList</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@tanstack/vue-virtual&#39;</span><span class="p">;</span>
+
+<span class="c1">// 3. 数据缓存</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">cache</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Map</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">any</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">getCachedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">fetcher</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">any</span><span class="o">&gt;</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">cache</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">key</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">cache</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">key</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetcher</span><span class="p">();</span>
+<span class="w">  </span><span class="nx">cache</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">data</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// 4. 分页预加载</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">preloadNextPage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">has_next</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">nextPageData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">emailAPI</span><span class="p">.</span><span class="nx">searchEmails</span><span class="p">({</span>
+<span class="w">      </span><span class="p">...</span><span class="nx">currentFilters</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">page</span><span class="o">:</span><span class="w"> </span><span class="kt">pagination.current_page</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">    </span><span class="c1">// 缓存下一页数据</span>
+<span class="w">    </span><span class="nx">cache</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="sb">`page_</span><span class="si">${</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">current_page</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span><span class="w"> </span><span class="nx">nextPageData</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+<h2 id="_5">📊 数据格式参考</h2>
+<h3 id="1_7">1. 搜索筛选参数</h3>
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">SearchFilters</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">keyword?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">           </span><span class="c1">// 搜索关键词</span>
+<span class="w">  </span><span class="nx">domain?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">            </span><span class="c1">// 域名筛选</span>
+<span class="w">  </span><span class="nx">status?</span><span class="o">:</span><span class="w"> </span><span class="kt">EmailStatus</span><span class="p">;</span><span class="w">       </span><span class="c1">// 状态筛选</span>
+<span class="w">  </span><span class="nx">tags?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w">            </span><span class="c1">// 标签筛选</span>
+<span class="w">  </span><span class="nx">date_from?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// 开始日期 (YYYY-MM-DD)</span>
+<span class="w">  </span><span class="nx">date_to?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">           </span><span class="c1">// 结束日期 (YYYY-MM-DD)</span>
+<span class="w">  </span><span class="nx">created_by?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// 创建者筛选</span>
+<span class="w">  </span><span class="nx">has_notes?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w">        </span><span class="c1">// 是否有备注</span>
+<span class="w">  </span><span class="nx">page?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">              </span><span class="c1">// 页码</span>
+<span class="w">  </span><span class="nx">page_size?</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">         </span><span class="c1">// 每页大小</span>
+<span class="w">  </span><span class="nx">sort_by?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">           </span><span class="c1">// 排序字段</span>
+<span class="w">  </span><span class="nx">sort_order</span><span class="o">?:</span><span class="w"> </span><span class="s1">&#39;asc&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;desc&#39;</span><span class="p">;</span><span class="w"> </span><span class="c1">// 排序方向</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="2_8">2. 批量操作参数</h3>
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">BatchCreateParams</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">prefix_type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;random_name&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;sequence&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;timestamp&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;custom&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">base_prefix?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">tags?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">notes?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">created_by?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">BatchUpdateParams</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">email_ids</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">updates</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">status?</span><span class="o">:</span><span class="w"> </span><span class="kt">EmailStatus</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">notes?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">last_used?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">BatchTagParams</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">email_ids</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">tag_names</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
+<span class="w">  </span><span class="nx">operation</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;add&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;remove&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;replace&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr />
+<p><strong>前端API指南版本</strong>: Phase 3A
+<strong>最后更新</strong>: 2025年1月23日
+<strong>状态</strong>: ✅ 已完成并测试通过</p>
+<p>如需更多详细信息，请参考 <code>docs/api-specification.md</code> 完整API文档。
+```</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>

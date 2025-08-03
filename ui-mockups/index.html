@@ -1,0 +1,1357 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="基于PyQt6的域名邮箱管理工具 - 多平台自动打包发布">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>域名邮箱管理器 - 简化版界面设计 - 域名邮箱管理器</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#-" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="域名邮箱管理器" class="md-header__button md-logo" aria-label="域名邮箱管理器" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            域名邮箱管理器
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              域名邮箱管理器 - 简化版界面设计
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/installation.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  下载安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/user-guide.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  使用指南
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/development.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  开发文档
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/api-specification.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API规范
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/changelog.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="域名邮箱管理器" class="md-nav__button md-logo" aria-label="域名邮箱管理器" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    域名邮箱管理器
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    首页
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/installation.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    下载安装
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/user-guide.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    使用指南
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/development.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    开发文档
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/api-specification.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API规范
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/changelog.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    更新日志
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎨 设计概述
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      🖼️ 整体布局设计
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🖼️ 整体布局设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      主窗口结构
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      📄 页面详细设计
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📄 页面详细设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-emailgenerationpage" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 邮箱生成页面 (EmailGenerationPage)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. 邮箱生成页面 (EmailGenerationPage)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.1 布局结构
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.2 组件详细设计
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      1.3 交互流程
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-emailmanagementpage" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 邮箱管理页面 (EmailManagementPage)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 邮箱管理页面 (EmailManagementPage)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1 布局结构
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2 表格列设计
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3 筛选功能设计
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tagmanagementpage" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 标签管理页面 (TagManagementPage)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 标签管理页面 (TagManagementPage)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1 布局结构
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2 功能设计
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-configurationpage" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 配置页面 (ConfigurationPage)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 配置页面 (ConfigurationPage)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.1 布局结构
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42" class="md-nav__link">
+    <span class="md-ellipsis">
+      4.2 配置分组设计
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎨 视觉设计规范
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎨 视觉设计规范">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 颜色方案
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 字体规范
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 间距规范
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 图标设计
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      📱 响应式设计
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📱 响应式设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 窗口大小适配
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 组件自适应
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 交互设计
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 交互设计">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 操作反馈
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 快捷操作
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 拖拽支持
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 简化设计原则
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 简化设计原则">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 功能专注
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 界面简洁
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 用户友好
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="-">域名邮箱管理器 - 简化版界面设计</h1>
+<h2 id="_1">🎨 设计概述</h2>
+<p>本文档描述了简化版域名邮箱管理器的用户界面设计，专注于邮箱生成、存储和管理的核心功能。采用现代化的Material Design风格，界面简洁直观，易于使用。</p>
+<h2 id="_2">🖼️ 整体布局设计</h2>
+<h3 id="_3">主窗口结构</h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│  📧 域名邮箱管理器                                    🔧 ⚙️ ❌    │
+├─────────────────────────────────────────────────────────────────┤
+│  文件(F)  编辑(E)  工具(T)  帮助(H)                              │
+├─────────────────────────────────────────────────────────────────┤
+│  🏠 邮箱生成  │  📋 邮箱管理  │  🏷️ 标签管理  │  ⚙️ 配置        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                     [当前选中页面内容]                           │
+│                                                                 │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  状态: 就绪  │  域名: example.com  │  邮箱总数: 25  │  12:34:56   │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<p><strong>设计要点：</strong>
+- 窗口最小尺寸：1024x768
+- 推荐尺寸：1280x800
+- 支持窗口大小调整
+- 四个主要功能页面
+- 统一的状态栏显示关键信息</p>
+<h2 id="_4">📄 页面详细设计</h2>
+<h3 id="1-emailgenerationpage">1. 邮箱生成页面 (EmailGenerationPage)</h3>
+<h4 id="11">1.1 布局结构</h4>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│  🏠 邮箱生成                                                     │
+├─────────────────┬─────────────────────┬─────────────────────────┤
+│   生成配置       │      操作区域        │       结果显示          │
+│                │                     │                         │
+│ 📍 当前域名      │   🎯 生成邮箱        │  � 生成结果            │
+│ example.com     │                     │                         │
+│                │  ┌─────────────────┐ │  ┌─────────────────────┐ │
+│ 📧 生成模式      │  │   生成新邮箱     │ │  │ test123@example.com │ │
+│ ○ 随机名字      │  │                 │ │  │ ✅ 生成成功          │ │
+│ ○ 随机字符串    │  └─────────────────┘ │  │ 📅 2025-01-22       │ │
+│ ● 自定义前缀    │                     │  │ 🏷️ [测试] [开发]     │ │
+│                │  ┌─────────────────┐ │  │                     │ │
+│ 🔤 自定义前缀    │  │   批量生成       │ │  └─────────────────────┘ │
+│ [demo_user]     │  │   (数量: 5)      │ │                         │
+│                │  └─────────────────┘ │  📊 统计信息             │
+│ 📊 统计信息      │                     │  ┌─────────────────────┐ │
+│ 今日生成: 5     │  🏷️ 标签选择         │  │ 总邮箱数: 25        │ │
+│ 总数: 25       │  ☑️ 测试用           │  │ 今日创建: 5         │ │
+│                │  ☑️ 开发用           │  │ 活跃状态: 20        │ │
+│                │  ☐ 生产用           │  │ 归档状态: 5         │ │
+│                │                     │  └─────────────────────┘ │
+└─────────────────┴─────────────────────┴─────────────────────────┘
+</code></pre></div>
+<h4 id="12">1.2 组件详细设计</h4>
+<p><strong>左侧配置面板 (220px宽度)：</strong>
+- 当前域名显示（大字体，突出显示）
+- 邮箱生成模式选择（单选按钮组）
+- 自定义前缀输入框（当选择自定义时启用）
+- 实时统计信息（卡片样式）</p>
+<p><strong>中央操作区域 (280px宽度)：</strong>
+- 生成新邮箱按钮（主要操作）
+- 批量生成按钮（带数量选择）
+- 标签选择器（多选复选框）
+- 备注输入框</p>
+<p><strong>右侧结果区域 (剩余宽度)：</strong>
+- 最新生成的邮箱显示
+- 生成状态和时间
+- 关联的标签显示
+- 整体统计信息</p>
+<h4 id="13">1.3 交互流程</h4>
+<div class="highlight"><pre><span></span><code>用户选择生成模式
+    ↓
+输入自定义前缀（如需要）
+    ↓
+选择标签和备注
+    ↓
+点击生成按钮
+    ↓
+显示生成结果和统计更新
+</code></pre></div>
+<h3 id="2-emailmanagementpage">2. 邮箱管理页面 (EmailManagementPage)</h3>
+<h4 id="21">2.1 布局结构</h4>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│  📋 邮箱管理                                                     │
+├─────────────────────────────────────────────────────────────────┤
+│  🔍 [搜索框]  📅 时间筛选  🏷️ 标签筛选  📊 状态筛选  🔄 刷新    │
+├─────────────────────────────────────────┬───────────────────────┤
+│                邮箱列表                  │     详情面板          │
+│ ┌─────────────────────────────────────┐ │                       │
+│ │☑️│邮箱地址        │域名  │创建时间│状态│ │  📝 邮箱详情           │
+│ ├─┼──────────────┼────┼──────┼──┤ │                       │
+│ │☑️│test123@ex.com│ex.com│今天 │✅│ │  ┌─────────────────┐   │
+│ │☑️│demo456@ex.com│ex.com│昨天 │📊│ │  │ 📧 邮箱地址       │   │
+│ │☑️│user789@ex.com│ex.com│2天前│📁│ │  │ test123@ex.com  │   │
+│ │☑️│temp012@ex.com│ex.com│3天前│✅│ │  │                 │   │
+│ │☑️│...           │...   │... │..│ │  │ 📅 创建时间       │   │
+│ └─────────────────────────────────────┘ │  │ 2025-01-22 10:30│   │
+│                                         │  │                 │   │
+│ 📄 第1页，共3页  ⬅️ ➡️                   │  │ � 状态: 活跃     │   │
+│                                         │  │                 │   │
+│ ☑️ 全选  🗑️ 删除  📤 导出  🏷️ 批量标签    │  │ 🏷️ 标签          │   │
+│                                         │  │ [测试] [开发]   │   │
+│                                         │  │                 │   │
+│                                         │  │ 📝 备注          │   │
+│                                         │  │ 测试用邮箱      │   │
+│                                         │  └─────────────────┘   │
+└─────────────────────────────────────────┴───────────────────────┘
+</code></pre></div>
+<h4 id="22">2.2 表格列设计</h4>
+<table>
+<thead>
+<tr>
+<th>列名</th>
+<th>宽度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>选择框</td>
+<td>40px</td>
+<td>多选复选框</td>
+</tr>
+<tr>
+<td>邮箱地址</td>
+<td>250px</td>
+<td>主要信息，可点击复制</td>
+</tr>
+<tr>
+<td>域名</td>
+<td>120px</td>
+<td>域名部分</td>
+</tr>
+<tr>
+<td>创建时间</td>
+<td>120px</td>
+<td>相对时间显示</td>
+</tr>
+<tr>
+<td>状态</td>
+<td>80px</td>
+<td>活跃/非活跃/归档</td>
+</tr>
+<tr>
+<td>标签</td>
+<td>150px</td>
+<td>标签徽章显示</td>
+</tr>
+<tr>
+<td>操作</td>
+<td>100px</td>
+<td>编辑、删除按钮</td>
+</tr>
+</tbody>
+</table>
+<h4 id="23">2.3 筛选功能设计</h4>
+<p><strong>搜索框：</strong>
+- 实时搜索（输入延迟500ms）
+- 支持邮箱地址和备注模糊匹配
+- 搜索历史记录</p>
+<p><strong>时间筛选：</strong>
+- 今天、昨天、本周、本月
+- 自定义时间范围选择器</p>
+<p><strong>标签筛选：</strong>
+- 多选标签过滤
+- 标签计数显示
+- "未标记"选项</p>
+<p><strong>状态筛选：</strong>
+- 活跃、非活跃、归档状态
+- 状态图标显示</p>
+<h3 id="3-tagmanagementpage">3. 标签管理页面 (TagManagementPage)</h3>
+<h4 id="31">3.1 布局结构</h4>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│  🏷️ 标签管理                                                     │
+├─────────────────────────────────────────┬───────────────────────┤
+│                标签列表                  │     标签编辑面板       │
+│                                         │                       │
+│ ┌─────────────────────────────────────┐ │  📝 标签详情           │
+│ │ 🧪 测试用     │ #e74c3c │ 12 │ 编辑 │ │  ┌─────────────────┐   │
+│ │ 💻 开发用     │ #3498db │ 8  │ 编辑 │ │  │ 🏷️ 标签名称      │   │
+│ │ 🚀 生产用     │ #2ecc71 │ 5  │ 编辑 │ │  │ [测试用]        │   │
+│ │ ⏰ 临时用     │ #f39c12 │ 3  │ 编辑 │ │  │                 │   │
+│ │ 📧 邮件营销   │ #9b59b6 │ 0  │ 编辑 │ │  │ 📝 描述          │   │
+│ │ ...          │ ...     │... │ ... │ │  │ [用于测试目的]  │   │
+│ └─────────────────────────────────────┘ │  │                 │   │
+│                                         │  │ 🎨 颜色          │   │
+│ ➕ 新建标签                              │  │ ⬜ #e74c3c      │   │
+│                                         │  │                 │   │
+│ 📊 标签统计:                             │  │ 🎭 图标          │   │
+│ • 总标签数: 5                           │  │ [🧪]            │   │
+│ • 用户标签: 4                           │  │                 │   │
+│ • 系统标签: 1                           │  │ 📊 使用统计      │   │
+│                                         │  │ 使用次数: 12    │   │
+│                                         │  │                 │   │
+│                                         │  │ [💾 保存] [❌ 取消] │   │
+│                                         │  └─────────────────┘   │
+└─────────────────────────────────────────┴───────────────────────┘
+</code></pre></div>
+<h4 id="32">3.2 功能设计</h4>
+<p><strong>标签列表：</strong>
+- 标签名称、颜色、使用次数显示
+- 可排序（按名称、使用次数、创建时间）
+- 快速编辑和删除操作</p>
+<p><strong>标签编辑面板：</strong>
+- 标签名称输入
+- 描述文本框
+- 颜色选择器
+- 图标选择器
+- 使用统计显示</p>
+<p><strong>操作功能：</strong>
+- 新建标签
+- 编辑标签
+- 删除标签（检查使用情况）
+- 批量操作</p>
+<h3 id="4-configurationpage">4. 配置页面 (ConfigurationPage)</h3>
+<h4 id="41">4.1 布局结构</h4>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────┐
+│  ⚙️ 配置管理                                                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─ 🌐 域名配置 ─────────────────────────────────────────────┐   │
+│  │                                                           │   │
+│  │  域名地址: [example.com                    ] 🔍 验证      │   │
+│  │  状态: ✅ 域名格式正确                                     │   │
+│  │  说明: 用于生成邮箱地址的域名                              │   │
+│  │                                                           │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─ � 安全配置 ─────────────────────────────────────────────┐   │
+│  │                                                           │   │
+│  │  主密码: [••••••••••••••        ] 🔄 更改密码             │   │
+│  │  数据加密: ☑️ 加密敏感配置                                │   │
+│  │  自动锁定: ☑️ 启用 (闲置 [30] 分钟后)                     │   │
+│  │  日志级别: [信息 ▼] (调试/信息/警告/错误)                  │   │
+│  │                                                           │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─ � 数据管理 ─────────────────────────────────────────────┐   │
+│  │                                                           │   │
+│  │  配置导出: [📤 导出配置] [📥 导入配置]                     │   │
+│  │  数据备份: [💾 备份数据] 最后备份: 2025-01-22 10:30       │   │
+│  │  数据清理: [🗑️ 清理数据] (清理已删除的邮箱记录)           │   │
+│  │  数据库优化: [⚡ 优化数据库] (整理碎片，提升性能)          │   │
+│  │                                                           │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─ � 应用设置 ─────────────────────────────────────────────┐   │
+│  │                                                           │   │
+│  │  启动设置: ☑️ 开机自启动                                  │   │
+│  │  窗口设置: ☑️ 记住窗口大小和位置                          │   │
+│  │  通知设置: ☑️ 显示操作完成通知                            │   │
+│  │  主题设置: [浅色主题 ▼] (浅色/深色/跟随系统)              │   │
+│  │                                                           │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │              [💾 保存配置]  [🔄 重置]  [❌ 取消]            │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h4 id="42">4.2 配置分组设计</h4>
+<p><strong>域名配置组：</strong>
+- 域名输入框 + 格式验证
+- 域名状态显示
+- 使用说明</p>
+<p><strong>安全配置组：</strong>
+- 主密码设置和修改
+- 数据加密选项
+- 自动锁定配置
+- 日志级别设置</p>
+<p><strong>数据管理组：</strong>
+- 配置导入导出
+- 数据备份功能
+- 数据清理工具
+- 数据库优化</p>
+<p><strong>应用设置组：</strong>
+- 启动和窗口设置
+- 通知设置
+- 主题选择</p>
+<h2 id="_5">🎨 视觉设计规范</h2>
+<h3 id="1">1. 颜色方案</h3>
+<p><strong>主色调：</strong>
+- 主色：#3498db (蓝色)
+- 辅助色：#2ecc71 (绿色)
+- 警告色：#f39c12 (橙色)
+- 错误色：#e74c3c (红色)</p>
+<p><strong>状态颜色：</strong>
+- 活跃：#27ae60 (绿色)
+- 非活跃：#f39c12 (橙色)
+- 归档：#95a5a6 (灰色)
+- 错误：#e74c3c (红色)
+- 信息：#3498db (蓝色)</p>
+<p><strong>背景颜色：</strong>
+- 主背景：#ffffff
+- 次背景：#f8f9fa
+- 边框：#dee2e6
+- 阴影：rgba(0,0,0,0.1)</p>
+<h3 id="2">2. 字体规范</h3>
+<p><strong>字体族：</strong>
+- 中文：Microsoft YaHei, 微软雅黑
+- 英文：Segoe UI, Arial, sans-serif
+- 等宽：Consolas, Monaco, monospace</p>
+<p><strong>字体大小：</strong>
+- 标题：18px (bold)
+- 子标题：16px (medium)
+- 正文：14px (regular)
+- 小字：12px (regular)
+- 代码：13px (monospace)</p>
+<h3 id="3">3. 间距规范</h3>
+<p><strong>内边距：</strong>
+- 小：8px
+- 中：16px
+- 大：24px
+- 特大：32px</p>
+<p><strong>外边距：</strong>
+- 组件间：16px
+- 分组间：24px
+- 页面边距：20px</p>
+<h3 id="4">4. 图标设计</h3>
+<p><strong>图标库：</strong>
+- 使用Material Design Icons
+- 统一16px或24px尺寸
+- 支持主题色彩</p>
+<p><strong>状态图标：</strong>
+- ✅ 活跃状态
+- 📊 非活跃状态
+- 📁 归档状态
+- ❌ 错误状态
+- 🔄 刷新/重试
+- 🏷️ 标签
+- 📧 邮箱</p>
+<h2 id="_6">📱 响应式设计</h2>
+<h3 id="1_1">1. 窗口大小适配</h3>
+<p><strong>最小窗口 (1024x768)：</strong>
+- 隐藏部分次要信息
+- 紧凑布局模式
+- 滚动条支持</p>
+<p><strong>标准窗口 (1280x800)：</strong>
+- 完整功能显示
+- 舒适的间距
+- 最佳用户体验</p>
+<p><strong>大窗口 (1920x1080+)：</strong>
+- 更多信息展示
+- 宽松的布局
+- 充分利用空间</p>
+<h3 id="2_1">2. 组件自适应</h3>
+<p><strong>表格组件：</strong>
+- 列宽自动调整
+- 水平滚动支持
+- 列显示/隐藏选项</p>
+<p><strong>侧边栏：</strong>
+- 可折叠设计
+- 最小化状态
+- 鼠标悬停展开</p>
+<h2 id="_7">🔧 交互设计</h2>
+<h3 id="1_2">1. 操作反馈</h3>
+<p><strong>按钮状态：</strong>
+- 正常、悬停、按下、禁用
+- 加载状态动画
+- 操作确认提示</p>
+<p><strong>表单验证：</strong>
+- 实时验证反馈
+- 错误信息提示
+- 成功状态确认</p>
+<h3 id="2_2">2. 快捷操作</h3>
+<p><strong>键盘快捷键：</strong>
+- Ctrl+N: 生成新邮箱
+- Ctrl+F: 搜索邮箱
+- Ctrl+S: 保存配置
+- F5: 刷新列表
+- Ctrl+T: 新建标签
+- Delete: 删除选中项</p>
+<p><strong>右键菜单：</strong>
+- 复制邮箱地址
+- 编辑邮箱信息
+- 添加/移除标签
+- 更改状态
+- 删除记录</p>
+<h3 id="3_1">3. 拖拽支持</h3>
+<p><strong>标签管理：</strong>
+- 拖拽邮箱到标签进行分类
+- 标签排序调整
+- 批量标签操作</p>
+<h2 id="_8">🎯 简化设计原则</h2>
+<h3 id="1_3">1. 功能专注</h3>
+<ul>
+<li>移除复杂的验证码获取功能</li>
+<li>专注于邮箱生成、存储和管理</li>
+<li>简化配置选项，只保留核心设置</li>
+</ul>
+<h3 id="2_3">2. 界面简洁</h3>
+<ul>
+<li>清晰的功能分区</li>
+<li>直观的操作流程</li>
+<li>减少不必要的界面元素</li>
+</ul>
+<h3 id="3_2">3. 用户友好</h3>
+<ul>
+<li>一键生成邮箱</li>
+<li>可视化的标签管理</li>
+<li>简单的配置界面</li>
+<li>实时的状态反馈</li>
+</ul>
+<p>这个简化的UI设计专注于核心的邮箱管理功能，提供了直观、高效的用户体验。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>

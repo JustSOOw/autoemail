@@ -1,0 +1,1047 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="基于PyQt6的域名邮箱管理工具 - 多平台自动打包发布">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>域名邮箱管理器 - 开发计划文档 - 域名邮箱管理器</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#-" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="域名邮箱管理器" class="md-header__button md-logo" aria-label="域名邮箱管理器" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            域名邮箱管理器
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              域名邮箱管理器 - 开发计划文档
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="切换到深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换到深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="blue"  aria-label="切换到浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换到浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/installation.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  下载安装
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/user-guide.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  使用指南
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/development.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  开发文档
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/api-specification.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API规范
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../docs/changelog.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  更新日志
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="域名邮箱管理器" class="md-nav__button md-logo" aria-label="域名邮箱管理器" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    域名邮箱管理器
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    首页
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/installation.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    下载安装
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/user-guide.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    使用指南
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/development.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    开发文档
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/api-specification.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API规范
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/changelog.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    更新日志
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      📋 项目概述
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      🛠️ 技术栈选择
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🛠️ 技术栈选择">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyqt6-sqlite-pyinstaller" class="md-nav__link">
+    <span class="md-ellipsis">
+      推荐技术栈：PyQt6 + SQLite + PyInstaller
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      📁 项目结构设计
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 开发阶段规划 (并行轨道)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 开发阶段规划 (并行轨道)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-worktree-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      轨道 A: 核心后端与数据管理 (Worktree A)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-uiux-worktree-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      轨道 B: 前端 UI/UX 与集成 (Worktree B)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      🤝 冲突避免策略
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 开发里程碑
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 开发环境配置
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      📝 代码规范
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 质量保证
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="-">域名邮箱管理器 - 开发计划文档</h1>
+<h2 id="_1">📋 项目概述</h2>
+<p>开发一个简单的域名邮箱管理器桌面应用程序，主要功能是生成、存储和管理基于自定义域名的邮箱地址。这是一个轻量级的邮箱管理工具，专注于邮箱地址的生成和组织管理。</p>
+<p><strong>双工作区并行开发说明：</strong>
+为了提高开发效率并支持多功能并行开发，本项目将采用双工作区（Git Worktree）并行开发模式。这意味着开发任务将被划分为两个主要并行轨道，每个轨道在一个独立的工作区中进行，以最大程度地减少代码冲突并优化协作流程。</p>
+<h2 id="_2">🛠️ 技术栈选择</h2>
+<h3 id="pyqt6-sqlite-pyinstaller">推荐技术栈：PyQt6 + SQLite + PyInstaller</h3>
+<p><strong>前端框架：PyQt6 + QML (重点)</strong>
+- <strong>QML现代化声明式UI：</strong> 默认推荐，用于构建流畅、响应迅速的用户界面。
+- <strong>动画设计：</strong> 利用QML强大的动画系统，实现平滑的过渡、加载动画和交互反馈，增强用户体验。
+- <strong>UI/UX设计：</strong> 遵循Material Design原则，确保界面美观、直观且易于使用。
+- <strong>视觉体验方案：</strong> 统一的色彩、字体、图标和组件库，提供一致且专业的视觉感受。
+- <strong>与现有Python代码完美集成：</strong> 通过PyQt的QObject机制实现QML与Python的无缝通信。
+- <strong>跨平台支持：</strong> Windows/Mac/Linux。
+- <strong>GPU加速渲染和响应式布局：</strong> 确保高性能和适应不同屏幕尺寸。</p>
+<p><strong>数据库：SQLite</strong>
+- 轻量级，无需额外安装。
+- 支持复杂查询和事务。
+- Python原生支持。
+- 适合桌面应用数据量。</p>
+<p><strong>打包工具：PyInstaller</strong>
+- 成熟稳定，支持PyQt。
+- 单文件exe分发。
+- 支持图标和版本信息。
+- 可隐藏控制台窗口。</p>
+<h2 id="_3">📁 项目结构设计</h2>
+<div class="highlight"><pre><span></span><code>email-domain-manager/
+├── src/                          # 源代码目录
+│   ├── main.py                   # 应用程序入口 (主要由前端工作区维护)
+│   ├── models/                   # 数据模型层 (主要由后端工作区维护)
+│   │   ├── __init__.py
+│   │   ├── email_model.py        # 邮箱数据模型
+│   │   ├── config_model.py       # 配置数据模型
+│   │   └── tag_model.py          # 标签数据模型
+│   ├── services/                 # 业务逻辑层 (主要由后端工作区维护)
+│   │   ├── __init__.py
+│   │   ├── email_service.py      # 邮箱生成和管理服务
+│   │   ├── config_service.py     # 配置管理服务
+│   │   └── database_service.py   # 数据库服务
+│   ├── controllers/              # 控制器层 (前后端交互接口)
+│   │   ├── __init__.py
+│   │   ├── email_controller.py   # 邮箱控制器
+│   │   └── config_controller.py  # 配置控制器
+│   ├── views/                    # 视图层 (主要由前端工作区维护)
+│   │   ├── __init__.py
+│   │   ├── main_window.py        # 主窗口 (Python部分)
+│   │   ├── qml/                  # QML文件目录
+│   │   │   ├── main.qml          # 主QML文件
+│   │   │   ├── components/       # 可复用QML组件
+│   │   │   └── pages/            # 各页面QML文件
+│   │   ├── email_generation_page.py  # 邮箱申请页面 (Python部分，与QML交互)
+│   │   ├── email_management_page.py  # 邮箱管理页面 (Python部分，与QML交互)
+│   │   └── configuration_page.py     # 配置管理页面 (Python部分，与QML交互)
+│   ├── utils/                    # 工具类 (前后端共享，但主要由后端工作区维护)
+│   │   ├── __init__.py
+│   │   ├── crypto_utils.py       # 加密工具
+│   │   ├── file_utils.py         # 文件操作工具
+│   │   └── logger.py             # 日志工具
+│   └── resources/                # 资源文件 (前后端共享)
+│       ├── icons/                # 图标文件
+│       ├── styles/               # 样式文件 (QML样式)
+│       └── database/             # 数据库初始化脚本
+├── tests/                        # 测试代码
+├── docs/                         # 文档目录
+├── requirements.txt              # 依赖包列表
+├── build.py                      # 构建脚本
+└── README.md                     # 项目说明
+</code></pre></div>
+<h2 id="_4">🚀 开发阶段规划 (并行轨道)</h2>
+<p>为了最大化并行开发效率并最小化冲突，我们将开发流程划分为两个主要轨道：</p>
+<h3 id="a-worktree-a">轨道 A: 核心后端与数据管理 (Worktree A)</h3>
+<p><strong>主要职责：</strong> 负责所有后端业务逻辑、数据模型、数据库交互、配置管理和核心算法的实现。此轨道将专注于提供稳定的API接口供前端调用。</p>
+<p><strong>Phase 1A: 基础架构与核心模块 (Week 1-2)</strong></p>
+<p><strong>任务清单：</strong>
+- [x] 创建项目目录结构（后端相关部分）
+- [x] 设置开发环境和依赖管理（后端依赖）
+- [x] 实现简单的邮箱生成器（EmailGenerator）
+- [x] 设计数据库表结构（Email, Config, Tag）
+- [x] 初始化数据库服务 <code>src/services/database_service.py</code></p>
+<p><strong>关键文件：</strong>
+- <code>src/services/email_service.py</code> - 邮箱生成和管理功能
+- <code>src/services/database_service.py</code> - 数据库初始化与CRUD操作
+- <code>src/models/*.py</code> - 数据模型定义</p>
+<p><strong>验收标准：</strong>
+- 数据库可以正常创建和连接。
+- 邮箱生成逻辑可以独立运行并返回预期结果。
+- 数据模型定义清晰，与数据库结构一致。</p>
+<p><strong>Phase 2A: 核心业务逻辑与数据持久化 (Week 3-4)</strong></p>
+<p><strong>任务清单：</strong>
+- [ ] 实现EmailService的完整功能（生成、存储、删除、查询）
+- [ ] 实现ConfigService配置管理（读取、写入）
+- [ ] 实现DatabaseService的数据持久化（增删改查）
+- [ ] 实现TagService（标签的CRUD操作）</p>
+<p><strong>关键功能：</strong>
+- 邮箱生成算法（基于域名和自定义规则）。
+- 配置文件管理和加密。
+- 数据库CRUD操作的稳定性和性能。</p>
+<p><strong>验收标准：</strong>
+- 可以成功生成域名邮箱并保存到数据库。
+- 配置可以正确保存和加载，并能通过API进行管理。
+- 邮箱和标签记录可以正确存储、查询和更新。</p>
+<p><strong>Phase 3A: 高级后端功能与安全性 (Week 5-7)</strong></p>
+<p><strong>任务清单：</strong>
+- [ ] 实现标签系统（创建、编辑、删除、关联邮箱）的后端逻辑。
+- [ ] 实现搜索和筛选功能的后端查询接口。
+- [ ] 实现数据导出功能（CSV/JSON）的后端数据准备。
+- [ ] 实现批量操作的后端接口。
+- [ ] 实现配置文件加密和敏感数据保护的后端机制。</p>
+<p><strong>安全性设计：</strong>
+- AES加密敏感配置。
+- 内存数据及时清理。
+- 日志脱敏处理。</p>
+<p><strong>验收标准：</strong>
+- 标签系统后端API完整可用。
+- 搜索筛选后端接口响应迅速且准确。
+- 导出功能后端数据准备正确无误。
+- 敏感信息得到保护，加密解密流程正常。</p>
+<h3 id="b-uiux-worktree-b">轨道 B: 前端 UI/UX 与集成 (Worktree B)</h3>
+<p><strong>主要职责：</strong> 负责所有用户界面（UI）的设计、开发、动画实现、视觉优化以及与后端API的集成。此轨道将专注于提供卓越的用户体验。</p>
+<p><strong>Phase 1B: 基础UI框架与QML环境搭建 (Week 1-2)</strong></p>
+<p><strong>任务清单：</strong>
+- [ ] 创建基础的PyQt6应用框架和QML加载机制。
+- [ ] 设置QML开发环境和工具（如Qt Design Studio）。
+- [ ] 设计并实现主窗口 (<code>src/views/main_window.py</code> 和 <code>src/views/qml/main.qml</code>)。
+- [ ] 建立QML与Python后端控制器 (<code>src/controllers/</code>) 的基本通信机制。</p>
+<p><strong>关键文件：</strong>
+- <code>src/main.py</code> - 应用程序入口，加载QML。
+- <code>src/views/main_window.py</code> - Python主窗口类。
+- <code>src/views/qml/main.qml</code> - 主QML文件。
+- <code>src/controllers/*.py</code> - 定义前端可调用的Python接口。</p>
+<p><strong>验收标准：</strong>
+- 应用程序可以启动并显示带有基本布局的主窗口。
+- QML界面可以正常加载和渲染。
+- QML与Python之间可以进行简单的双向通信。</p>
+<p><strong>Phase 2B: 核心页面UI与交互 (Week 3-4)</strong></p>
+<p><strong>任务清单：</strong>
+- [ ] 开发邮箱申请页面UI (<code>src/views/qml/pages/email_generation_page.qml</code>)。
+- [ ] 开发邮箱管理页面UI (<code>src/views/qml/pages/email_management_page.qml</code>)。
+- [ ] 开发配置管理页面UI (<code>src/views/qml/pages/configuration_page.qml</code>)。
+- [ ] 实现页面间导航和数据传递（前端层面）。
+- [ ] 添加基础的加载动画和状态提示（如进度条）。</p>
+<p><strong>页面详细设计 (QML实现)：</strong></p>
+<p><strong>2.1 邮箱申请页面</strong>
+- 左侧面板：配置概览（如当前使用的域名）。
+- 中央区域：生成按钮和交互反馈（动画效果）。
+- 底部状态栏：操作状态提示（动画效果）。</p>
+<p><strong>2.2 邮箱管理页面</strong>
+- 顶部工具栏：搜索框、筛选器、刷新按钮。
+- 主表格：邮箱列表（邮箱地址、创建时间、标签，通过后端API获取）。
+- 右侧面板：标签管理和详细信息（通过后端API获取）。
+- 底部操作栏：导出、删除、批量操作按钮。</p>
+<p><strong>2.3 配置管理页面</strong>
+- 分组配置表单：域名设置、数据导入/导出设置。
+- 导入/导出功能：调用后端API。
+- 帮助文档：配置说明和示例。</p>
+<p><strong>验收标准：</strong>
+- 所有页面UI完整且美观，符合Material Design风格。
+- 页面间切换流畅，带有过渡动画。
+- 基础交互功能正常，能调用后端API并显示结果。</p>
+<p><strong>Phase 3B: 高级UI/UX与视觉增强 (Week 5-7)</strong></p>
+<p><strong>任务清单：</strong>
+- [ ] 实现标签系统的UI交互（创建、编辑、删除、关联）。
+- [ ] 实现搜索和筛选功能的UI逻辑。
+- [ ] 实现数据导出功能的UI流程和进度显示。
+- [ ] 实现批量操作的UI交互。
+- [ ] 优化整体视觉体验：统一字体、颜色、图标。
+- [ ] 添加更复杂的动画效果（如列表项进入/退出动画、按钮点击反馈）。
+- [ ] 确保UI的响应式布局，适应不同屏幕尺寸。</p>
+<p><strong>QML优化设计：</strong>
+- <strong>性能优化：</strong>
+    - 避免在QML中进行复杂的计算，将逻辑尽可能下沉到Python后端。
+    - 使用 <code>Loader</code> 组件进行按需加载，避免一次性加载所有UI元素。
+    - 优化 <code>Repeater</code> 和 <code>ListView</code> 的Delegate，减少不必要的元素创建和属性绑定。
+    - 谨慎使用 <code>Connections</code>，避免循环引用和内存泄漏。
+- <strong>代码结构：</strong>
+    - 将可复用的UI组件封装到 <code>src/views/qml/components/</code> 目录。
+    - 将每个主要页面拆分为独立的QML文件，放置在 <code>src/views/qml/pages/</code>。</p>
+<p><strong>动画设计：</strong>
+- <strong>类型：</strong>
+    - <strong>Transitions (过渡):</strong> 用于页面切换、组件显示/隐藏时的平滑过渡。
+    - <strong>PropertyAnimation (属性动画):</strong> 改变组件的属性（如位置、大小、透明度、颜色）。
+    - <strong>SequentialAnimation (序列动画):</strong> 动画按顺序播放。
+    - <strong>ParallelAnimation (并行动画):</strong> 动画同时播放。
+- <strong>原则：</strong>
+    - <strong>缓动曲线 (Easing Curves):</strong> 使用合适的缓动曲线使动画更自然、流畅。
+    - <strong>持续时间 (Duration):</strong> 动画持续时间适中，不宜过长或过短。
+    - <strong>延迟 (Delay):</strong> 适当的延迟可以增强动画的节奏感。
+- <strong>工具：</strong>
+    - 推荐使用 <strong>Qt Design Studio</strong> 进行QML UI和动画的可视化设计。</p>
+<p><strong>UI设计方案：</strong>
+- <strong>Material Design原则：</strong>
+    - <strong>层次感：</strong> 利用阴影和Z轴深度来区分元素。
+    - <strong>反馈：</strong> 按钮点击、列表选择等操作应有即时视觉反馈。
+    - <strong>一致性：</strong> 保持组件、布局和交互模式的一致性。
+    - <strong>可访问性：</strong> 考虑颜色对比度、字体大小和键盘导航。
+- <strong>响应式布局：</strong>
+    - 使用 <code>Anchors</code> 和 <code>Layouts</code> (如 <code>RowLayout</code>, <code>ColumnLayout</code>, <code>GridLayout</code>) 来构建灵活的UI。
+    - 考虑不同屏幕分辨率和DPI设置。</p>
+<p><strong>增强视觉体验方案：</strong>
+- <strong>图标设计：</strong> 采用一套统一、现代且易于识别的图标库（如Material Icons）。
+- <strong>字体排版：</strong> 选择清晰易读的字体，并定义不同层级的字体大小和粗细，建立视觉层次。
+- <strong>色彩搭配：</strong> 建立主色、辅色和强调色，确保色彩和谐且符合品牌调性。考虑深色模式支持。
+- <strong>微交互：</strong> 细小的动画和反馈，如按钮悬停效果、输入框焦点动画，提升用户愉悦感。</p>
+<p><strong>验收标准：</strong>
+- 所有高级UI功能（标签、搜索、导出、批量操作）交互流畅。
+- 动画效果自然、平滑，提升用户体验。
+- 界面美观，符合Material Design风格，响应式布局良好。</p>
+<h2 id="_5">🤝 冲突避免策略</h2>
+<p>为了确保双工作区并行开发的顺利进行，我们将严格遵循以下策略：</p>
+<ol>
+<li>
+<p><strong>明确职责边界：</strong></p>
+<ul>
+<li><strong>轨道 A (后端):</strong> 专注于 <code>src/models/</code>, <code>src/services/</code>, <code>src/utils/</code> (除UI相关日志外), <code>data/</code>, <code>resources/database/</code>。</li>
+<li><strong>轨道 B (前端):</strong> 专注于 <code>src/views/</code>, <code>src/main.py</code>, <code>resources/icons/</code>, <code>resources/styles/</code>。</li>
+<li><code>src/controllers/</code> 目录下的文件将作为前后端交互的桥梁，由双方共同维护，但需提前定义好接口规范。</li>
+<li><code>src/utils/logger.py</code> 和 <code>src/utils/config_manager.py</code> 等共享工具类，主要由后端工作区维护，前端工作区仅调用其提供的接口。</li>
+</ul>
+</li>
+<li>
+<p><strong>API契约优先：</strong></p>
+<ul>
+<li>在开发初期，前后端团队需共同定义清晰的API接口（方法签名、输入参数、返回数据结构）。</li>
+<li>一旦API契约确定，双方应严格遵守，任何一方需要修改API时，必须提前与另一方沟通并达成一致。</li>
+</ul>
+</li>
+<li>
+<p><strong>最小化共享文件修改：</strong></p>
+<ul>
+<li>尽量避免同时修改同一个文件。如果必须修改，应提前沟通，并确保修改范围最小化。</li>
+<li>对于 <code>main.py</code>，前端工作区负责其主要结构和QML加载，后端工作区仅在必要时（如初始化服务）进行少量修改。</li>
+</ul>
+</li>
+<li>
+<p><strong>频繁同步与Rebase：</strong></p>
+<ul>
+<li>两个工作区应频繁从 <code>develop</code> 分支拉取最新代码并进行 <code>rebase</code> 操作，而不是 <code>merge</code>，以保持提交历史的整洁。</li>
+<li>在 <code>rebase</code> 过程中遇到冲突时，应立即解决。</li>
+</ul>
+</li>
+<li>
+<p><strong>代码审查：</strong></p>
+<ul>
+<li>所有提交到 <code>develop</code> 分支的PR都必须经过严格的代码审查，特别是涉及跨轨道修改的PR，以确保兼容性和避免潜在冲突。</li>
+</ul>
+</li>
+</ol>
+<h2 id="_6">📊 开发里程碑</h2>
+<table>
+<thead>
+<tr>
+<th>里程碑</th>
+<th>时间</th>
+<th>主要交付物 (轨道 A)</th>
+<th>主要交付物 (轨道 B)</th>
+<th>验收标准</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M1</td>
+<td>Week 2</td>
+<td>核心后端服务API就绪，数据库初始化</td>
+<td>基础UI框架搭建，主窗口显示，QML与Python通信</td>
+<td>应用可启动，后端服务可独立测试，基础UI可渲染</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Week 4</td>
+<td>核心业务逻辑与数据持久化完成，标签系统后端API</td>
+<td>核心页面UI完成，基础交互与动画</td>
+<td>邮箱生成/管理后端功能完整，所有主要页面UI完整且可交互</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Week 7</td>
+<td>高级后端功能与安全性实现</td>
+<td>高级UI/UX与视觉增强完成</td>
+<td>标签、搜索、导出等高级功能后端支持，前端界面美观流畅，动画丰富</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Week 9</td>
+<td>最终后端集成与测试</td>
+<td>最终前端集成与测试</td>
+<td>所有功能模块集成，系统稳定，用户体验良好</td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Week 11</td>
+<td>打包配置与跨平台测试</td>
+<td>打包配置与跨平台测试</td>
+<td>可分发的exe程序，敏感信息保护，在目标平台正常工作</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_7">🔧 开发环境配置</h2>
+<p><strong>必需软件：</strong>
+- Python 3.9+
+- PyQt6
+- SQLite3
+- PyInstaller
+- <strong>Qt Design Studio (推荐用于QML可视化设计)</strong></p>
+<p><strong>推荐IDE：</strong>
+- PyCharm Professional
+- VS Code + Python扩展</p>
+<p><strong>开发工具：</strong>
+- Qt Designer (UI设计)
+- DB Browser for SQLite (数据库管理)
+- Git (版本控制)
+- <strong>Git Worktree (并行开发)</strong></p>
+<h2 id="_8">📝 代码规范</h2>
+<p><strong>Python代码规范：</strong>
+- 遵循PEP 8标准
+- 使用类型提示
+- 完整的文档字符串
+- 单元测试覆盖</p>
+<p><strong>QML/JavaScript代码规范：</strong>
+- 遵循QML编码风格指南。
+- 保持代码简洁、可读性高。
+- 避免在QML中编写复杂业务逻辑。</p>
+<p><strong>Git提交规范：</strong>
+- feat: 新增功能
+- fix: 修复bug
+- docs: 文档更新
+- style: 代码格式
+- refactor: 重构
+- test: 测试相关
+- ci: CI/CD 配置文件和脚本的更改
+- chore: 其他不修改源代码或测试文件的杂项更改</p>
+<h2 id="_9">🎯 质量保证</h2>
+<p><strong>测试策略：</strong>
+- 单元测试：核心业务逻辑（后端）和QML组件（前端）。
+- 集成测试：模块间交互，前后端API调用。
+- UI测试：界面功能验证，动画效果。
+- 性能测试：大数据量处理，UI响应速度。</p>
+<p><strong>代码审查：</strong>
+- 每个功能模块完成后进行代码审查。
+- 关注安全性、性能、可维护性。
+- 确保符合架构设计原则。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
