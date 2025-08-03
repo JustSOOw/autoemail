@@ -533,10 +533,11 @@ jobs:
             echo "🎉 自动发布成功完成！"
             echo "📦 新版本已发布到GitHub Releases"
             echo "📚 文档已更新到GitHub Pages"
-          echo ""
-          echo "🔗 相关链接:"
-          echo "  - Releases: https://github.com/${{ github.repository }}/releases"
-          echo "  - 文档: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+            echo ""
+            echo "🔗 相关链接:"
+            echo "  - Releases: https://github.com/${{ github.repository }}/releases"
+            echo "  - 文档: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          fi
         fi
 
         echo ""
