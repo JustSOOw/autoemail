@@ -93,6 +93,14 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@v4
 
+    - name: 安装Visual C++运行时 (Windows)
+      if: matrix.platform == 'windows'
+      run: |
+        echo "🔧 安装Visual C++运行时 (Windows平台)..."
+        # 使用chocolatey安装VC++运行时
+        choco install vcredist-all -y
+        echo "✅ Visual C++运行时安装完成"
+
     - name: 设置Python环境 (Windows/macOS)
       if: matrix.platform != 'linux'
       uses: actions/setup-python@v5
@@ -140,6 +148,7 @@ jobs:
         # command-not-found hook已禁用，可以正常使用apt-get update
         sudo apt-get update
 
+        # 安装Qt6和PyQt6运行时依赖
         sudo apt-get install -y \
           libgl1-mesa-glx \
           libglib2.0-0 \
@@ -150,13 +159,56 @@ jobs:
           libxcb-randr0 \
           libxcb-render-util0 \
           libxcb-xinerama0 \
-          libxcb-xfixes0
+          libxcb-xfixes0 \
+          libxcb-shape0 \
+          libxcb-sync1 \
+          libxcb-xfixes0 \
+          libxcb-shm0 \
+          libxcb-util1 \
+          libxcb-cursor0 \
+          libfontconfig1 \
+          libfreetype6 \
+          libx11-6 \
+          libx11-xcb1 \
+          libxext6 \
+          libxrender1 \
+          libegl1-mesa \
+          libxss1 \
+          libasound2 \
+          libpulse0 \
+          libdrm2 \
+          libxcomposite1 \
+          libxdamage1 \
+          libxrandr2 \
+          libxtst6 \
+          libxss1 \
+          libgconf-2-4
+
+        echo "✅ Linux系统依赖安装完成"
 
     - name: 安装Python依赖
       run: |
+        echo "📦 安装Python依赖..."
         python -m pip install --upgrade pip
+
+        # 确保PyQt6完整安装
+        echo "🎨 安装完整的PyQt6..."
+        pip install PyQt6 PyQt6-Qt6 PyQt6-sip
+
+        # 安装其他依赖
+        echo "📋 安装项目依赖..."
         pip install -r requirements.txt
-        pip install pyinstaller
+
+        # 确保PyInstaller是最新版本
+        echo "🔨 安装PyInstaller..."
+        pip install pyinstaller --upgrade
+
+        # 验证关键依赖
+        echo "✅ 验证依赖安装..."
+        python -c "import PyQt6.QtCore; print('PyQt6.QtCore: OK')"
+        python -c "import PyQt6.QtQml; print('PyQt6.QtQml: OK')"
+        python -c "import PyQt6.QtQuick; print('PyQt6.QtQuick: OK')"
+        python -c "import PyInstaller; print(f'PyInstaller: {PyInstaller.__version__}')"
 
     - name: 配置构建环境
       run: |

@@ -171,6 +171,60 @@ def build_application(platform_name: str = None, arch: str = None) -> bool:
     # 添加平台特定参数
     cmd.extend(platform_config["pyinstaller_args"])
 
+    # 优化文件大小 - 排除不需要的模块
+    exclude_modules = [
+        # GUI框架（我们只用PyQt6）
+        "tkinter", "tkinter.ttk", "tkinter.constants",
+        "PySide2", "PySide6", "PyQt5",
+
+        # 科学计算库（项目不需要）
+        "matplotlib", "numpy", "pandas", "scipy",
+        "sklearn", "tensorflow", "torch", "keras",
+
+        # 图像处理（除非项目需要）
+        "PIL", "Pillow", "cv2", "opencv",
+
+        # 网络框架（项目不需要）
+        "flask", "django", "tornado", "fastapi",
+
+        # 开发工具
+        "pytest", "unittest", "doctest",
+        "pdb", "cProfile", "profile",
+
+        # 其他大型库
+        "IPython", "jupyter", "notebook",
+        "sphinx", "jinja2",
+
+        # PyQt6中不需要的模块
+        "PyQt6.QtWebEngine", "PyQt6.QtWebEngineWidgets",
+        "PyQt6.QtCharts", "PyQt6.QtDataVisualization",
+        "PyQt6.Qt3D", "PyQt6.QtLocation", "PyQt6.QtPositioning",
+        "PyQt6.QtMultimedia", "PyQt6.QtMultimediaWidgets",
+        "PyQt6.QtBluetooth", "PyQt6.QtNfc", "PyQt6.QtSensors"
+    ]
+
+    for module in exclude_modules:
+        cmd.extend(["--exclude-module", module])
+
+    # 平台特定的优化
+    if platform_name == "windows":
+        # Windows特定排除
+        cmd.extend([
+            "--exclude-module", "curses",
+            "--exclude-module", "readline",
+            "--exclude-module", "termios"
+        ])
+    elif platform_name == "linux":
+        # Linux特定排除
+        cmd.extend([
+            "--exclude-module", "winsound",
+            "--exclude-module", "msvcrt",
+            "--exclude-module", "winreg"
+        ])
+
+    # 移除空的参数
+    cmd = [arg for arg in cmd if arg]
+
     # 添加输出目录（包含架构信息）
     output_dir = f"{platform_name}-{arch}"
     cmd.extend([
@@ -201,18 +255,69 @@ def build_application(platform_name: str = None, arch: str = None) -> bool:
         cmd.extend(["--add-data", f"{qml_dir}{os.pathsep}qml"])
         print(f"📁 添加QML目录: {qml_dir}")
     
-    # 添加隐藏导入（PyQt6特定）
+    # 精确的PyQt6依赖管理（避免文件过大）
+    # 只收集项目实际使用的模块
     hidden_imports = [
+        # 核心模块（必需）
         "PyQt6.QtCore",
-        "PyQt6.QtGui", 
+        "PyQt6.QtGui",
         "PyQt6.QtWidgets",
+
+        # QML相关模块（项目使用QML界面）
         "PyQt6.QtQml",
         "PyQt6.QtQuick",
-        "PyQt6.QtQuickControls2"
+        "PyQt6.QtQuickControls2",
+        "PyQt6.QtQuickLayouts",
+
+        # SIP支持（必需）
+        "PyQt6.sip",
+
+        # 项目特定模块
+        "asyncqt",
+        "cryptography.fernet",
+        "sqlite3",
+        "json",
+        "csv",
+        "datetime",
+        "pathlib",
+        "logging",
+        "asyncio",
+        "requests"
     ]
-    
+
     for module in hidden_imports:
         cmd.extend(["--hidden-import", module])
+
+    # 精确添加必需的Qt6文件（避免全部复制）
+    try:
+        import PyQt6
+        qt6_path = Path(PyQt6.__file__).parent
+
+        # 只添加必需的Qt6插件
+        qt6_plugins = qt6_path / "Qt6" / "plugins"
+        if qt6_plugins.exists():
+            # 只添加关键插件，不是全部
+            essential_plugins = ["platforms", "imageformats", "styles"]
+            for plugin in essential_plugins:
+                plugin_path = qt6_plugins / plugin
+                if plugin_path.exists():
+                    cmd.extend(["--add-data", f"{plugin_path}{os.pathsep}PyQt6/Qt6/plugins/{plugin}"])
+                    print(f"📁 添加Qt6插件: {plugin}")
+
+        # 只添加QML必需模块
+        qt6_qml = qt6_path / "Qt6" / "qml"
+        if qt6_qml.exists():
+            # 只添加项目使用的QML模块
+            essential_qml = ["QtQuick", "QtQuick.Controls", "QtQuick.Layouts", "QtQuick.Templates"]
+            for qml_module in essential_qml:
+                qml_path = qt6_qml / qml_module.replace(".", "/")
+                if qml_path.exists():
+                    cmd.extend(["--add-data", f"{qml_path}{os.pathsep}PyQt6/Qt6/qml/{qml_module.replace('.', '/')}"])
+                    print(f"📁 添加QML模块: {qml_module}")
+
+    except Exception as e:
+        print(f"⚠️ 无法自动添加Qt6路径: {e}")
+        print("   将使用PyInstaller的自动检测功能")
     
     # 添加主文件
     cmd.append(str(main_file))
