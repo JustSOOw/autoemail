@@ -89,18 +89,19 @@ jobs:
             arch: x86_64
             runner_arch: X64
 
-          # 未来ARM64支持预留 (当前为实验性)
-          # - os: windows-latest
-          #   platform: windows
-          #   arch: arm64
-          #   runner_arch: ARM64
-          #   experimental: true
-          #
-          # - os: ubuntu-22.04  # 明确指定Ubuntu 22.04
-          #   platform: linux
-          #   arch: arm64
-          #   runner_arch: ARM64
-          #   experimental: true
+          # Windows ARM64 (新增支持)
+          - os: windows-latest
+            platform: windows
+            arch: arm64
+            runner_arch: ARM64
+            experimental: true
+
+          # Linux ARM64 (新增支持)
+          - os: ubuntu-22.04
+            platform: linux
+            arch: arm64
+            runner_arch: ARM64
+            experimental: true
 
     runs-on: ${{ matrix.os }}
 
@@ -188,23 +189,23 @@ jobs:
       run: |
         echo "🔨 构建 ${{ matrix.platform }}-${{ matrix.arch }} 版本..."
 
-        # 使用平台特定的构建参数
-        if [[ "${{ matrix.platform }}" == "windows" ]]; then
-          python scripts/build.py --windows
-        else
-          python scripts/build.py --linux
-        fi
+        # 使用新的构建脚本，传递平台和架构参数
+        python scripts/build.py --platform ${{ matrix.platform }} --arch ${{ matrix.arch }}
       shell: bash
 
     - name: 验证构建结果
       run: |
         echo "✅ 验证 ${{ matrix.platform }}-${{ matrix.arch }} 构建结果..."
 
-        # 检查构建产物
+        # 检查构建产物 - 适配新的构建脚本输出结构（包含架构）
+        DIST_DIR="dist/${{ matrix.platform }}-${{ matrix.arch }}"
+
         if [[ "${{ matrix.platform }}" == "windows" ]]; then
-          EXECUTABLE="dist/windows/EmailDomainManager.exe"
+          # Windows: 单文件模式
+          EXECUTABLE="$DIST_DIR/EmailDomainManager.exe"
         else
-          EXECUTABLE="dist/linux/EmailDomainManager"
+          # Linux: 目录模式
+          EXECUTABLE="$DIST_DIR/EmailDomainManager/EmailDomainManager"
         fi
 
         if [[ -f "$EXECUTABLE" ]]; then
@@ -216,7 +217,7 @@ jobs:
           SIZE_MB=$((SIZE / 1024 / 1024))
           echo "📦 文件大小: ${SIZE_MB}MB"
 
-          if [[ $SIZE_MB -lt 10 ]]; then
+          if [[ $SIZE_MB -lt 5 ]]; then
             echo "⚠️  警告: 文件大小异常小，可能构建不完整"
           fi
         else
@@ -235,20 +236,44 @@ jobs:
         RELEASE_DIR="release-${{ matrix.platform }}-${{ matrix.arch }}"
         mkdir -p "$RELEASE_DIR"
 
-        # 复制可执行文件和相关文件
-        if [[ "${{ matrix.platform }}" == "windows" ]]; then
-          cp -r dist/windows/* "$RELEASE_DIR/"
-          ARCHIVE_NAME="EmailDomainManager-${{ matrix.platform }}-${{ matrix.arch }}.zip"
+        # 复制可执行文件和相关文件（适配架构）
+        DIST_DIR="dist/${{ matrix.platform }}-${{ matrix.arch }}"
 
-          # Windows平台使用zip打包
-          if command -v 7z >/dev/null 2>&1; then
-            7z a "$ARCHIVE_NAME" "$RELEASE_DIR"/*
-          else
-            # 使用PowerShell压缩 (Windows runner)
-            powershell -Command "Compress-Archive -Path '$RELEASE_DIR\*' -DestinationPath '$ARCHIVE_NAME'"
-          fi
+        if [[ "${{ matrix.platform }}" == "windows" ]]; then
+          # Windows: 直接使用exe文件，不打包
+          ARCHIVE_NAME="EmailDomainManager-${{ matrix.platform }}-${{ matrix.arch }}.exe"
+          cp "$DIST_DIR/EmailDomainManager.exe" "$ARCHIVE_NAME"
+
+          echo "✅ Windows可执行文件准备完成: $ARCHIVE_NAME"
+          echo "📝 Windows版本说明:"
+          echo "  - 双击即可运行，无需安装"
+          echo "  - 系统要求: Windows 10+ (${{ matrix.arch }})"
+          echo "  - 首次运行可能需要确认安全警告"
         else
-          cp -r dist/linux/* "$RELEASE_DIR/"
+          # Linux: 目录模式，复制整个目录
+          cp -r "$DIST_DIR/EmailDomainManager"/* "$RELEASE_DIR/"
+
+          # 创建README文件
+          cat > "$RELEASE_DIR/README.txt" << EOF
+域名邮箱管理器 Linux版本
+
+安装说明:
+1. 解压文件: tar -xzf EmailDomainManager-linux-${{ matrix.arch }}.tar.gz
+2. 进入目录: cd EmailDomainManager-linux-${{ matrix.arch }}
+3. 添加执行权限: chmod +x EmailDomainManager
+4. 运行程序: ./EmailDomainManager
+
+系统要求:
+- Linux发行版 (Ubuntu 18.04+等) (${{ matrix.arch }})
+- 4GB RAM (推荐)
+- 100MB 磁盘空间
+- X11或Wayland显示服务器
+
+注意事项:
+- 确保系统已安装Qt6运行时库
+- 如遇到依赖问题，请安装: sudo apt install qt6-base-dev
+EOF
+
           ARCHIVE_NAME="EmailDomainManager-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz"
 
           # Linux平台使用tar.gz打包
