@@ -20,6 +20,12 @@ on:
         default: false
         type: boolean
 
+# 设置GitHub Actions权限
+permissions:
+  contents: write  # 允许创建release和上传文件
+  pages: write     # 允许部署到GitHub Pages
+  id-token: write  # 允许OIDC token写入
+
 jobs:
   # 发布前检查
   pre-release-check:
