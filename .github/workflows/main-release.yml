@@ -102,23 +102,35 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: 设置Python环境 (使用系统包管理器)
+    - name: 设置Python环境 (Windows/macOS)
+      if: matrix.platform != 'linux'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        architecture: ${{ matrix.runner_arch }}
+
+    - name: 设置Python环境 (Linux - 系统包管理器)
+      if: matrix.platform == 'linux'
       run: |
-        echo "🐍 使用系统包管理器安装Python 3.11 (更可靠的方案)..."
+        echo "🐍 使用系统包管理器安装Python 3.11 (Linux平台)..."
         sudo apt-get update
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository ppa:deadsnakes/ppa -y
         sudo apt-get update
-        sudo apt-get install -y python3.11 python3.11-pip python3.11-venv python3.11-dev
+
+        # 安装Python 3.11和相关包
+        sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3.11-distutils
+
+        # 安装pip (deadsnakes PPA中没有python3.11-pip，需要手动安装)
+        curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
 
         # 设置python3.11为默认python3
         sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
-        sudo update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1
 
         # 验证安装
         echo "✅ Python安装完成，版本信息："
         python3 --version
-        pip3 --version
+        python3 -m pip --version
 
 
 
