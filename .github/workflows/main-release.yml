@@ -148,11 +148,18 @@ jobs:
         # command-not-found hook已禁用，可以正常使用apt-get update
         sudo apt-get update
 
-        # 安装Qt6和PyQt6运行时依赖
+        # 重要：不安装系统Qt6包，避免版本冲突
+        echo "🚫 确保不安装系统Qt6包（避免版本冲突）..."
+
+        # 安装基础系统依赖（不包括Qt6）
         sudo apt-get install -y \
+          build-essential \
           libgl1-mesa-glx \
+          libgl1-mesa-dev \
           libglib2.0-0 \
+          libglib2.0-dev \
           libxkbcommon-x11-0 \
+          libxkbcommon-dev \
           libxcb-icccm4 \
           libxcb-image0 \
           libxcb-keysyms1 \
@@ -162,38 +169,58 @@ jobs:
           libxcb-xfixes0 \
           libxcb-shape0 \
           libxcb-sync1 \
-          libxcb-xfixes0 \
           libxcb-shm0 \
           libxcb-util1 \
           libxcb-cursor0 \
           libfontconfig1 \
+          libfontconfig1-dev \
           libfreetype6 \
+          libfreetype6-dev \
           libx11-6 \
+          libx11-dev \
           libx11-xcb1 \
           libxext6 \
+          libxext-dev \
           libxrender1 \
+          libxrender-dev \
           libegl1-mesa \
+          libegl1-mesa-dev \
           libxss1 \
           libasound2 \
+          libasound2-dev \
           libpulse0 \
+          libpulse-dev \
           libdrm2 \
+          libdrm-dev \
           libxcomposite1 \
+          libxcomposite-dev \
           libxdamage1 \
+          libxdamage-dev \
           libxrandr2 \
+          libxrandr-dev \
           libxtst6 \
-          libxss1 \
-          libgconf-2-4
+          libxtst-dev
 
-        echo "✅ Linux系统依赖安装完成"
+        echo "✅ Linux系统依赖安装完成（不包括Qt6，避免版本冲突）"
 
     - name: 安装Python依赖
       run: |
         echo "📦 安装Python依赖..."
         python -m pip install --upgrade pip
 
-        # 确保PyQt6完整安装
-        echo "🎨 安装完整的PyQt6..."
-        pip install PyQt6 PyQt6-Qt6 PyQt6-sip
+        # Linux平台特殊处理：避免Qt6版本冲突
+        if [[ "${{ matrix.platform }}" == "linux" ]]; then
+          echo "🐧 Linux平台：清理可能冲突的Qt6包..."
+          # 移除系统可能安装的Qt6包，避免版本冲突
+          sudo apt-get remove -y qt6-base-dev qt6-qml-dev || true
+
+          echo "🎨 Linux平台：安装兼容的PyQt6版本..."
+          # 使用特定版本避免ABI冲突
+          pip install PyQt6==6.6.1 PyQt6-Qt6==6.6.1 PyQt6-sip==13.6.0
+        else
+          echo "🎨 Windows平台：安装完整的PyQt6..."
+          pip install PyQt6 PyQt6-Qt6 PyQt6-sip
+        fi
 
         # 安装其他依赖
         echo "📋 安装项目依赖..."
@@ -207,7 +234,19 @@ jobs:
         echo "✅ 验证依赖安装..."
         python -c "import PyQt6.QtCore; print('PyQt6.QtCore: OK')"
         python -c "import PyQt6.QtQml; print('PyQt6.QtQml: OK')"
-        python -c "import PyQt6.QtQuick; print('PyQt6.QtQuick: OK')"
+
+        # Linux平台额外验证
+        if [[ "${{ matrix.platform }}" == "linux" ]]; then
+          echo "🐧 Linux平台额外验证..."
+          python -c "import PyQt6.QtGui; print('PyQt6.QtGui: OK')"
+          python -c "import PyQt6.QtQuick; print('PyQt6.QtQuick: OK')"
+          # 检查Qt6版本
+          python -c "from PyQt6.QtCore import qVersion; print(f'Qt6 version: {qVersion()}')"
+        else
+          python -c "import PyQt6.QtGui; print('PyQt6.QtGui: OK')"
+          python -c "import PyQt6.QtQuick; print('PyQt6.QtQuick: OK')"
+        fi
+
         python -c "import PyInstaller; print(f'PyInstaller: {PyInstaller.__version__}')"
 
     - name: 配置构建环境
