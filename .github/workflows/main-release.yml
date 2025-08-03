@@ -24,7 +24,7 @@ jobs:
   # 发布前检查
   pre-release-check:
     name: 发布前检查
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04以避免Ubuntu 24.04兼容性问题
 
     steps:
     - name: 检出代码
@@ -78,7 +78,7 @@ jobs:
             runner_arch: X64
 
           # Linux x86_64 (主要支持)
-          - os: ubuntu-latest
+          - os: ubuntu-22.04  # 明确指定Ubuntu 22.04
             platform: linux
             arch: x86_64
             runner_arch: X64
@@ -90,7 +90,7 @@ jobs:
           #   runner_arch: ARM64
           #   experimental: true
           #
-          # - os: ubuntu-latest
+          # - os: ubuntu-22.04  # 明确指定Ubuntu 22.04
           #   platform: linux
           #   arch: arm64
           #   runner_arch: ARM64
@@ -233,7 +233,7 @@ jobs:
   create-release:
     name: 创建GitHub Release
     needs: build-release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
@@ -344,7 +344,7 @@ jobs:
   deploy-docs:
     name: 部署文档
     needs: create-release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
@@ -451,7 +451,7 @@ jobs:
   build-notification:
     name: 构建通知
     needs: [build-release, create-release, deploy-docs]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
     if: always()
 
     steps:
