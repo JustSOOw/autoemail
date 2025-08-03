@@ -114,26 +114,13 @@ jobs:
       run: |
         echo "🐍 使用系统包管理器安装Python 3.11 (Linux平台)..."
 
-        # 安全更新包缓存（绕过APT Post-Invoke脚本问题）
-        echo "📦 更新包缓存（绕过APT Post-Invoke脚本问题）..."
-        sudo apt-get update -o APT::Update::Post-Invoke-Success::= || {
-          echo "⚠️ 方案1失败，使用方案2：临时禁用command-not-found脚本..."
-          sudo chmod -x /usr/lib/cnf-update-db 2>/dev/null || true
-          sudo apt-get update
-          sudo chmod +x /usr/lib/cnf-update-db 2>/dev/null || true
-        }
+        # 初始包缓存更新
+        echo "📦 初始包缓存更新..."
+        sudo apt-get update
 
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository ppa:deadsnakes/ppa -y
-
-        # 再次安全更新包缓存
-        echo "📦 添加PPA后更新包缓存..."
-        sudo apt-get update -o APT::Update::Post-Invoke-Success::= || {
-          echo "⚠️ 方案1失败，使用方案2：临时禁用command-not-found脚本..."
-          sudo chmod -x /usr/lib/cnf-update-db 2>/dev/null || true
-          sudo apt-get update
-          sudo chmod +x /usr/lib/cnf-update-db 2>/dev/null || true
-        }
+        sudo apt-get update
 
         # 安装Python 3.11和相关包
         sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3.11-distutils
@@ -144,9 +131,13 @@ jobs:
         # 设置python3.11为默认python3
         sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 
-        # 重新安装python3-apt以确保apt_pkg模块可用
-        echo "🔧 重新安装python3-apt以确保apt_pkg模块可用..."
-        sudo apt-get install -y --reinstall python3-apt || echo "⚠️ python3-apt重新安装失败，但不影响构建流程"
+        # 关键修复：为Python 3.11安装python-apt包，解决apt_pkg模块问题
+        echo "🔧 为Python 3.11安装python-apt包，解决apt_pkg模块问题..."
+        python3.11 -m pip install python-apt
+
+        # 验证apt_pkg模块可用
+        echo "✅ 验证apt_pkg模块..."
+        python3 -c "import apt_pkg; print('✅ apt_pkg模块可用，版本:', apt_pkg.VERSION)" || echo "⚠️ apt_pkg模块验证失败"
 
         # 验证安装
         echo "✅ Python安装完成，版本信息："
@@ -158,13 +149,9 @@ jobs:
     - name: 安装系统依赖 (Linux)
       if: matrix.platform == 'linux'
       run: |
-        echo "📦 安装系统依赖包（绕过APT Post-Invoke脚本问题）..."
-        sudo apt-get update -o APT::Update::Post-Invoke-Success::= || {
-          echo "⚠️ 方案1失败，使用方案2：临时禁用command-not-found脚本..."
-          sudo chmod -x /usr/lib/cnf-update-db 2>/dev/null || true
-          sudo apt-get update
-          sudo chmod +x /usr/lib/cnf-update-db 2>/dev/null || true
-        }
+        echo "📦 安装系统依赖包..."
+        # 现在apt_pkg模块已可用，可以正常使用apt-get update
+        sudo apt-get update
 
         sudo apt-get install -y \
           libgl1-mesa-glx \
