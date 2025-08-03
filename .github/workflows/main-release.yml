@@ -102,11 +102,47 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: 设置Python环境
+    - name: 设置Python环境 (方案1 - setup-python@v5)
+      id: setup-python-v5-build
       uses: actions/setup-python@v5
+      with:
+        python-version: '3.11.12'  # 使用具体版本号
+        architecture: ${{ matrix.runner_arch }}
+      continue-on-error: true
+
+    - name: 设置Python环境 (方案2 - setup-python@v4)
+      id: setup-python-v4-build
+      if: steps.setup-python-v5-build.outcome == 'failure'
+      uses: actions/setup-python@v4
       with:
         python-version: '3.11'
         architecture: ${{ matrix.runner_arch }}
+      continue-on-error: true
+
+    - name: 设置Python环境 (方案3 - 系统包管理器) [仅Linux]
+      if: steps.setup-python-v5-build.outcome == 'failure' && steps.setup-python-v4-build.outcome == 'failure' && matrix.platform == 'linux'
+      run: |
+        echo "🔄 setup-python失败，使用系统包管理器安装Python 3.11..."
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa -y
+        sudo apt-get update
+        sudo apt-get install -y python3.11 python3.11-pip python3.11-venv python3.11-dev
+
+        # 设置python3.11为默认python3
+        sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+        sudo update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip3.11 1
+
+        # 验证安装
+        python3 --version
+        pip3 --version
+
+    - name: 验证Python环境
+      run: |
+        echo "🐍 验证Python环境..."
+        python3 --version
+        pip3 --version
+        python3 -c "import sys; print(f'Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
 
     - name: 安装系统依赖 (Linux)
       if: matrix.platform == 'linux'
