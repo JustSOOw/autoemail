@@ -99,9 +99,9 @@ def check_requirements(target_platforms: List[str]) -> bool:
 
     # 检查Python版本
     python_version = sys.version_info
-    if python_version < (3, 9):
+    if python_version < (3, 11):
         print(f"❌ Python版本过低: {python_version.major}.{python_version.minor}")
-        print("   需要Python 3.9或更高版本")
+        print("   需要Python 3.11或更高版本")
         return False
 
     print(
