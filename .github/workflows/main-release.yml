@@ -238,25 +238,23 @@ jobs:
           cp -r "$DIST_DIR/EmailDomainManager"/* "$RELEASE_DIR/"
 
           # 创建README文件
-          cat > "$RELEASE_DIR/README.txt" << EOF
-域名邮箱管理器 Linux版本
-
-安装说明:
-1. 解压文件: tar -xzf EmailDomainManager-linux-${{ matrix.arch }}.tar.gz
-2. 进入目录: cd EmailDomainManager-linux-${{ matrix.arch }}
-3. 添加执行权限: chmod +x EmailDomainManager
-4. 运行程序: ./EmailDomainManager
-
-系统要求:
-- Linux发行版 (Ubuntu 18.04+等) (${{ matrix.arch }})
-- 4GB RAM (推荐)
-- 100MB 磁盘空间
-- X11或Wayland显示服务器
-
-注意事项:
-- 确保系统已安装Qt6运行时库
-- 如遇到依赖问题，请安装: sudo apt install qt6-base-dev
-EOF
+          echo "域名邮箱管理器 Linux版本" > "$RELEASE_DIR/README.txt"
+          echo "" >> "$RELEASE_DIR/README.txt"
+          echo "安装说明:" >> "$RELEASE_DIR/README.txt"
+          echo "1. 解压文件: tar -xzf EmailDomainManager-linux-${{ matrix.arch }}.tar.gz" >> "$RELEASE_DIR/README.txt"
+          echo "2. 进入目录: cd EmailDomainManager-linux-${{ matrix.arch }}" >> "$RELEASE_DIR/README.txt"
+          echo "3. 添加执行权限: chmod +x EmailDomainManager" >> "$RELEASE_DIR/README.txt"
+          echo "4. 运行程序: ./EmailDomainManager" >> "$RELEASE_DIR/README.txt"
+          echo "" >> "$RELEASE_DIR/README.txt"
+          echo "系统要求:" >> "$RELEASE_DIR/README.txt"
+          echo "- Linux发行版 (Ubuntu 18.04+等) (${{ matrix.arch }})" >> "$RELEASE_DIR/README.txt"
+          echo "- 4GB RAM (推荐)" >> "$RELEASE_DIR/README.txt"
+          echo "- 100MB 磁盘空间" >> "$RELEASE_DIR/README.txt"
+          echo "- X11或Wayland显示服务器" >> "$RELEASE_DIR/README.txt"
+          echo "" >> "$RELEASE_DIR/README.txt"
+          echo "注意事项:" >> "$RELEASE_DIR/README.txt"
+          echo "- 确保系统已安装Qt6运行时库" >> "$RELEASE_DIR/README.txt"
+          echo "- 如遇到依赖问题，请安装: sudo apt install qt6-base-dev" >> "$RELEASE_DIR/README.txt"
 
           ARCHIVE_NAME="EmailDomainManager-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz"
 
