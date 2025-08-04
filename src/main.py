@@ -60,9 +60,11 @@ class ApplicationManager:
     def setup_logging(self) -> bool:
         """设置日志系统"""
         try:
-            # 创建日志目录
-            log_dir = project_root / "logs"
-            log_dir.mkdir(exist_ok=True)
+            # 创建日志目录 - 使用用户数据目录
+            import tempfile
+            app_data_dir = Path(tempfile.gettempdir()) / "EmailDomainManager"
+            log_dir = app_data_dir / "logs"
+            log_dir.mkdir(parents=True, exist_ok=True)
 
             # 初始化日志
             setup_logger(
@@ -83,8 +85,11 @@ class ApplicationManager:
     def setup_config(self) -> bool:
         """设置配置管理器"""
         try:
-            config_dir = project_root / "config"
-            config_dir.mkdir(exist_ok=True)
+            # 使用用户数据目录
+            import tempfile
+            app_data_dir = Path(tempfile.gettempdir()) / "EmailDomainManager"
+            config_dir = app_data_dir / "config"
+            config_dir.mkdir(parents=True, exist_ok=True)
 
             self.config_manager = ConfigManager(config_dir / "app.conf")
             self.logger.info("配置管理器初始化完成")
@@ -97,8 +102,11 @@ class ApplicationManager:
     def setup_database(self) -> bool:
         """设置数据库服务"""
         try:
-            db_dir = project_root / "data"
-            db_dir.mkdir(exist_ok=True)
+            # 使用用户数据目录
+            import tempfile
+            app_data_dir = Path(tempfile.gettempdir()) / "EmailDomainManager"
+            db_dir = app_data_dir / "data"
+            db_dir.mkdir(parents=True, exist_ok=True)
 
             self.database_service = DatabaseService(db_dir / "email_manager.db")
             self.database_service.init_database()
