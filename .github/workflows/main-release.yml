@@ -82,12 +82,17 @@ jobs:
         python-version: '3.11'
         architecture: 'x64'
 
-    - name: 安装Visual C++运行时
+    - name: 安装Visual C++运行时和系统依赖
       run: |
-        echo "🔧 安装Visual C++运行时..."
-        # 使用chocolatey安装VC++运行时，确保PyQt6能正常工作
-        choco install vcredist-all -y
-        echo "✅ Visual C++运行时安装完成"
+        echo "🔧 安装Visual C++运行时和系统依赖..."
+
+        # 安装Visual C++ Redistributable
+        choco install vcredist2015 vcredist2017 vcredist2019 vcredist2022 -y
+
+        # 安装Windows SDK组件（PyQt6需要）
+        choco install windows-sdk-10-version-2004-all -y --ignore-checksums
+
+        echo "✅ 系统依赖安装完成"
 
     - name: 安装Python依赖
       run: |
@@ -160,10 +165,10 @@ jobs:
         # 创建发布目录
         New-Item -ItemType Directory -Force -Path "release"
 
-        # 1. 单文件exe - 直接复制
+        # 1. 单文件exe
         Copy-Item "dist/EmailDomainManager.exe" "release/EmailDomainManager-Windows-x64.exe"
 
-        # 2. 便携版 - 压缩整个目录
+        # 2. 便携版zip
         $compress = @{
           Path = "dist/EmailDomainManager-Portable/*"
           CompressionLevel = "Optimal"
@@ -178,16 +183,13 @@ jobs:
           Write-Host "  $($_.Name): $([math]::Round($size, 1))MB"
         }
 
-        Write-Host ""
-        Write-Host "📋 发布说明:"
-        Write-Host "  - 单文件exe: 双击即可运行，启动较慢"
-        Write-Host "  - 便携版zip: 解压后运行，启动较快"
-
     - name: 上传Windows构建产物
       uses: actions/upload-artifact@v4
       with:
         name: windows-builds
-        path: release/*
+        path: |
+          release/EmailDomainManager-Windows-x64.exe
+          release/EmailDomainManager-Windows-x64-Portable.zip
         retention-days: 30
 
   # Ubuntu构建 - 生成可执行文件和tar.gz包
@@ -326,6 +328,12 @@ jobs:
         # 创建发布目录
         mkdir -p release
 
+        # 验证构建结果
+        if [ ! -d "dist/EmailDomainManager" ]; then
+          echo "❌ Ubuntu构建目录不存在"
+          exit 1
+        fi
+
         # 创建安装包目录
         mkdir -p EmailDomainManager-Ubuntu-x64
         cp -r dist/EmailDomainManager/* EmailDomainManager-Ubuntu-x64/
@@ -380,7 +388,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ubuntu-builds
-        path: release/*
+        path: release/EmailDomainManager-Ubuntu-x64.tar.gz
         retention-days: 30
 
 
@@ -416,20 +424,16 @@ jobs:
 
         # 复制Windows构建产物
         if [ -d "artifacts/windows" ]; then
-          echo "📦 Windows构建产物:"
-          find artifacts/windows -type f -exec ls -lh {} \;
-          cp artifacts/windows/* release-files/ 2>/dev/null || echo "无Windows文件"
+          cp artifacts/windows/* release-files/
         fi
 
         # 复制Ubuntu构建产物
         if [ -d "artifacts/ubuntu" ]; then
-          echo "📦 Ubuntu构建产物:"
-          find artifacts/ubuntu -type f -exec ls -lh {} \;
-          cp artifacts/ubuntu/* release-files/ 2>/dev/null || echo "无Ubuntu文件"
+          cp artifacts/ubuntu/* release-files/
         fi
 
         echo "📦 最终发布文件:"
-        ls -lh release-files/ || echo "没有找到发布文件"
+        ls -lh release-files/
 
     - name: 生成发布说明
       run: |
