@@ -14,11 +14,7 @@ on:
         description: '发布版本号 (例如: v1.0.0)'
         required: true
         default: 'v1.0.0'
-      include_arm64:
-        description: '是否包含ARM64架构 (实验性功能)'
-        required: false
-        default: false
-        type: boolean
+
 
 # 设置GitHub Actions权限
 permissions:
@@ -59,245 +55,517 @@ jobs:
         echo "源分支: ${{ github.head_ref }}"
         echo "目标分支: ${{ github.base_ref }}"
         echo "当前提交: ${{ github.sha }}"
-        echo "包含ARM64: ${{ github.event.inputs.include_arm64 || 'false' }}"
+
 
         # 检查图标文件
         echo "🎨 检查应用图标文件..."
         ls -la src/resources/icons/
 
-        # 验证构建脚本
-        echo "🔧 验证构建脚本..."
-        python scripts/build.py --test-only
+        # 验证PyInstaller环境
+        echo "🔧 验证PyInstaller环境..."
+        pip install pyinstaller pyinstaller-hooks-contrib
+        python -c "import PyInstaller; print(f'PyInstaller: {PyInstaller.__version__}')"
 
-  # 构建发布版本 - 支持多平台多架构
-  build-release:
-    name: 构建发布版本
+  # Windows构建 - 生成单exe和目录压缩包
+  build-windows:
+    name: 构建Windows版本
     needs: pre-release-check
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Windows x86_64 (主要支持)
-          - os: windows-latest
-            platform: windows
-            arch: x86_64
-            runner_arch: X64
-
-          # Linux x86_64 (主要支持)
-          - os: ubuntu-22.04  # 明确指定Ubuntu 22.04
-            platform: linux
-            arch: x86_64
-            runner_arch: X64
-
-          # 未来ARM64支持预留 (当前为实验性)
-          # - os: windows-latest
-          #   platform: windows
-          #   arch: arm64
-          #   runner_arch: ARM64
-          #   experimental: true
-          #
-          # - os: ubuntu-22.04  # 明确指定Ubuntu 22.04
-          #   platform: linux
-          #   arch: arm64
-          #   runner_arch: ARM64
-          #   experimental: true
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: 设置Python环境 (Windows/macOS)
-      if: matrix.platform != 'linux'
+    - name: 设置Python环境
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        architecture: ${{ matrix.runner_arch }}
+        architecture: 'x64'
 
-    - name: 设置Python环境 (Linux - 系统包管理器)
-      if: matrix.platform == 'linux'
+    - name: 安装Visual C++运行时和系统依赖
       run: |
-        echo "🐍 使用系统包管理器安装Python 3.11 (Linux平台)..."
+        echo "🔧 安装Visual C++运行时和系统依赖..."
 
-        # 关键修复：禁用command-not-found的APT hook，解决cnf-update-db脚本问题
-        echo "🔧 禁用command-not-found的APT hook，解决cnf-update-db脚本问题..."
-        sudo mv /etc/apt/apt.conf.d/50command-not-found /etc/apt/apt.conf.d/50command-not-found.disabled 2>/dev/null || echo "⚠️ command-not-found配置文件不存在，跳过"
+        # 安装Visual C++ Redistributable (修复包名错误)
+        try {
+          choco install vcredist140 -y --force
+          Write-Host "✅ vcredist140 安装完成"
+        } catch {
+          Write-Host "⚠️ vcredist140 安装失败，继续执行..."
+        }
 
-        # 现在可以正常使用apt-get update
-        echo "📦 更新包缓存..."
-        sudo apt-get update
+        # 手动下载并安装最新的VC++ Redistributable (更可靠的方法)
+        echo "📦 下载并安装最新的Visual C++ Redistributable..."
+        try {
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
+          Start-Process -FilePath "vc_redist.x64.exe" -ArgumentList "/quiet", "/norestart" -Wait
+          Remove-Item "vc_redist.x64.exe" -ErrorAction SilentlyContinue
+          Write-Host "✅ 最新VC++ Redistributable安装完成"
+        } catch {
+          Write-Host "⚠️ VC++ Redistributable下载安装失败，但继续执行..."
+        }
 
-        sudo apt-get install -y software-properties-common
-        sudo add-apt-repository ppa:deadsnakes/ppa -y
-        sudo apt-get update
+        # 验证关键DLL文件
+        echo "🔍 验证Visual C++运行时库..."
+        $requiredDlls = @(
+          "C:\Windows\System32\vcruntime140.dll",
+          "C:\Windows\System32\msvcp140.dll"
+        )
 
-        # 安装Python 3.11和相关包
-        sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3.11-distutils
+        foreach ($dll in $requiredDlls) {
+          if (Test-Path $dll) {
+            $dllName = Split-Path $dll -Leaf
+            Write-Host "✅ $dllName 已安装"
+          } else {
+            $dllName = Split-Path $dll -Leaf
+            Write-Host "⚠️ $dllName 缺失"
+          }
+        }
 
-        # 安装pip (deadsnakes PPA中没有python3.11-pip，需要手动安装)
-        curl -sS https://bootstrap.pypa.io/get-pip.py | python3.11
+        echo "✅ 系统依赖检查完成"
 
-        # 设置python3.11为默认python3
-        sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
-
-        # 验证安装
-        echo "✅ Python安装完成，版本信息："
-        python3 --version
-        python3 -m pip --version
-
-
-
-    - name: 安装系统依赖 (Linux)
-      if: matrix.platform == 'linux'
+    - name: 安装Python依赖
       run: |
-        echo "📦 安装系统依赖包..."
-        # command-not-found hook已禁用，可以正常使用apt-get update
+        python -m pip install --upgrade pip
+
+        # 安装项目依赖（使用与本地相同的版本）
+        pip install -r requirements.txt
+
+        # 安装PyInstaller和相关工具（关键修复）
+        pip install pyinstaller==6.14.2 pyinstaller-hooks-contrib
+
+        # 安装额外的PyQt6支持工具
+        pip install pyqt6-tools
+
+        echo "📦 验证PyQt6安装..."
+        python -c "import PyQt6.QtCore; print(f'PyQt6 version: {PyQt6.QtCore.qVersion()}')"
+        python -c "import PyQt6.sip; print(f'PyQt6-sip version: {PyQt6.sip.SIP_VERSION_STR}')"
+
+    - name: 验证依赖安装
+      run: |
+        python -c "import PyQt6.QtCore; print('PyQt6.QtCore: OK')"
+        python -c "import PyQt6.QtQml; print('PyQt6.QtQml: OK')"
+        python -c "import PyInstaller; print(f'PyInstaller: {PyInstaller.__version__}')"
+
+    - name: 构建单文件exe
+      run: |
+        echo "🔨 构建Windows单文件exe..."
+
+        # 使用增强的PyInstaller参数（关键修复）
+        pyinstaller `
+          --onefile `
+          --windowed `
+          --icon=src/resources/icons/app.ico `
+          --name=EmailDomainManager `
+          --collect-all PyQt6 `
+          --collect-all PyQt6.QtCore `
+          --collect-all PyQt6.QtGui `
+          --collect-all PyQt6.QtWidgets `
+          --collect-all PyQt6.QtQml `
+          --hidden-import=PyQt6.QtCore `
+          --hidden-import=PyQt6.QtGui `
+          --hidden-import=PyQt6.QtWidgets `
+          --hidden-import=PyQt6.QtQml `
+          --hidden-import=PyQt6.sip `
+          --add-data "src/resources;resources" `
+          --add-data "src/views/qml;views/qml" `
+          --paths src `
+          --noupx `
+          --clean `
+          src/main.py
+
+        # 验证构建结果
+        if (Test-Path "dist/EmailDomainManager.exe") {
+          $size = (Get-Item "dist/EmailDomainManager.exe").Length / 1MB
+          Write-Host "✅ 单文件exe构建成功，大小: $([math]::Round($size, 1))MB"
+
+          # 检查exe文件的依赖（调试信息）
+          Write-Host "🔍 检查exe文件信息..."
+          Get-Item "dist/EmailDomainManager.exe" | Select-Object Name, Length, CreationTime
+        } else {
+          Write-Host "❌ 单文件exe构建失败"
+          Write-Host "📁 dist目录内容:"
+          Get-ChildItem "dist" -ErrorAction SilentlyContinue
+          exit 1
+        }
+
+    - name: 构建目录版本
+      run: |
+        echo "🔨 构建Windows目录版本..."
+        # 清理之前的构建
+        Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
+
+        # 使用增强的PyInstaller参数（关键修复）
+        pyinstaller `
+          --onedir `
+          --windowed `
+          --icon=src/resources/icons/app.ico `
+          --name=EmailDomainManager-Portable `
+          --collect-all PyQt6 `
+          --collect-all PyQt6.QtCore `
+          --collect-all PyQt6.QtGui `
+          --collect-all PyQt6.QtWidgets `
+          --collect-all PyQt6.QtQml `
+          --hidden-import=PyQt6.QtCore `
+          --hidden-import=PyQt6.QtGui `
+          --hidden-import=PyQt6.QtWidgets `
+          --hidden-import=PyQt6.QtQml `
+          --hidden-import=PyQt6.sip `
+          --add-data "src/resources;resources" `
+          --add-data "src/views/qml;views/qml" `
+          --paths src `
+          --noupx `
+          --clean `
+          src/main.py
+
+        # 验证构建结果
+        if (Test-Path "dist/EmailDomainManager-Portable/EmailDomainManager-Portable.exe") {
+          Write-Host "✅ 目录版本构建成功"
+
+          # 检查关键DLL文件是否存在（调试信息）
+          Write-Host "🔍 检查关键DLL文件..."
+          $dllPath = "dist/EmailDomainManager-Portable/_internal"
+          if (Test-Path "$dllPath/PyQt6") {
+            Write-Host "✅ PyQt6目录存在"
+            Get-ChildItem "$dllPath/PyQt6" -Name "*.dll" | Select-Object -First 5 | ForEach-Object { Write-Host "  - $_" }
+          }
+          if (Test-Path "$dllPath/Qt6Core.dll") {
+            Write-Host "✅ Qt6Core.dll 存在"
+          } else {
+            Write-Host "⚠️  Qt6Core.dll 缺失"
+          }
+        } else {
+          Write-Host "❌ 目录版本构建失败"
+          Write-Host "📁 dist目录内容:"
+          Get-ChildItem "dist" -ErrorAction SilentlyContinue
+          exit 1
+        }
+
+    - name: 包含Visual C++运行时库到便携版
+      run: |
+        echo "📦 包含Visual C++运行时库到便携版..."
+
+        # 查找系统中的Visual C++运行时库
+        $vcRuntimePaths = @(
+          "C:\Windows\System32\vcruntime140.dll",
+          "C:\Windows\System32\vcruntime140_1.dll",
+          "C:\Windows\System32\msvcp140.dll",
+          "C:\Windows\System32\msvcp140_1.dll",
+          "C:\Windows\System32\msvcp140_2.dll"
+        )
+
+        # 复制运行时库到便携版目录
+        $portableDir = "dist/EmailDomainManager-Portable"
+        if (Test-Path $portableDir) {
+          $copiedCount = 0
+          Write-Host "🔍 检查并复制Visual C++运行时库..."
+
+          foreach ($dllPath in $vcRuntimePaths) {
+            if (Test-Path $dllPath) {
+              $dllName = Split-Path $dllPath -Leaf
+              try {
+                Copy-Item $dllPath "$portableDir/$dllName" -Force
+                Write-Host "✅ 已复制: $dllName"
+                $copiedCount++
+              } catch {
+                Write-Host "⚠️ 复制失败: $dllName - $($_.Exception.Message)"
+              }
+            } else {
+              $dllName = Split-Path $dllPath -Leaf
+              Write-Host "❌ 未找到: $dllName"
+            }
+          }
+
+          Write-Host "📊 总共复制了 $copiedCount 个运行时库文件"
+
+          # 验证复制结果
+          Write-Host "🔍 便携版目录中的DLL文件:"
+          Get-ChildItem "$portableDir" -Name "*.dll" | Where-Object { $_ -like "*140*" } | ForEach-Object {
+            Write-Host "  ✅ $_"
+          }
+        } else {
+          Write-Host "❌ 便携版目录不存在: $portableDir"
+          exit 1
+        }
+
+        Write-Host "✅ Visual C++运行时库包含完成"
+
+    - name: 创建Windows发布包
+      run: |
+        echo "📦 创建Windows发布包..."
+
+        # 创建发布目录
+        New-Item -ItemType Directory -Force -Path "release"
+
+        # 1. 单文件exe
+        Copy-Item "dist/EmailDomainManager.exe" "release/EmailDomainManager-Windows-x64.exe"
+
+        # 2. 便携版zip
+        $compress = @{
+          Path = "dist/EmailDomainManager-Portable/*"
+          CompressionLevel = "Optimal"
+          DestinationPath = "release/EmailDomainManager-Windows-x64-Portable.zip"
+        }
+        Compress-Archive @compress
+
+        # 显示结果
+        Write-Host "📁 Windows发布文件:"
+        Get-ChildItem "release" | ForEach-Object {
+          $size = $_.Length / 1MB
+          Write-Host "  $($_.Name): $([math]::Round($size, 1))MB"
+        }
+
+    - name: 上传Windows构建产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-builds
+        path: |
+          release/EmailDomainManager-Windows-x64.exe
+          release/EmailDomainManager-Windows-x64-Portable.zip
+        retention-days: 30
+
+  # Ubuntu构建 - 生成可执行文件和tar.gz包
+  build-ubuntu:
+    name: 构建Ubuntu版本
+    needs: pre-release-check
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置Python环境
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 安装系统依赖
+      run: |
+        echo "📦 安装Ubuntu系统依赖..."
         sudo apt-get update
 
+        # 安装PyQt6运行时依赖
         sudo apt-get install -y \
           libgl1-mesa-glx \
+          libgl1-mesa-dev \
           libglib2.0-0 \
+          libglib2.0-dev \
           libxkbcommon-x11-0 \
+          libxkbcommon-dev \
           libxcb-icccm4 \
           libxcb-image0 \
           libxcb-keysyms1 \
           libxcb-randr0 \
           libxcb-render-util0 \
           libxcb-xinerama0 \
-          libxcb-xfixes0
+          libxcb-xfixes0 \
+          libxcb-shape0 \
+          libxcb-sync1 \
+          libxcb-shm0 \
+          libxcb-util1 \
+          libxcb-cursor0 \
+          libfontconfig1 \
+          libfontconfig1-dev \
+          libfreetype6 \
+          libfreetype6-dev \
+          libx11-6 \
+          libx11-dev \
+          libx11-xcb1 \
+          libxext6 \
+          libxext-dev \
+          libxrender1 \
+          libxrender-dev \
+          libegl1-mesa \
+          libegl1-mesa-dev \
+          libxss1 \
+          libasound2 \
+          libasound2-dev \
+          libpulse0 \
+          libpulse-dev \
+          libdrm2 \
+          libdrm-dev \
+          libxcomposite1 \
+          libxcomposite-dev \
+          libxdamage1 \
+          libxdamage-dev \
+          libxrandr2 \
+          libxrandr-dev \
+          libxtst6 \
+          libxtst-dev
+
+        echo "✅ 系统依赖安装完成"
 
     - name: 安装Python依赖
       run: |
+        echo "🐍 安装Python依赖..."
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pyinstaller
 
-    - name: 配置构建环境
+        # Ubuntu特殊处理：先安装兼容的PyQt6版本
+        echo "🐧 Ubuntu平台：安装兼容的PyQt6版本..."
+        pip install PyQt6==6.6.1 PyQt6-Qt6==6.6.1 PyQt6-sip==13.6.0
+
+        # 安装其他项目依赖（跳过PyQt6相关）
+        pip install -r requirements.txt --no-deps
+        pip install requests aiohttp loguru pydantic cryptography asyncqt
+
+        # 安装PyInstaller
+        pip install pyinstaller==6.14.2 pyinstaller-hooks-contrib
+
+        echo "✅ Python依赖安装完成"
+
+    - name: 验证依赖安装
       run: |
-        echo "🔧 配置 ${{ matrix.platform }}-${{ matrix.arch }} 构建环境..."
-        echo "平台: ${{ matrix.platform }}"
-        echo "架构: ${{ matrix.arch }}"
-        echo "运行器架构: ${{ matrix.runner_arch }}"
+        echo "🔍 验证依赖安装..."
+        python -c "import PyQt6.QtCore; print('PyQt6.QtCore: OK')"
+        python -c "from PyQt6.QtCore import qVersion; print(f'Qt6 version: {qVersion()}')"
+        python -c "import PyInstaller; print(f'PyInstaller: {PyInstaller.__version__}')"
+        echo "✅ 核心依赖验证通过"
 
-        # 设置环境变量
-        echo "BUILD_PLATFORM=${{ matrix.platform }}" >> $GITHUB_ENV
-        echo "BUILD_ARCH=${{ matrix.arch }}" >> $GITHUB_ENV
-
-    - name: 构建可执行文件
+    - name: 构建Ubuntu可执行文件
       run: |
-        echo "🔨 构建 ${{ matrix.platform }}-${{ matrix.arch }} 版本..."
+        echo "🔨 构建Ubuntu可执行文件..."
+        pyinstaller \
+          --onedir \
+          --windowed \
+          --icon=src/resources/icons/app.png \
+          --name=EmailDomainManager \
+          --collect-all PyQt6 \
+          --add-data "src/resources:resources" \
+          --add-data "src/views/qml:views/qml" \
+          --paths src \
+          src/main.py
 
-        # 使用平台特定的构建参数
-        if [[ "${{ matrix.platform }}" == "windows" ]]; then
-          python scripts/build.py --windows
+        # 验证构建结果
+        if [ -f "dist/EmailDomainManager/EmailDomainManager" ]; then
+          chmod +x dist/EmailDomainManager/EmailDomainManager
+          size=$(stat -c%s "dist/EmailDomainManager/EmailDomainManager")
+          size_mb=$((size / 1024 / 1024))
+          echo "✅ Ubuntu可执行文件构建成功，大小: ${size_mb}MB"
+
+          # 检查文件信息
+          file dist/EmailDomainManager/EmailDomainManager
+          echo "📁 构建目录内容:"
+          ls -la dist/EmailDomainManager/
         else
-          python scripts/build.py --linux
-        fi
-      shell: bash
-
-    - name: 验证构建结果
-      run: |
-        echo "✅ 验证 ${{ matrix.platform }}-${{ matrix.arch }} 构建结果..."
-
-        # 检查构建产物
-        if [[ "${{ matrix.platform }}" == "windows" ]]; then
-          EXECUTABLE="dist/windows/EmailDomainManager.exe"
-        else
-          EXECUTABLE="dist/linux/EmailDomainManager"
-        fi
-
-        if [[ -f "$EXECUTABLE" ]]; then
-          echo "✅ 可执行文件构建成功: $EXECUTABLE"
-          ls -la "$EXECUTABLE"
-
-          # 检查文件大小
-          SIZE=$(stat -c%s "$EXECUTABLE" 2>/dev/null || stat -f%z "$EXECUTABLE" 2>/dev/null || echo "0")
-          SIZE_MB=$((SIZE / 1024 / 1024))
-          echo "📦 文件大小: ${SIZE_MB}MB"
-
-          if [[ $SIZE_MB -lt 10 ]]; then
-            echo "⚠️  警告: 文件大小异常小，可能构建不完整"
-          fi
-        else
-          echo "❌ 可执行文件未找到: $EXECUTABLE"
+          echo "❌ Ubuntu可执行文件构建失败"
           echo "📁 dist目录内容:"
-          find dist/ -type f -ls 2>/dev/null || ls -la dist/ 2>/dev/null || echo "dist目录不存在"
+          ls -la dist/ || echo "dist目录不存在"
           exit 1
         fi
-      shell: bash
 
-    - name: 创建发布包
+    - name: 创建Ubuntu发布包
       run: |
-        echo "📦 创建 ${{ matrix.platform }}-${{ matrix.arch }} 发布包..."
+        echo "📦 创建Ubuntu发布包..."
 
         # 创建发布目录
-        RELEASE_DIR="release-${{ matrix.platform }}-${{ matrix.arch }}"
-        mkdir -p "$RELEASE_DIR"
+        mkdir -p release
 
-        # 复制可执行文件和相关文件
-        if [[ "${{ matrix.platform }}" == "windows" ]]; then
-          cp -r dist/windows/* "$RELEASE_DIR/"
-          ARCHIVE_NAME="EmailDomainManager-${{ matrix.platform }}-${{ matrix.arch }}.zip"
-
-          # Windows平台使用zip打包
-          if command -v 7z >/dev/null 2>&1; then
-            7z a "$ARCHIVE_NAME" "$RELEASE_DIR"/*
-          else
-            # 使用PowerShell压缩 (Windows runner)
-            powershell -Command "Compress-Archive -Path '$RELEASE_DIR\*' -DestinationPath '$ARCHIVE_NAME'"
-          fi
-        else
-          cp -r dist/linux/* "$RELEASE_DIR/"
-          ARCHIVE_NAME="EmailDomainManager-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz"
-
-          # Linux平台使用tar.gz打包
-          tar -czf "$ARCHIVE_NAME" -C "$RELEASE_DIR" .
+        # 验证构建结果
+        if [ ! -d "dist/EmailDomainManager" ]; then
+          echo "❌ Ubuntu构建目录不存在"
+          exit 1
         fi
 
-        echo "✅ 发布包创建完成: $ARCHIVE_NAME"
-        ls -la "$ARCHIVE_NAME"
+        # 创建安装包目录
+        mkdir -p EmailDomainManager-Ubuntu-x64
+        cp -r dist/EmailDomainManager/* EmailDomainManager-Ubuntu-x64/
 
-        # 设置输出变量
-        echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
-        echo "RELEASE_DIR=$RELEASE_DIR" >> $GITHUB_ENV
-      shell: bash
+        # 创建启动脚本
+        cat > EmailDomainManager-Ubuntu-x64/run.sh << 'EOF'
+        #!/bin/bash
+        # 域名邮箱管理器启动脚本
 
-    - name: 上传构建产物
+        # 获取脚本所在目录
+        DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+        # 运行程序
+        cd "$DIR"
+        ./EmailDomainManager "$@"
+        EOF
+
+        chmod +x EmailDomainManager-Ubuntu-x64/run.sh
+        chmod +x EmailDomainManager-Ubuntu-x64/EmailDomainManager
+
+        # 创建README
+        cat > EmailDomainManager-Ubuntu-x64/README.txt << 'EOF'
+        域名邮箱管理器 Ubuntu版本
+
+        安装说明:
+        1. 解压文件: tar -xzf EmailDomainManager-Ubuntu-x64.tar.gz
+        2. 进入目录: cd EmailDomainManager-Ubuntu-x64
+        3. 运行程序: ./EmailDomainManager 或 ./run.sh
+
+        系统要求:
+        - Ubuntu 18.04+ 或其他现代Linux发行版 (x86_64)
+        - 4GB+ RAM (推荐)
+        - 100MB+ 磁盘空间
+        - X11或Wayland显示服务器
+
+        如遇到依赖问题，请安装:
+        sudo apt install libgl1-mesa-glx libglib2.0-0 libxkbcommon-x11-0 libfontconfig1 libfreetype6
+
+        项目主页: https://github.com/your-username/email-domain-manager
+        EOF
+
+        # 创建tar.gz包
+        tar -czf release/EmailDomainManager-Ubuntu-x64.tar.gz EmailDomainManager-Ubuntu-x64/
+
+        # 显示结果
+        echo "📁 Ubuntu发布文件:"
+        ls -lh release/
+
+        echo "✅ Ubuntu发布包创建完成"
+
+    - name: 上传Ubuntu构建产物
       uses: actions/upload-artifact@v4
       with:
-        name: build-${{ matrix.platform }}-${{ matrix.arch }}
-        path: |
-          ${{ env.ARCHIVE_NAME }}
-          ${{ env.RELEASE_DIR }}/
+        name: ubuntu-builds
+        path: release/EmailDomainManager-Ubuntu-x64.tar.gz
         retention-days: 30
 
-  # 创建GitHub Release (合并到main时自动创建)
+
+  # 创建GitHub Release
   create-release:
     name: 创建GitHub Release
-    needs: build-release
-    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [build-windows, build-ubuntu]
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
 
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: 下载所有构建产物
+    - name: 下载Windows构建产物
       uses: actions/download-artifact@v4
       with:
-        path: artifacts/
+        name: windows-builds
+        path: artifacts/windows/
+
+    - name: 下载Ubuntu构建产物
+      uses: actions/download-artifact@v4
+      with:
+        name: ubuntu-builds
+        path: artifacts/ubuntu/
 
     - name: 整理构建产物
       run: |
         echo "📁 整理构建产物..."
-        find artifacts/ -name "*.zip" -o -name "*.tar.gz" | while read file; do
-          echo "发现构建产物: $file"
-          cp "$file" ./
-        done
+
+        # 创建发布目录
+        mkdir -p release-files
+
+        # 复制Windows构建产物
+        if [ -d "artifacts/windows" ]; then
+          cp artifacts/windows/* release-files/
+        fi
+
+        # 复制Ubuntu构建产物
+        if [ -d "artifacts/ubuntu" ]; then
+          cp artifacts/ubuntu/* release-files/
+        fi
 
         echo "📦 最终发布文件:"
-        ls -la *.zip *.tar.gz 2>/dev/null || echo "没有找到发布文件"
+        ls -lh release-files/
 
     - name: 生成发布说明
       run: |
@@ -306,8 +574,19 @@ jobs:
         # 获取最新的提交信息作为发布说明
         RELEASE_NOTES=$(git log --pretty=format:"- %s" -10)
 
+        # 根据事件类型设置发布类型标识
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          RELEASE_TYPE="🧪 测试版本 (PR #${{ github.event.number }})"
+          RELEASE_TITLE="域名邮箱管理器 测试版本"
+        else
+          RELEASE_TYPE="🎉 正式发布版本"
+          RELEASE_TITLE="域名邮箱管理器 多平台发布版本"
+        fi
+
         cat > release-notes.md << EOF
-        # 域名邮箱管理器 多平台发布版本
+        # $RELEASE_TITLE
+
+        ## $RELEASE_TYPE
 
         ## 🎉 新功能和改进
 
@@ -315,42 +594,52 @@ jobs:
 
         ## 📦 下载说明
 
-        ### 支持的平台和架构
+        ### Windows版本 (x86_64)
+        - **单文件exe**: \`EmailDomainManager-Windows-x64.exe\` - 双击即可运行，无需安装，启动较慢
+        - **便携版**: \`EmailDomainManager-Windows-x64-Portable.zip\` - 解压后运行，启动更快，推荐
 
-        - **Windows x86_64**: 下载 \`EmailDomainManager-windows-x86_64.zip\`
-        - **Linux x86_64**: 下载 \`EmailDomainManager-linux-x86_64.tar.gz\`
-
-        ### 🔮 未来支持计划
-
-        - **Windows ARM64**: 计划支持 (适用于ARM处理器的Windows设备)
-        - **Linux ARM64**: 计划支持 (适用于ARM服务器和设备)
+        ### Ubuntu版本 (x86_64)
+        - **完整包**: \`EmailDomainManager-Ubuntu-x64.tar.gz\` - 包含可执行文件和说明文档
 
         ## 🚀 安装说明
 
         ### Windows用户
-        1. 下载 \`EmailDomainManager-windows-x86_64.zip\`
+        **方式1 - 便携版 (推荐)**:
+        1. 下载 \`EmailDomainManager-Windows-x64-Portable.zip\`
         2. 解压到任意目录
-        3. 双击 \`EmailDomainManager.exe\` 运行
+        3. 运行 \`EmailDomainManager-Portable.exe\`
 
-        ### Linux用户
-        1. 下载 \`EmailDomainManager-linux-x86_64.tar.gz\`
-        2. 解压: \`tar -xzf EmailDomainManager-linux-x86_64.tar.gz\`
-        3. 添加执行权限: \`chmod +x EmailDomainManager\`
-        4. 运行: \`./EmailDomainManager\`
+        **方式2 - 单文件exe**:
+        1. 下载 \`EmailDomainManager-Windows-x64.exe\`
+        2. 双击exe文件直接运行，无需安装（启动较慢）
+
+        ### Ubuntu用户
+        1. 下载 \`EmailDomainManager-Ubuntu-x64.tar.gz\`
+        2. 解压: \`tar -xzf EmailDomainManager-Ubuntu-x64.tar.gz\`
+        3. 进入目录: \`cd EmailDomainManager-Ubuntu-x64\`
+        4. 运行: \`./EmailDomainManager\` 或 \`./run.sh\`
 
         ## 📋 系统要求
 
-        - **Windows**: Windows 10+ (x86_64)
-        - **Linux**: 现代Linux发行版 (x86_64)，支持X11或Wayland
-        - **内存**: 4GB+ RAM (推荐)
-        - **存储**: 100MB+ 磁盘空间
+        ### Windows
+        - Windows 10+ (x86_64)
+        - 4GB+ RAM (推荐)
+        - 100MB+ 磁盘空间
+
+        ### Ubuntu/Linux
+        - Ubuntu 18.04+ 或其他现代Linux发行版 (x86_64)
+        - 4GB+ RAM (推荐)
+        - 100MB+ 磁盘空间
+        - X11或Wayland显示服务器
+        - 如遇依赖问题: \`sudo apt install libgl1-mesa-glx libglib2.0-0 libxkbcommon-x11-0\`
 
         ## 🎨 应用特性
 
         - 基于PyQt6的现代化界面
         - Material Design设计风格
-        - 支持Windows (.ico) 和 Linux (.png) 平台图标
+        - 跨平台支持 (Windows/Linux)
         - 完整的邮箱管理功能
+        - 单文件exe和便携版双重选择
 
         ## 🐛 问题反馈
 
@@ -362,6 +651,9 @@ jobs:
       run: |
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
           VERSION="${{ github.event.inputs.version }}"
+        elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # PR测试版本：包含PR编号
+          VERSION="v$(date +'%Y.%m.%d')-pr${{ github.event.number }}-test${{ github.run_number }}"
         else
           # 自动生成版本号：v年.月.日-构建号
           VERSION="v$(date +'%Y.%m.%d')-${{ github.run_number }}"
@@ -376,19 +668,20 @@ jobs:
         name: 域名邮箱管理器 ${{ steps.version.outputs.version }}
         body_path: release-notes.md
         draft: false
-        prerelease: false
+        prerelease: ${{ github.event_name == 'pull_request' }}
         files: |
-          EmailDomainManager-windows-x86_64.zip
-          EmailDomainManager-linux-x86_64.tar.gz
+          release-files/EmailDomainManager-Windows-x64.exe
+          release-files/EmailDomainManager-Windows-x64-Portable.zip
+          release-files/EmailDomainManager-Ubuntu-x64.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # 部署文档 (合并到main时自动部署)
+  # 部署文档 (临时允许PR触发，用于测试)
   deploy-docs:
     name: 部署文档
     needs: create-release
     runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
 
     steps:
     - name: 检出代码
@@ -493,28 +786,30 @@ jobs:
   # 构建通知和总结
   build-notification:
     name: 构建通知
-    needs: [build-release, create-release, deploy-docs]
-    runs-on: ubuntu-22.04  # 明确指定Ubuntu 22.04
+    needs: [build-windows, build-ubuntu, create-release, deploy-docs]
+    runs-on: ubuntu-22.04
     if: always()
 
     steps:
     - name: 构建结果通知
       run: |
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          echo "🔍 PR构建测试完成"
+          echo "🔍 PR构建测试和预发布完成"
           echo "========================"
           echo "PR信息:"
           echo "  - PR编号: #${{ github.event.number }}"
           echo "  - 源分支: ${{ github.head_ref }}"
           echo "  - 目标分支: ${{ github.base_ref }}"
+          echo "  - 测试版本: ${{ needs.create-release.outputs.version || '未知' }}"
         else
-          echo "🎉 自动发布流程完成"
+          echo "🎉 正式发布流程完成"
           echo "========================"
         fi
 
         # 检查构建任务结果
         echo "📋 任务执行结果:"
-        echo "  - 构建测试: ${{ needs.build-release.result }}"
+        echo "  - Windows构建: ${{ needs.build-windows.result }}"
+        echo "  - Ubuntu构建: ${{ needs.build-ubuntu.result }}"
 
         if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
           echo "  - 创建Release: ${{ needs.create-release.result }}"
@@ -525,7 +820,8 @@ jobs:
           echo ""
           echo "❌ 流程中出现问题"
           echo "失败的任务:"
-          [[ "${{ needs.build-release.result }}" == "failure" ]] && echo "  - 构建测试失败"
+          [[ "${{ needs.build-windows.result }}" == "failure" ]] && echo "  - Windows构建失败"
+          [[ "${{ needs.build-ubuntu.result }}" == "failure" ]] && echo "  - Ubuntu构建失败"
           [[ "${{ needs.create-release.result }}" == "failure" ]] && echo "  - 创建Release失败"
           [[ "${{ needs.deploy-docs.result }}" == "failure" ]] && echo "  - 部署文档失败"
           echo ""
@@ -533,10 +829,12 @@ jobs:
         else
           echo ""
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "✅ PR构建测试通过！"
-            echo "📦 所有平台构建成功，可以安全合并"
+            echo "✅ PR构建测试和预发布成功！"
+            echo "📦 Windows和Ubuntu平台构建成功"
+            echo "🎯 已创建测试版本Release，可以下载测试"
+            echo "✅ 测试通过后可以安全合并到main分支"
           else
-            echo "🎉 自动发布成功完成！"
+            echo "🎉 正式发布成功完成！"
             echo "📦 新版本已发布到GitHub Releases"
             echo "📚 文档已更新到GitHub Pages"
             echo ""
@@ -548,7 +846,8 @@ jobs:
 
         echo ""
         echo "📊 构建统计:"
-        echo "  - 支持平台: Windows x86_64, Linux x86_64"
+        echo "  - Windows: 单文件exe + 便携版zip"
+        echo "  - Ubuntu: 单文件 + 完整tar.gz包"
         echo "  - 构建时间: $(date)"
         echo "  - PR编号: #${{ github.event.number }}"
         echo "  - 源分支: ${{ github.head_ref }}"

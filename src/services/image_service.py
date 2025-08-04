@@ -38,15 +38,17 @@ class ImageService(QObject):
     def __init__(self, parent=None):
         """
         初始化图片服务
-        
+
         Args:
             parent: 父对象
         """
         super().__init__(parent)
         self.logger = get_logger(__name__)
-        
-        # 设置存储路径
-        self.base_storage_path = Path("data/images")
+
+        # 设置存储路径 - 使用用户数据目录
+        import tempfile
+        app_data_dir = Path(tempfile.gettempdir()) / "EmailDomainManager"
+        self.base_storage_path = app_data_dir / "data" / "images"
         self.icons_path = self.base_storage_path / "icons"
         
         # 创建存储目录
