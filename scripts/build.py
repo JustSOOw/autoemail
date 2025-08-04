@@ -11,6 +11,12 @@ import sys
 import subprocess
 from pathlib import Path
 
+# 设置 Windows 环境下的 UTF-8 输出编码
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(description='构建脚本')
