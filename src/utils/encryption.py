@@ -63,20 +63,23 @@ class EncryptionManager:
     def _init_with_default_key(self):
         """使用默认密钥初始化加密器"""
         try:
-            # 生成或加载默认密钥
-            key_file = "data/encryption.key"
+            # 生成或加载默认密钥 - 使用用户数据目录
+            import tempfile
+            from pathlib import Path
+            app_data_dir = Path(tempfile.gettempdir()) / "EmailDomainManager"
+            key_file = app_data_dir / "data" / "encryption.key"
             
-            if os.path.exists(key_file):
+            if key_file.exists():
                 # 加载现有密钥
                 with open(key_file, 'rb') as f:
                     key = f.read()
             else:
                 # 生成新密钥
                 key = Fernet.generate_key()
-                
+
                 # 确保目录存在
-                os.makedirs(os.path.dirname(key_file), exist_ok=True)
-                
+                key_file.parent.mkdir(parents=True, exist_ok=True)
+
                 # 保存密钥
                 with open(key_file, 'wb') as f:
                     f.write(key)
