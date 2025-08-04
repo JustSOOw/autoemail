@@ -86,23 +86,43 @@ jobs:
       run: |
         echo "🔧 安装Visual C++运行时和系统依赖..."
 
-        # 安装最新的Visual C++ Redistributable (关键修复)
-        choco install vcredist140 -y
-        choco install vcredist2022 -y
-
-        # 确保安装了所有必要的运行时库
-        echo "📦 验证Visual C++运行时安装..."
-        if (Test-Path "C:\Windows\System32\vcruntime140.dll") {
-          Write-Host "✅ vcruntime140.dll 已安装"
-        } else {
-          Write-Host "❌ vcruntime140.dll 缺失，尝试手动安装..."
-          # 下载并安装最新的VC++ Redistributable
-          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
-          Start-Process -FilePath "vc_redist.x64.exe" -ArgumentList "/quiet" -Wait
-          Remove-Item "vc_redist.x64.exe"
+        # 安装Visual C++ Redistributable (修复包名错误)
+        try {
+          choco install vcredist140 -y --force
+          Write-Host "✅ vcredist140 安装完成"
+        } catch {
+          Write-Host "⚠️ vcredist140 安装失败，继续执行..."
         }
 
-        echo "✅ 系统依赖安装完成"
+        # 手动下载并安装最新的VC++ Redistributable (更可靠的方法)
+        echo "📦 下载并安装最新的Visual C++ Redistributable..."
+        try {
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
+          Start-Process -FilePath "vc_redist.x64.exe" -ArgumentList "/quiet", "/norestart" -Wait
+          Remove-Item "vc_redist.x64.exe" -ErrorAction SilentlyContinue
+          Write-Host "✅ 最新VC++ Redistributable安装完成"
+        } catch {
+          Write-Host "⚠️ VC++ Redistributable下载安装失败，但继续执行..."
+        }
+
+        # 验证关键DLL文件
+        echo "🔍 验证Visual C++运行时库..."
+        $requiredDlls = @(
+          "C:\Windows\System32\vcruntime140.dll",
+          "C:\Windows\System32\msvcp140.dll"
+        )
+
+        foreach ($dll in $requiredDlls) {
+          if (Test-Path $dll) {
+            $dllName = Split-Path $dll -Leaf
+            Write-Host "✅ $dllName 已安装"
+          } else {
+            $dllName = Split-Path $dll -Leaf
+            Write-Host "⚠️ $dllName 缺失"
+          }
+        }
+
+        echo "✅ 系统依赖检查完成"
 
     - name: 安装Python依赖
       run: |
@@ -221,9 +241,9 @@ jobs:
           exit 1
         }
 
-    - name: 包含Visual C++运行时库
+    - name: 包含Visual C++运行时库到便携版
       run: |
-        echo "📦 包含Visual C++运行时库到发布包中..."
+        echo "📦 包含Visual C++运行时库到便携版..."
 
         # 查找系统中的Visual C++运行时库
         $vcRuntimePaths = @(
@@ -237,13 +257,35 @@ jobs:
         # 复制运行时库到便携版目录
         $portableDir = "dist/EmailDomainManager-Portable"
         if (Test-Path $portableDir) {
-          foreach ($dll in $vcRuntimePaths) {
-            if (Test-Path $dll) {
-              $dllName = Split-Path $dll -Leaf
-              Copy-Item $dll "$portableDir/$dllName" -ErrorAction SilentlyContinue
-              Write-Host "✅ 已复制: $dllName"
+          $copiedCount = 0
+          Write-Host "🔍 检查并复制Visual C++运行时库..."
+
+          foreach ($dllPath in $vcRuntimePaths) {
+            if (Test-Path $dllPath) {
+              $dllName = Split-Path $dllPath -Leaf
+              try {
+                Copy-Item $dllPath "$portableDir/$dllName" -Force
+                Write-Host "✅ 已复制: $dllName"
+                $copiedCount++
+              } catch {
+                Write-Host "⚠️ 复制失败: $dllName - $($_.Exception.Message)"
+              }
+            } else {
+              $dllName = Split-Path $dllPath -Leaf
+              Write-Host "❌ 未找到: $dllName"
             }
           }
+
+          Write-Host "📊 总共复制了 $copiedCount 个运行时库文件"
+
+          # 验证复制结果
+          Write-Host "🔍 便携版目录中的DLL文件:"
+          Get-ChildItem "$portableDir" -Name "*.dll" | Where-Object { $_ -like "*140*" } | ForEach-Object {
+            Write-Host "  ✅ $_"
+          }
+        } else {
+          Write-Host "❌ 便携版目录不存在: $portableDir"
+          exit 1
         }
 
         Write-Host "✅ Visual C++运行时库包含完成"
