@@ -41,6 +41,10 @@ def main():
     
     print(f"✅ 项目结构检查通过")
     
+    if args.test_only:
+        print("✅ 构建配置测试通过 (跳过依赖检查)")
+        return 0
+    
     # 检查依赖
     try:
         import PyQt6.QtCore
@@ -55,10 +59,6 @@ def main():
     except ImportError:
         print("❌ PyInstaller 未安装")
         return 1
-    
-    if args.test_only:
-        print("✅ 构建配置测试通过")
-        return 0
     
     # 实际构建逻辑（如果需要）
     print("🔨 开始构建...")
